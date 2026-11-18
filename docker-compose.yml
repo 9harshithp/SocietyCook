@@ -6,9 +6,12 @@ services:
       MYSQL_USER: societycook
       MYSQL_PASSWORD: localpassword
       MYSQL_ROOT_PASSWORD: localrootpassword
-    ports: ['3307:3306']
+    ports:
+      # Configurable host port to avoid 3306 conflicts; defaults to 3307 on host, internal port remains 3306
+      - "${DB_PORT:-3307}:3306"
     volumes:
       - dbdata:/var/lib/mysql
       - ./backend/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
 volumes:
   dbdata:

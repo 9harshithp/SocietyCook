@@ -1,110 +1,100 @@
-# SocietyCook — Hyperlocal Shared Cook Booking Platform (MVP 1.0)
+# SocietyCook – Community Cook Hiring & Workforce Platform (v2.0)
 
-> **"Your kitchen. Your cook. Your time."**  
-> A society-first hyperlocal marketplace connecting apartment complex residents with verified professional cooks who serve multiple households in the same building during predefined time slots.
+> **"Hire together. Save together. Eat better."**  
+> A production-grade hyperlocal domestic cooking platform enabling neighbouring households within gated residential societies to collectively hire verified cooks, receive fresh customized meals in their private kitchens, and benefit from tiered group discounts.
 
----
-
-## ✨ Features & Unique Touches
-
-1. **Hyperlocal Society Clustering**:
-   - Cooks service 5 adjacent households in the same building tower (e.g. Greenwood Residency Tower A).
-   - Reduces travel lag to **2 minutes by elevator**, zero road traffic, and ensures 100% on-time arrivals.
-   - Saves residents ~40% (₹4,000/mo vs ₹8,000–₹12,000 for exclusive private cooks).
-
-2. **Wireframe-Accurate Slot Booking (PRD Section 9)**:
-   - Dedicated 45-minute cooking slots with 15-minute inter-flat transition buffer.
-   - Interactive time slot selector: `07:00 PM (Booked)`, `07:45 PM (Booked)`, `08:30 PM (Selected / Booked)`, `09:15 PM (Booked)`, `10:00 PM (Available)`.
-   - Simulated UPI / Razorpay payment modal with instant confirmation.
-
-3. **Guaranteed Backup Cook & Replacement Engine**:
-   - Wireframe alert card: *"Cook on leave: A backup cook has been assigned. Replacement confirmed."*
-   - Automated & manual backup cook dispatching from the same society pool (e.g. Sunita Sharma covering for Lakshmi Narayanan).
-   - Resident 1-click emergency replacement requests.
-
-4. **Interactive Business Revenue Calculator (PRD Section 12)**:
-   - Live sliders for:
-     - Households per cook (1 to 8)
-     - Monthly subscription price (₹2,000 to ₹8,000)
-     - Platform commission % (5% to 25%)
-     - Active cooks on platform (10 to 10,000)
-   - Real-time KPIs: Cook Payout (90%), Platform Revenue per Cook (10%), Monthly Platform Revenue, and Annual Gross Revenue.
-   - Scaled projections table matching the PRD revenue forecasting matrix.
-
-5. **Cook Partner Dashboard (PRD Wireframe Replica)**:
-   - Monthly earnings card: **₹20,000** (5 active households × ₹4,000/mo).
-   - Today's flat route schedule with 1-click **Check In** and **Check Out** timestamps.
-   - Detailed resident dietary preferences and meal notes for each flat.
-   - Leave application desk with zero lost wages.
-
-6. **Weekly Menu Planner & Dietary Taste Profile (PRD P1/P2)**:
-   - 7-day personalized homestyle Indian meal board (Monday to Sunday).
-   - Customizable dishes (Dal Tadka, Paneer Butter Masala, Sambar, Phulkas, Theplas, Biryani).
-   - Dietary switches: Spice level (Mild/Desi/High), Oil usage (Minimal/Ghee), Vegetarian / 100% Jain Friendly.
-   - One-click sync to the assigned cook's daily schedule.
-
-7. **Society Security Gate & Pass Hub (MyGate / NoBrokerHood Integration)**:
-   - Digital Gate Pass & QR code generator (#SC-8942) for authorized cooks.
-   - Society Tower & Flat directory tracking cook clearance and gate check-ins.
-   - Police & hygiene verification badges.
-
-8. **1-Click Demo Persona Switcher Bar**:
-   - Instantly test every role from the sticky top bar:
-     - `Resident (Rahul)` — Flat A-101, active ₹4,000 plan, slot booking, reviews.
-     - `Cook (Ramesh)` — Master of Phulkas, ₹20,000 earnings, 5 flats in Tower A, check in/out.
-     - `Cook (Lakshmi)` — South Indian pure veg specialist, approved leave with backup assigned.
-     - `Society Manager` — Security gate pass, tower directory, resident roster.
-     - `Platform Admin` — KYC verification, backup dispatching, dispute resolution.
+[![Test Suite](https://img.shields.io/badge/Vitest-19%20Passing-brightgreen.svg)](#testing)
+[![Branch](https://img.shields.io/badge/Branch-feature%2Fsocietycook--v2-blue.svg)](#git-branch)
+[![API Docs](https://img.shields.io/badge/Swagger-OpenAPI%203.0-orange.svg)](#api-documentation)
 
 ---
 
-## 🚀 Quick Setup
+## 🌟 Core Differentiation (vs ChefKart, COOX, Cookzy, Broomees)
 
-### Prerequisites
-- Node.js 22+
+| Capability | SocietyCook v2 | Traditional Platforms |
+| :--- | :--- | :--- |
+| **Hiring Paradigm** | **Community Demand Clustering** (Flats in same tower share route) | Isolated individual booking |
+| **Pricing** | **Dynamic Volume Discount** (₹4,000–₹4,500/mo) | High rate (₹7,000–₹10,000) + ₹15k brokerage |
+| **Cook Commute** | **0 km (2-minute elevator transit)** | 3–4 hours stressful daily city transit |
+| **Cook Monthly Earnings** | **₹20,000 – ₹28,000/mo** (Fair wage floor guaranteed) | Variable / high agency deductions |
+| **Absenteeism Defense** | **Automated Backup Dispatch in &lt;1 Hr** | 24–48 hr wait or no replacement |
+| **Session Verification** | **Daily 4-Digit Resident OTP** | Paper diaries / frequent disputes |
+| **Society Gate Clearance** | **RWA Gate Pass (#SC-8942) + QR check-in** | Manual visitor register entries |
+
+---
+
+## 🚀 Quick Start Guide
+
+### 1. Prerequisites
+- Node.js (v18+)
 - Docker & Docker Compose
-- npm
+- Git
 
-### 1. Start MySQL Database
-```sh
-docker compose up -d
+### 2. Clone and Checkout Feature Branch
+```bash
+git clone https://github.com/9harshithp/SocietyCook.git
+cd SocietyCook
+git checkout feature/societycook-v2
 ```
 
-### 2. Backend Setup & Seeding
-```sh
+### 3. Start Database (Host Port 3307)
+```bash
+docker compose up -d db
+```
+*Note: Configured with `${DB_PORT:-3307}:3306` to avoid collisions with local port 3306.*
+
+### 4. Run Migrations & Realistic Seed Dataset
+```bash
 cd backend
-npm install
-node seed.js
-npm run dev
+node migrations.js   # Non-destructive migrations (31 tables/extensions)
+node seed.js         # Seeds 3 societies, 30 users, cooks, groups, and sessions
 ```
-Backend API will be running on `http://localhost:5000/api/v1`.
 
-### 3. Frontend Setup
-In a second terminal:
-```sh
+### 5. Start Backend Server
+```bash
+cd backend
+npm run start
+# Server listens on http://localhost:5000
+# OpenAPI Docs available at http://localhost:5000/api/v1/docs
+```
+
+### 6. Start Frontend Web Client
+```bash
 cd frontend
-npm install
 npm run dev
+# Web application available at http://localhost:5173
 ```
-Frontend Web App will be running on `http://localhost:5173`.
 
 ---
 
-## 🔑 Demo Accounts (All password: `Demo12345!`)
-
-| Role | Email | Highlights |
-|---|---|---|
-| **Resident** | `resident@example.com` | Flat A-101, active ₹4,000 plan with Ramesh, reviews |
-| **Cook** | `ramesh@example.com` | 5 active households in Tower A, ₹20k earnings, daily schedule |
-| **Cook** | `cook@example.com` | Lakshmi Narayanan, South Indian specialist, leave with backup |
-| **Society Manager** | `manager@example.com` | Greenwood Residency gate passes, Tower A roster |
-| **Platform Admin** | `admin@example.com` | Cook verification, backup matching desk, revenue analytics |
+## 🧪 Automated Testing
+```bash
+cd backend
+npm test
+```
+*Runs 19 comprehensive Vitest unit and integration tests across pricing, scheduling, recommender, and full lifecycle flows.*
 
 ---
 
-## 🛠️ Tech Stack
+## 📚 Complete Documentation Suite
+- [PRD.md](PRD.md) — Product Requirements Document (MVP to v2.0)
+- [TRD.md](TRD.md) — Technical Requirements Document & Engineering Architecture
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Modular Monolith Architecture & Mermaid Diagrams
+- [DATABASE.md](DATABASE.md) — MySQL 8.0 Schema, Relationships, and Indexes
+- [API.md](API.md) — REST API Specification with Request & Response Payloads
+- [ALGORITHMS.md](ALGORITHMS.md) — Transparent Mathematical & Heuristic Formulations
+- [SECURITY.md](SECURITY.md) — Multi-Layer Defense, RBAC, OTP, and Audit Trails
+- [TESTING.md](TESTING.md) — Test Strategy, Test Cases, and Coverage Breakdown
+- [DEPLOYMENT.md](DEPLOYMENT.md) — Production Deployment & Cloud Operations Runbook
+- [CHANGELOG.md](CHANGELOG.md) — Complete v1.0 to v2.0 Version History
+- [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) — 100% Verified Task Tracking
 
-- **Frontend**: React 19, Vite 6, Tailwind CSS v4, Lucide React
-- **Backend**: Node.js, Express, MySQL 8 (mysql2 connection pool), JWT, Zod
-- **Database**: Dockerized MySQL 8.4
-- **Design System**: Warm saffron, turmeric amber, fresh mint emerald, card glassmorphism
+---
+
+## 👥 Demo Personas (1-Click Switcher)
+Test all platform workflows using the top-bar persona switcher:
+1. **Resident (Rahul Sharma):** Flat A-101 · Today's cooking OTP `4829`, 7-day meal planner, group savings.
+2. **Cook (Ramesh Kumar):** Chef · Flat route schedule, flat OTP check-in & check-out, monthly earnings.
+3. **Cook (Lakshmi Devi):** Chef · South Indian homestyle specialist, leave request desk.
+4. **Society Manager:** Greenwood Heights RWA · Campus gate pass clearance, tower clusters, demand heatmaps.
+5. **Platform Admin:** Superadmin · Cook KYC verification, leave & backup dispatcher, moving average forecast.
