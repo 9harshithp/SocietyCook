@@ -1,13 +1,19 @@
 import mysql from 'mysql2/promise';
 import { ENV } from './env.js';
 
+const isSsl =
+  ENV.DATABASE_URL.includes('aivencloud') ||
+  ENV.DATABASE_URL.includes('ssl') ||
+  process.env.DB_SSL === 'true';
+
 export const db = mysql.createPool({
   uri: ENV.DATABASE_URL,
   waitForConnections: true,
   connectionLimit: 15,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 10000
+  keepAliveInitialDelay: 10000,
+  ...(isSsl ? { ssl: { rejectUnauthorized: false } } : {})
 });
 
 export const query = async (sql, args = []) => {
