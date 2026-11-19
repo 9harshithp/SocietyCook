@@ -10,7 +10,7 @@ export class AttendanceService {
       SELECT s.*, 
              b.slot_label, b.meal_type, b.amount, b.group_id,
              ru.name as resident_name, ru.flat as resident_flat, ru.phone as resident_phone,
-             cu.name as cook_name, c.photo_url as cook_photo, c.phone as cook_phone,
+             cu.name as cook_name, c.photo_url as cook_photo, cu.phone as cook_phone,
              soc.name as society_name,
              (SELECT r.status FROM replacements r WHERE r.session_id = s.id LIMIT 1) as replacement_status
       FROM sessions s

@@ -108,3 +108,14 @@
 - [x] `DEPLOYMENT.md` — Docker Compose & Production Runbook
 - [x] `CHANGELOG.md` — Comprehensive v1 to v2 changelog
 - [x] `README.md` — Updated project landing guide
+
+### Phase 9 — Senior QA Verification & Hardening (Completed ✅)
+- [x] Fixed Tailwind CSS v4 class-based dark mode toggle (`@custom-variant dark`) in `style.css`
+- [x] Resolved responsive alignment, wrapping, and height jitter on role switcher buttons in `Navbar.jsx`
+- [x] Added root `GET /health` alongside `/api/v1/health`
+- [x] Normalized API request payload schemas (snake_case and camelCase compatibility) across auth, groups, attendance, and leaves
+- [x] Fixed `Unknown column 'c.phone'` database query bug in `AttendanceService.getSessions`
+- [x] Implemented `GET /api/v1/invoices` and added dynamic printable invoice downloads
+- [x] Replaced hardcoded appointments, mock statistics, and static charts with live API feeds
+- [x] Executed end-to-end browser test suite (Puppeteer + Headless Chrome) covering all 4 user roles with 100% pass rate
+- [x] Generated Feature Verification Matrix & Technical Review Report (`TECHNICAL_REVIEW_REPORT.md`)

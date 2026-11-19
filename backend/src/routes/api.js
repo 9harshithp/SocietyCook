@@ -33,13 +33,25 @@ apiRouter.post('/auth/register', handle(async (req, res) => {
     email: z.string().email(),
     password: z.string().min(8).max(72),
     role: z.enum(['RESIDENT', 'COOK', 'SOCIETY_MANAGER']),
-    societyId: z.coerce.number().int().positive(),
-    flat: z.string().max(30).optional(),
+    societyId: z.coerce.number().int().positive().optional(),
+    society_id: z.coerce.number().int().positive().optional(),
+    flat: z.string().max(50).optional(),
+    flat_number: z.string().max(30).optional(),
+    block_name: z.string().max(30).optional(),
     phone: z.string().max(20).optional(),
     referralCode: z.string().optional()
   });
   const data = schema.parse(req.body);
-  const result = await AuthService.register(data);
+  const resolvedSocietyId = data.societyId || data.society_id;
+  if (!resolvedSocietyId) {
+    return res.status(400).json({ success: false, message: 'Society selection is required' });
+  }
+  const resolvedFlat = data.flat || (data.block_name && data.flat_number ? `${data.block_name} Flat ${data.flat_number}` : data.flat_number || null);
+  const result = await AuthService.register({
+    ...data,
+    societyId: resolvedSocietyId,
+    flat: resolvedFlat
+  });
   res.status(201).json({ success: true, ...result });
 }));
 
@@ -181,22 +193,40 @@ apiRouter.post('/groups', authenticate, requireRoles(['RESIDENT', 'ADMIN']), han
   const schema = z.object({
     name: z.string().min(3).max(100),
     description: z.string().optional(),
-    mealService: z.enum(['BREAKFAST', 'LUNCH', 'DINNER', 'MULTIPLE']).default('DINNER'),
-    preferredCuisines: z.string().default('North Indian, South Indian'),
-    dietaryPref: z.string().default('VEGETARIAN'),
-    preferredTimeStart: z.string().default('19:00:00'),
-    preferredTimeEnd: z.string().default('22:00:00'),
-    monthlyBudgetMax: z.number().int().min(2000).max(15000).default(4500),
-    minHouseholds: z.number().int().min(2).max(8).default(3),
-    maxHouseholds: z.number().int().min(3).max(10).default(5),
+    mealService: z.enum(['BREAKFAST', 'LUNCH', 'DINNER', 'MULTIPLE']).optional(),
+    meal_service: z.enum(['BREAKFAST', 'LUNCH', 'DINNER', 'MULTIPLE']).optional(),
+    preferredCuisines: z.string().optional(),
+    cuisine_preferences: z.string().optional(),
+    dietaryPref: z.string().optional(),
+    dietary_requirements: z.string().optional(),
+    preferredTimeStart: z.string().optional(),
+    preferredTimeEnd: z.string().optional(),
+    preferred_slot: z.string().optional(),
+    monthlyBudgetMax: z.coerce.number().int().min(2000).max(15000).optional(),
+    budget_per_household: z.coerce.number().int().min(2000).max(15000).optional(),
+    minHouseholds: z.coerce.number().int().min(2).max(8).optional(),
+    min_members: z.coerce.number().int().min(2).max(8).optional(),
+    maxHouseholds: z.coerce.number().int().min(3).max(10).optional(),
+    max_members: z.coerce.number().int().min(3).max(10).optional(),
     creatorFlat: z.string().optional(),
-    creatorHouseholdSize: z.number().int().min(1).max(6).default(2)
+    creatorHouseholdSize: z.coerce.number().int().min(1).max(6).default(2)
   });
   const data = schema.parse(req.body);
   const group = await GroupService.createGroup({
     residentId: req.user.id,
     societyId: req.user.society_id,
-    ...data
+    name: data.name,
+    description: data.description || '',
+    mealService: data.mealService || data.meal_service || 'DINNER',
+    preferredCuisines: data.preferredCuisines || data.cuisine_preferences || 'North Indian, South Indian',
+    dietaryPref: data.dietaryPref || data.dietary_requirements || 'VEGETARIAN',
+    preferredTimeStart: data.preferredTimeStart || (data.preferred_slot ? data.preferred_slot.split('-')[0].trim() + ':00' : '19:00:00'),
+    preferredTimeEnd: data.preferredTimeEnd || (data.preferred_slot ? data.preferred_slot.split('-')[1].trim() + ':00' : '22:00:00'),
+    monthlyBudgetMax: data.monthlyBudgetMax || data.budget_per_household || 4500,
+    minHouseholds: data.minHouseholds || data.min_members || 3,
+    maxHouseholds: data.maxHouseholds || data.max_members || 5,
+    creatorFlat: data.creatorFlat || req.user.flat,
+    creatorHouseholdSize: data.creatorHouseholdSize
   });
   res.status(201).json({ success: true, ...group });
 }));
@@ -209,15 +239,21 @@ apiRouter.get('/groups/:id', authenticate, handle(async (req, res) => {
 apiRouter.post('/groups/:id/join', authenticate, requireRoles(['RESIDENT', 'ADMIN']), handle(async (req, res) => {
   const schema = z.object({
     flatNumber: z.string().optional(),
-    householdSize: z.number().int().min(1).max(6).default(2),
-    preferredSlotStart: z.string().default('19:00:00'),
-    dietaryNotes: z.string().optional()
+    flat_number: z.string().optional(),
+    householdSize: z.coerce.number().int().min(1).max(6).optional(),
+    preferredSlotStart: z.string().optional(),
+    preferred_slot: z.string().optional(),
+    dietaryNotes: z.string().optional(),
+    dietary_preferences: z.string().optional()
   });
   const data = schema.parse(req.body);
   const result = await GroupService.joinGroup({
     groupId: Number(req.params.id),
     residentId: req.user.id,
-    ...data
+    flatNumber: data.flatNumber || data.flat_number || req.user.flat,
+    householdSize: data.householdSize || 2,
+    preferredSlotStart: data.preferredSlotStart || (data.preferred_slot ? data.preferred_slot.split('-')[0].trim() + ':00' : '19:00:00'),
+    dietaryNotes: data.dietaryNotes || data.dietary_preferences || ''
   });
   res.json({ success: true, ...result });
 }));
@@ -321,10 +357,25 @@ apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) =
   res.json(result);
 }));
 
+apiRouter.get('/invoices', authenticate, handle(async (req, res) => {
+  const where = req.user.role === 'ADMIN' ? '' : 'WHERE i.resident_id = ?';
+  const params = req.user.role === 'ADMIN' ? [] : [req.user.id];
+  const rows = await query(`
+    SELECT i.*, ru.name as resident_name, ru.flat as resident_flat, b.meal_type, b.slot_label
+    FROM invoices i
+    JOIN users ru ON ru.id = i.resident_id
+    LEFT JOIN bookings b ON b.id = i.booking_id
+    ${where}
+    ORDER BY i.id DESC
+  `, params);
+  res.json(rows);
+}));
+
 // 8. Sessions & Attendance
 apiRouter.get('/sessions', authenticate, handle(async (req, res) => {
   const rows = await AttendanceService.getSessions({
     user: req.user,
+    societyId: req.query.societyId ? Number(req.query.societyId) : req.query.society_id ? Number(req.query.society_id) : undefined,
     date: req.query.date,
     status: req.query.status
   });
@@ -334,8 +385,9 @@ apiRouter.get('/sessions', authenticate, handle(async (req, res) => {
 apiRouter.post('/sessions/:id/attendance', authenticate, handle(async (req, res) => {
   const { action, otp } = req.body;
   const sessionId = Number(req.params.id);
+  const normAction = String(action || '').toLowerCase().replace('check_', '').trim();
 
-  if (action === 'in') {
+  if (normAction === 'in') {
     const result = await AttendanceService.checkIn({
       sessionId,
       cookUserId: req.user.id,
@@ -343,14 +395,14 @@ apiRouter.post('/sessions/:id/attendance', authenticate, handle(async (req, res)
       bypassOtp: req.user.role === 'ADMIN'
     });
     return res.json(result);
-  } else if (action === 'out') {
+  } else if (normAction === 'out') {
     const result = await AttendanceService.checkOut({
       sessionId,
       cookUserId: req.user.id
     });
     return res.json(result);
   } else {
-    return res.status(400).json({ success: false, message: "Invalid action. Use 'in' or 'out'." });
+    return res.status(400).json({ success: false, message: "Invalid action. Use 'in' or 'out' (or 'CHECK_IN' / 'CHECK_OUT')." });
   }
 }));
 
@@ -380,15 +432,29 @@ apiRouter.get('/leaves', authenticate, handle(async (req, res) => {
   res.json(rows);
 }));
 
-apiRouter.post('/leaves', authenticate, requireRoles(['COOK']), handle(async (req, res) => {
+apiRouter.post('/leaves', authenticate, requireRoles(['COOK', 'ADMIN']), handle(async (req, res) => {
   const schema = z.object({
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    startDate: z.string().optional(),
+    start_date: z.string().optional(),
+    endDate: z.string().optional(),
+    end_date: z.string().optional(),
     reason: z.string().min(3).max(255),
-    leaveType: z.enum(['PLANNED', 'EMERGENCY']).default('PLANNED')
+    leaveType: z.enum(['PLANNED', 'EMERGENCY']).default('PLANNED'),
+    cook_id: z.coerce.number().optional()
   });
   const data = schema.parse(req.body);
-  const result = await LeaveService.applyLeave({ cookUserId: req.user.id, ...data });
+  const start = data.startDate || data.start_date;
+  const end = data.endDate || data.end_date;
+  if (!start || !end) {
+    return res.status(400).json({ success: false, message: 'startDate and endDate are required' });
+  }
+  const result = await LeaveService.applyLeave({
+    cookUserId: req.user.role === 'COOK' ? req.user.id : (data.cook_id || req.user.id),
+    startDate: start,
+    endDate: end,
+    reason: data.reason,
+    leaveType: data.leaveType
+  });
   res.status(201).json({ success: true, ...result });
 }));
 
@@ -423,17 +489,22 @@ apiRouter.get('/replacements', authenticate, handle(async (req, res) => {
 // 10. Reviews & Notifications
 apiRouter.post('/reviews', authenticate, handle(async (req, res) => {
   const schema = z.object({
-    bookingId: z.coerce.number().int().positive(),
-    rating: z.number().int().min(1).max(5),
+    bookingId: z.coerce.number().int().positive().optional(),
+    booking_id: z.coerce.number().int().positive().optional(),
+    rating: z.coerce.number().int().min(1).max(5),
     comment: z.string().max(500).optional()
   });
   const b = schema.parse(req.body);
+  const targetBookingId = b.bookingId || b.booking_id;
+  if (!targetBookingId) {
+    return res.status(400).json({ success: false, message: 'bookingId is required' });
+  }
 
   await query(
     `INSERT INTO reviews (booking_id, rating, comment)
      VALUES (?, ?, ?)
      ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment)`,
-    [b.bookingId, b.rating, b.comment || '']
+    [targetBookingId, b.rating, b.comment || '']
   );
 
   res.json({ success: true });

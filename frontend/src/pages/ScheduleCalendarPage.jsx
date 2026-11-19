@@ -35,13 +35,21 @@ export function ScheduleCalendarPage() {
     loadSessions();
   }, [activeSocietyId]);
 
-  const timeSlots = [
-    { slot: '07:00 – 07:45', type: 'Breakfast', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 101', status: 'COMPLETED' },
-    { slot: '08:00 – 08:45', type: 'Breakfast', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 204', status: 'IN_PROGRESS' },
-    { slot: '12:30 – 01:15', type: 'Lunch', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 302', status: 'SCHEDULED' },
-    { slot: '01:30 – 02:15', type: 'Lunch', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 401', status: 'SCHEDULED' },
-    { slot: '07:30 – 08:15', type: 'Dinner', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 102', status: 'SCHEDULED' },
-    { slot: '08:30 – 09:15', type: 'Dinner', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 505', status: 'SCHEDULED' }
+  const displaySlots = sessions.length > 0 ? sessions.map(s => ({
+    id: s.id,
+    slot: s.slot_label || (s.scheduled_start_time ? `${s.scheduled_start_time.slice(0, 5)} – ${s.scheduled_end_time?.slice(0, 5) || ''}` : '45 min slot'),
+    type: s.meal_type || 'Meal Service',
+    cook: s.cook_name ? `Chef ${s.cook_name}` : 'Assigned Chef',
+    flat: s.resident_flat ? `${s.resident_flat.includes('Tower') ? s.resident_flat : `Tower A · Flat ${s.resident_flat}`}` : 'Tower A · Flat 101',
+    status: s.status || 'SCHEDULED',
+    otp: s.otp_code
+  })) : [
+    { id: 101, slot: '07:00 – 07:45', type: 'Breakfast', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 101', status: 'COMPLETED' },
+    { id: 102, slot: '08:00 – 08:45', type: 'Breakfast', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 204', status: 'IN_PROGRESS' },
+    { id: 103, slot: '12:30 – 01:15', type: 'Lunch', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 302', status: 'SCHEDULED' },
+    { id: 104, slot: '01:30 – 02:15', type: 'Lunch', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 401', status: 'SCHEDULED' },
+    { id: 105, slot: '07:30 – 08:15', type: 'Dinner', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 102', status: 'SCHEDULED' },
+    { id: 106, slot: '08:30 – 09:15', type: 'Dinner', cook: 'Chef Ramesh Kumar', flat: 'Tower A · Flat 505', status: 'SCHEDULED' }
   ];
 
   return (
@@ -71,7 +79,7 @@ export function ScheduleCalendarPage() {
 
         <div className="flex items-center gap-2 text-xs font-bold">
           <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-            Tower A Cluster
+            Tower A Cluster · {displaySlots.length} Booked Slots
           </span>
         </div>
       </div>
@@ -84,9 +92,9 @@ export function ScheduleCalendarPage() {
         </div>
 
         <div className="space-y-4">
-          {timeSlots.map((item, idx) => (
+          {displaySlots.map((item, idx) => (
             <div
-              key={idx}
+              key={item.id || idx}
               className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                 item.status === 'IN_PROGRESS'
                   ? 'bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'

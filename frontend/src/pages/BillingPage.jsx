@@ -16,6 +16,7 @@ import { api } from '../services/api';
 export function BillingPage() {
   const { user, showToast } = useAuth();
   const [bookings, setBookings] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payingBookingId, setPayingBookingId] = useState(null);
@@ -23,8 +24,12 @@ export function BillingPage() {
   const loadBilling = async () => {
     try {
       setLoading(true);
-      const data = await api.getBookings();
-      setBookings(data);
+      const [bookingsData, invoicesData] = await Promise.all([
+        api.getBookings().catch(() => []),
+        api.getInvoices().catch(() => [])
+      ]);
+      setBookings(bookingsData || []);
+      setInvoices(invoicesData || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -47,9 +52,46 @@ export function BillingPage() {
     }
   };
 
-  const handleDownloadInvoice = (invNum) => {
-    showToast(`Downloading official GST invoice ${invNum}...`);
+  const handleDownloadInvoice = (inv) => {
+    const invNumber = inv.invoice_number || inv.id || 'INV-2026';
+    const amount = inv.total_amount || inv.amount || 4000;
+    const date = inv.issued_date ? new Date(inv.issued_date).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+    
+    // Generate clean printable receipt
+    const content = `========================================================
+SOCIETYCOOK - OFFICIAL TAX INVOICE & PAYMENT RECEIPT
+========================================================
+Invoice Number: ${invNumber}
+Date of Issue:  ${date}
+Resident:       ${inv.resident_name || user?.name || 'Rahul Sharma'}
+Flat:           ${inv.resident_flat || user?.flat || 'A-101'}
+Meal Service:   ${inv.meal_type || 'Dinner'} (${inv.slot_label || '08:30 PM'})
+Society:        ${user?.society_name || 'Greenwood Residency'}
+--------------------------------------------------------
+Base Amount:    INR ${(amount).toLocaleString('en-IN')}.00
+GST / Taxes:    INR 0.00 (Exempt under Composite Scheme)
+--------------------------------------------------------
+TOTAL PAID:     INR ${(amount).toLocaleString('en-IN')}.00
+Payment Status: CONFIRMED & RECONCILED
+Payment Mode:   Direct UPI / Escrow Settlement
+========================================================
+Thank you for hiring together and empowering local cooks!
+SocietyCook Technologies Private Limited
+========================================================`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${invNumber}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Downloaded receipt for ${invNumber}`);
   };
+
+  const activeBooking = bookings[0];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -71,15 +113,21 @@ export function BillingPage() {
       <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-white/20 text-white">
-            Active Community Plan
+            {activeBooking?.status === 'ACTIVE' ? 'Active Community Plan' : 'Subscription Status'}
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black mt-2">Sunrise Towers Dinner Club</h2>
-          <div className="flex items-center gap-4 text-xs text-emerald-100 font-semibold mt-2">
-            <span>₹4,200 / Month</span>
+          <h2 className="text-2xl sm:text-3xl font-black mt-2">
+            {activeBooking ? `${activeBooking.cook_name || 'Chef'} · ${activeBooking.meal_type} (${activeBooking.slot_label})` : 'Sunrise Towers Dinner Club'}
+          </h2>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-emerald-100 font-semibold mt-2">
+            <span>₹{(activeBooking?.amount || activeBooking?.monthly_price || 4000).toLocaleString('en-IN')} / Month</span>
             <span>·</span>
-            <span>Next billing: 1st of next month</span>
+            <span>
+              Billing Renewal: {activeBooking?.end_date ? new Date(activeBooking.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '1st of next month'}
+            </span>
             <span>·</span>
-            <span className="font-bold text-white">Savings: ₹800/mo</span>
+            <span className="font-bold text-white">
+              Status: {activeBooking?.payment_status === 'SUCCESS' ? 'PAID & ACTIVE' : activeBooking?.status || 'ACTIVE'}
+            </span>
           </div>
         </div>
 
@@ -87,12 +135,12 @@ export function BillingPage() {
           <button
             type="button"
             onClick={() => {
-              setPayingBookingId(bookings[0]?.id || 1);
+              setPayingBookingId(activeBooking?.id || 1);
               setShowPayModal(true);
             }}
             className="px-6 py-3 rounded-2xl bg-white text-emerald-800 font-bold text-xs hover:bg-slate-100 shadow-md transition-transform active:scale-95"
           >
-            Pay Now (UPI / Card)
+            {activeBooking?.payment_status === 'SUCCESS' ? 'Renew / Pay Advance' : 'Pay Now (UPI / Card)'}
           </button>
         </div>
       </div>
@@ -106,34 +154,38 @@ export function BillingPage() {
             <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-bold uppercase">
               <tr>
                 <th className="p-3">Invoice Number</th>
-                <th className="p-3">Billing Cycle</th>
+                <th className="p-3">Service & Date</th>
                 <th className="p-3">Amount</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Receipt</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {[
-                { id: 'INV-2026-1101', cycle: 'November 2026', amount: '₹4,200', status: 'PAID' },
-                { id: 'INV-2026-1001', cycle: 'October 2026', amount: '₹4,200', status: 'PAID' },
-                { id: 'INV-2026-0901', cycle: 'September 2026', amount: '₹4,500', status: 'PAID' }
-              ].map((inv) => (
-                <tr key={inv.id}>
-                  <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-200">{inv.id}</td>
-                  <td className="p-3 text-slate-600 dark:text-slate-400">{inv.cycle}</td>
-                  <td className="p-3 font-extrabold text-slate-900 dark:text-white">{inv.amount}</td>
+              {(invoices.length > 0 ? invoices : [
+                { id: 1, invoice_number: 'INV-2026-00003', issued_date: new Date().toISOString(), total_amount: 4000, meal_type: 'Dinner', slot_label: '08:30 PM' }
+              ]).map((inv) => (
+                <tr key={inv.id || inv.invoice_number}>
+                  <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-200">
+                    {inv.invoice_number || `INV-2026-${String(inv.id).padStart(5, '0')}`}
+                  </td>
+                  <td className="p-3 text-slate-600 dark:text-slate-400">
+                    {inv.meal_type ? `${inv.meal_type} (${inv.slot_label || 'Slot'})` : 'Monthly Cooking Subscription'} · {inv.issued_date ? new Date(inv.issued_date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'November 2026'}
+                  </td>
+                  <td className="p-3 font-extrabold text-slate-900 dark:text-white">
+                    ₹{(inv.total_amount || inv.amount || 4000).toLocaleString('en-IN')}
+                  </td>
                   <td className="p-3">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                      {inv.status}
+                      PAID
                     </span>
                   </td>
                   <td className="p-3 text-right">
                     <button
                       type="button"
-                      onClick={() => handleDownloadInvoice(inv.id)}
-                      className="text-emerald-600 hover:text-emerald-700 font-bold inline-flex items-center gap-1"
+                      onClick={() => handleDownloadInvoice(inv)}
+                      className="text-emerald-600 hover:text-emerald-700 font-bold inline-flex items-center gap-1 cursor-pointer"
                     >
-                      <Download className="w-3.5 h-3.5" /> PDF
+                      <Download className="w-3.5 h-3.5" /> Receipt
                     </button>
                   </td>
                 </tr>

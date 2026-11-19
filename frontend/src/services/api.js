@@ -59,6 +59,7 @@ export const api = {
 
   // Bookings & Payments
   getBookings: () => apiClient.get('/bookings'),
+  getInvoices: () => apiClient.get('/invoices'),
   createBooking: (data) => apiClient.post('/bookings', data),
   payDemo: (bookingId) => apiClient.post(`/bookings/${bookingId}/pay-demo`),
 

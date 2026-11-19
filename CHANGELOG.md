@@ -44,9 +44,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `TermsPage`, `PrivacyPage`, `403 Forbidden`, and `404 Not Found`.
   - Added 1-Click Demo Persona Switcher (Rahul, Ramesh, Lakshmi, Manager, Admin).
   - Added Dark Mode theme toggle.
-- **Testing & Documentation:**
+- **Testing & QA Verification:**
   - Vitest test suite with 19 passing tests covering pricing, scheduling, recommender, lifecycle, and API endpoints.
+  - Comprehensive automated browser test suite (Puppeteer + Headless Chrome) verifying 7 critical workflows with 100% pass rate.
   - Generated full documentation suite: `PRD.md`, `TRD.md`, `ARCHITECTURE.md`, `DATABASE.md`, `API.md`, `ALGORITHMS.md`, `SECURITY.md`, `TESTING.md`, `DEPLOYMENT.md`, `CHANGELOG.md`.
+
+### Bug Fixes & QA Hardening (Verified in v2.0.0)
+- **Theme Switching:** Added `@custom-variant dark` in `style.css` and reactive `isDarkMode` state syncing in `AuthContext.jsx` to enable seamless class-based dark mode switching in Tailwind CSS v4.
+- **Navbar Responsive Layout:** Added `whitespace-nowrap`, fixed `h-7`, `shrink-0`, and identical 1px borders to prevent role switcher button text-wrapping and height jitter across viewports.
+- **Root Health Route:** Added root `GET /health` endpoint in `backend/server.js` alongside `/api/v1/health` responding with service status and uptime.
+- **API Parameter Normalization:**
+  - Fixed `/auth/register` to support both `societyId` and `society_id`, `flat` and `flat_number`.
+  - Fixed `/groups` creation and `/groups/:id/join` to seamlessly accept both snake_case and camelCase payload fields.
+  - Fixed `/sessions/:id/attendance` to normalize action strings (`check_in`, `CHECK_IN`, `in`).
+  - Fixed `/leaves` and `/reviews` Zod validation schemas for dual-format compatibility.
+- **Attendance Query Fix:** Resolved SQL error `Unknown column 'c.phone'` in `AttendanceService.getSessions` by selecting `cu.phone` from the joined `users` table.
+- **Invoicing API & Download:** Added `GET /api/v1/invoices` backend route returning reconciled invoices and connected `BillingPage` to download official tax receipts.
+- **Dynamic Dashboards:** Replaced hardcoded static appointment and KPI data in `DashboardHub`, `ScheduleCalendarPage`, `BillingPage`, and `AnalyticsPage` with live database analytics and query feeds.
 
 ---
 

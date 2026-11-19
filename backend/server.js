@@ -46,6 +46,16 @@ app.use(
 app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api/v1/docs.json', (req, res) => res.json(swaggerSpec));
 
+// Health check (at root and /api/v1/health)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'HEALTHY',
+    version: '2.0.0',
+    timestamp: new Date().toISOString(),
+    uptime: Math.round(process.uptime())
+  });
+});
+
 // Mount Versioned API Routes
 app.use('/api/v1', apiRouter);
 
