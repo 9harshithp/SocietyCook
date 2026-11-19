@@ -87,7 +87,10 @@ export function Navbar() {
                 <button
                   key={p.email}
                   type="button"
-                  onClick={() => switchPersona(p.email)}
+                  onClick={async () => {
+                    await switchPersona(p.email);
+                    navigate('/app');
+                  }}
                   className={`h-7 px-2.5 text-xs font-semibold rounded-xl whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 cursor-pointer ${
                     isActive
                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs font-bold'
@@ -220,7 +223,10 @@ export function Navbar() {
             <button
               key={p.email}
               type="button"
-              onClick={() => switchPersona(p.email)}
+              onClick={async () => {
+                await switchPersona(p.email);
+                navigate('/app');
+              }}
               className={`h-6 px-2 text-[11px] font-semibold rounded-lg whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 ${
                 isActive
                   ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'

@@ -233,7 +233,14 @@ apiRouter.post('/groups', authenticate, requireRoles(['RESIDENT', 'ADMIN']), han
 
 apiRouter.get('/groups/:id', authenticate, handle(async (req, res) => {
   const details = await GroupService.getGroupDetails(Number(req.params.id), req.user.id);
-  res.json(details);
+  res.json({
+    ...details.group,
+    group: details.group,
+    members: details.members,
+    pricing: details.pricing,
+    isMember: details.isMember,
+    activationThresholdMet: details.activationThresholdMet
+  });
 }));
 
 apiRouter.post('/groups/:id/join', authenticate, requireRoles(['RESIDENT', 'ADMIN']), handle(async (req, res) => {

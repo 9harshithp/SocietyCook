@@ -278,10 +278,10 @@ export function DashboardHub() {
                   {activeGroup?.name || 'Sunrise Towers Dinner Club'}
                 </span>
                 <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 my-1">
-                  ₹{(activeGroup?.budget_per_household || 4200).toLocaleString('en-IN')}<span className="text-xs font-medium text-slate-500">/mo</span>
+                  ₹{(activeGroup?.pricingEstimate?.pricePerHousehold || activeGroup?.budget_per_household || activeGroup?.monthly_budget_max || 4000).toLocaleString('en-IN')}<span className="text-xs font-medium text-slate-500">/mo</span>
                 </div>
                 <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                  🎉 Saving ₹{(5000 - (activeGroup?.budget_per_household || 4200)).toLocaleString('en-IN')}/mo vs solo cook (₹5,000)
+                  🎉 Saving ₹{(5000 - (activeGroup?.pricingEstimate?.pricePerHousehold || activeGroup?.budget_per_household || activeGroup?.monthly_budget_max || 4000)).toLocaleString('en-IN')}/mo vs solo cook (₹5,000)
                 </div>
               </div>
             </div>
@@ -290,23 +290,35 @@ export function DashboardHub() {
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Participating Flats</span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {activeGroup?.current_members || 4} / {activeGroup?.max_members || 5} Flats
+                  {activeGroup?.current_households || activeGroup?.verified_member_count || activeGroup?.current_members || 5} / {activeGroup?.max_households || activeGroup?.max_members || 5} Flats
                 </span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                 <div
                   className="bg-emerald-600 h-full rounded-full transition-all"
-                  style={{ width: `${Math.min(100, Math.round(((activeGroup?.current_members || 4) / (activeGroup?.max_members || 5)) * 100))}%` }}
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Math.round(
+                        ((activeGroup?.current_households || activeGroup?.verified_member_count || activeGroup?.current_members || 5) /
+                          (activeGroup?.max_households || activeGroup?.max_members || 5)) *
+                          100
+                      )
+                    )}%`
+                  }}
                 />
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {activeGroup?.current_members >= (activeGroup?.min_members || 3) ? 'Threshold reached! Group is active.' : 'Recruiting neighbours to reach threshold.'}
+                {(activeGroup?.current_households || activeGroup?.verified_member_count || activeGroup?.current_members || 5) >=
+                (activeGroup?.min_households || activeGroup?.min_members || 3)
+                  ? 'Threshold reached! Group is active.'
+                  : 'Recruiting neighbours to reach threshold.'}
               </p>
             </div>
 
             <Link
               to={`/groups/${activeGroup?.id || 1}`}
-              className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs text-center transition-colors"
+              className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs text-center transition-colors cursor-pointer"
             >
               Manage Group & Roster
             </Link>

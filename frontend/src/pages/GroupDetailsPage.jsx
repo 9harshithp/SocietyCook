@@ -30,14 +30,27 @@ export function GroupDetailsPage() {
   const loadGroupDetails = async () => {
     try {
       setLoading(true);
-      const [grp, recs] = await Promise.all([
+      const [grpRes, recsRes] = await Promise.all([
         api.getGroup(id),
-        api.getGroupRecommendations(id).catch(() => [])
+        api.getGroupRecommendations(id).catch(() => null)
       ]);
-      setGroup(grp);
-      setRecommendations(recs);
+      
+      const rawGroup = grpRes?.group || grpRes || {};
+      const normalizedGroup = {
+        ...rawGroup,
+        members: grpRes?.members || rawGroup.members || [],
+        pricing: grpRes?.pricing || rawGroup.pricing || null,
+        isMember: grpRes?.isMember ?? rawGroup.isMember ?? false,
+        activationThresholdMet: grpRes?.activationThresholdMet ?? rawGroup.activationThresholdMet ?? false
+      };
+      setGroup(normalizedGroup);
+
+      const recList = Array.isArray(recsRes)
+        ? recsRes
+        : (recsRes?.rankedMatches || (recsRes?.topMatch ? [recsRes.topMatch] : []));
+      setRecommendations(recList);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load group details:', err);
       showToast('Failed to load group details', 'error');
     } finally {
       setLoading(false);
@@ -98,9 +111,21 @@ export function GroupDetailsPage() {
     );
   }
 
-  const members = group.members || [];
-  const currentCount = members.length;
-  const maxCount = group.max_members || 5;
+  const status = group?.status || 'RECRUITING';
+  const statusLabel = status.replace(/_/g, ' ');
+  const mealService = group?.meal_service || 'DINNER';
+  const groupName = group?.name || 'Cook Hiring Cluster';
+  const description = group?.description || 'Tower cluster for concentrated daily cooking.';
+  const members = group?.members || [];
+  const currentCount = members.length || group?.current_households || group?.current_members || 0;
+  const minCount = group?.min_households || group?.min_members || 3;
+  const maxCount = group?.max_households || group?.max_members || 5;
+  const pricePerFlat = group?.pricing?.pricePerHousehold || group?.monthly_budget_max || group?.budget_per_household || 4200;
+  const totalSavings = group?.pricing?.totalGroupSavings || (5000 - pricePerFlat) * currentCount;
+  const cuisines = group?.preferred_cuisines || group?.cuisine_preferences || 'North Indian';
+  const diet = group?.dietary_pref || group?.dietary_requirements || 'Vegetarian';
+  const assignedCookName = group?.cook_name || group?.assigned_cook_name;
+  const assignedCookId = group?.assigned_cook_id;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -120,23 +145,23 @@ export function GroupDetailsPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                {group.meal_service}
+                {mealService}
               </span>
               <span
                 className={`text-[10px] font-extrabold px-3 py-1 rounded-full ${
-                  group.status === 'ACTIVE'
+                  status === 'ACTIVE'
                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                     : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'
                 }`}
               >
-                {group.status.replace('_', ' ')}
+                {statusLabel}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              {group.name}
+              {groupName}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
-              {group.description || 'Tower cluster for concentrated daily cooking.'}
+              {description}
             </p>
           </div>
 
@@ -145,7 +170,7 @@ export function GroupDetailsPage() {
             <button
               type="button"
               onClick={copyInviteLink}
-              className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Share2 className="w-4 h-4" />
               Copy Link
@@ -153,7 +178,7 @@ export function GroupDetailsPage() {
             <button
               type="button"
               onClick={shareWhatsApp}
-              className="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-green-600/20 transition-transform active:scale-95"
+              className="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-green-600/20 transition-transform active:scale-95 cursor-pointer"
             >
               WhatsApp Invite
             </button>
@@ -165,53 +190,53 @@ export function GroupDetailsPage() {
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
             <span className="text-[10px] font-bold uppercase text-slate-400">Monthly Per Flat</span>
             <div className="text-xl font-black text-emerald-600 mt-0.5">
-              ₹{(group.budget_per_household || 4200).toLocaleString('en-IN')}
+              ₹{pricePerFlat.toLocaleString('en-IN')}
             </div>
             <p className="text-[10px] text-slate-500 mt-1">vs ₹5,000 solo price</p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
             <span className="text-[10px] font-bold uppercase text-slate-400">Total Group Savings</span>
             <div className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-              ₹{((5000 - (group.budget_per_household || 4200)) * currentCount).toLocaleString('en-IN')}/mo
+              ₹{totalSavings.toLocaleString('en-IN')}/mo
             </div>
             <p className="text-[10px] text-slate-500 mt-1">Collective community benefit</p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
             <span className="text-[10px] font-bold uppercase text-slate-400">Cuisines</span>
             <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5 truncate">
-              {group.cuisine_preferences || 'North Indian'}
+              {cuisines}
             </div>
-            <p className="text-[10px] text-slate-500 mt-1">{group.dietary_requirements || 'Vegetarian'}</p>
+            <p className="text-[10px] text-slate-500 mt-1">{diet}</p>
           </div>
           <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
             <span className="text-[10px] font-bold uppercase text-slate-400">Assigned Cook</span>
             <div className="text-sm font-bold text-emerald-600 mt-0.5 truncate">
-              {group.assigned_cook_name || 'Matching Best Cook'}
+              {assignedCookName || 'Matching Best Cook'}
             </div>
             <p className="text-[10px] text-slate-500 mt-1">
-              {group.assigned_cook_id ? 'Confirmed' : 'Pending Selection'}
+              {assignedCookId ? 'Confirmed & Active' : 'Pending Selection'}
             </p>
           </div>
         </div>
 
         {/* Group Activation Bar (If ready) */}
-        {group.status !== 'ACTIVE' && (
+        {status !== 'ACTIVE' && (
           <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h4 className="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">
                 Ready for Activation
               </h4>
               <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">
-                {currentCount >= (group.min_members || 3)
+                {currentCount >= minCount
                   ? 'Threshold reached! Activate to generate non-overlapping cooking slots and start daily service.'
-                  : `Need ${ (group.min_members || 3) - currentCount } more flats to hit minimum activation threshold.`}
+                  : `Need ${minCount - currentCount} more flats to hit minimum activation threshold.`}
               </p>
             </div>
             <button
               type="button"
-              disabled={actionLoading || currentCount < (group.min_members || 3)}
+              disabled={actionLoading || currentCount < minCount}
               onClick={handleActivateGroup}
-              className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 disabled:opacity-50 transition-transform active:scale-95"
+              className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 disabled:opacity-50 transition-transform active:scale-95 cursor-pointer"
             >
               {actionLoading ? 'Activating...' : 'Activate Group Now'}
             </button>
@@ -233,27 +258,39 @@ export function GroupDetailsPage() {
           </div>
 
           <div className="space-y-3">
-            {members.map((m, idx) => (
-              <div
-                key={m.id || idx}
-                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
-                    {idx + 1}
+            {members.length === 0 ? (
+              <p className="text-xs text-slate-400 py-6 text-center">
+                No members joined yet. Invite neighbours to join!
+              </p>
+            ) : (
+              members.map((m, idx) => {
+                const memberName = m.resident_name || m.name || `Resident ${idx + 1}`;
+                const memberFlat = m.flat_number || m.flat || 'A-101';
+                const memberSlot = m.preferred_slot || (m.preferred_slot_start ? `${m.preferred_slot_start.slice(0, 5)} PM` : 'Dedicated Slot');
+
+                return (
+                  <div
+                    key={m.id || idx}
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <h5 className="font-extrabold text-xs text-slate-900 dark:text-white">{memberName}</h5>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {memberFlat.includes('Tower') ? memberFlat : `Tower A · Flat ${memberFlat}`}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      {memberSlot}
+                    </span>
                   </div>
-                  <div>
-                    <h5 className="font-extrabold text-xs text-slate-900 dark:text-white">{m.name}</h5>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {m.block_name || 'Tower A'}, Flat {m.flat_number || '101'}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                  {m.preferred_slot || '19:30-20:15'}
-                </span>
-              </div>
-            ))}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -274,47 +311,56 @@ export function GroupDetailsPage() {
             </p>
           ) : (
             <div className="space-y-3">
-              {recommendations.map((rec) => (
-                <div
-                  key={rec.cook_id}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{rec.cook_name}</h4>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                        <span className="font-bold text-amber-500">★ {rec.rating || 4.9}</span>
-                        <span>·</span>
-                        <span>{rec.experience_years || 8} yrs exp</span>
-                        <span>·</span>
-                        <span className="text-emerald-600 font-bold">Verified</span>
+              {recommendations.map((rec, rIdx) => {
+                const cId = rec.cook_id || rec.cookId || rec.cook?.id;
+                const cName = rec.cook_name || rec.name || rec.cook?.name || 'Professional Chef';
+                const cRating = rec.rating || rec.cook?.rating_avg || 4.9;
+                const cExp = rec.experience_years || rec.cook?.experience || 8;
+                const cScore = rec.match_score || rec.matchPercentage || 95;
+                const reasons = rec.match_reasons || rec.explanations || ['Verified background', 'Matches cuisine preferences'];
+
+                return (
+                  <div
+                    key={cId || rIdx}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{cName}</h4>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                          <span className="font-bold text-amber-500">★ {cRating}</span>
+                          <span>·</span>
+                          <span>{cExp} yrs exp</span>
+                          <span>·</span>
+                          <span className="text-emerald-600 font-bold">Verified</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-xs">
+                          {cScore}% Match
+                        </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-xs">
-                        {rec.match_score}% Match
-                      </span>
+
+                    {/* Explainable match reasons */}
+                    <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">Why matched: </span>
+                      {reasons.slice(0, 3).join('; ')}
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        disabled={actionLoading || assignedCookId === cId}
+                        onClick={() => handleProposeCook(cId)}
+                        className="px-4 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:bg-emerald-600 dark:hover:bg-emerald-500 dark:hover:text-white font-bold text-xs transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {assignedCookId === cId ? 'Assigned' : 'Propose Cook'}
+                      </button>
                     </div>
                   </div>
-
-                  {/* Explainable match reasons */}
-                  <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">Why matched: </span>
-                    {rec.match_reasons?.join('; ') || 'High proximity in Tower A, 98% punctuality, matched cuisine preferences.'}
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      disabled={actionLoading || group.assigned_cook_id === rec.cook_id}
-                      onClick={() => handleProposeCook(rec.cook_id)}
-                      className="px-4 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:bg-emerald-600 dark:hover:bg-emerald-500 dark:hover:text-white font-bold text-xs transition-colors disabled:opacity-50"
-                    >
-                      {group.assigned_cook_id === rec.cook_id ? 'Assigned' : 'Propose Cook'}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
