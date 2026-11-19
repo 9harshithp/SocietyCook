@@ -2,8 +2,4 @@ node_modules/
 .env
 *.env
 dist/
-.agent/
-.agents/
-.gemini/
-.gsd/
 .DS_Store

@@ -4,7 +4,7 @@
 > *A happier home. A simpler everyday.*  
 > A production-grade hyperlocal household services platform enabling neighbouring households within gated residential societies to collectively hire verified home cooks, dishwashing specialists, and complete kitchen care — scheduled seamlessly in their own homes.
 
-[![Test Suite](https://img.shields.io/badge/Vitest-21%20Passing-brightgreen.svg)](#testing)
+[![Test Suite](https://img.shields.io/badge/Vitest-21%20Passing-brightgreen.svg)](#automated-testing)
 [![Branch](https://img.shields.io/badge/Branch-feature%2Fsocietycook--v3-blue.svg)](#git-branch)
 [![API Docs](https://img.shields.io/badge/Swagger-OpenAPI%203.0-orange.svg)](#api-documentation)
 
@@ -14,8 +14,8 @@
 
 SocietyCook v3.0 expands beyond cook booking into an intelligent, community-first household services marketplace:
 
-1. **Professional Home Cooking (`COOKING`)** — Daily customized meals cooked fresh in resident kitchens with personalized spice and dietary controls.
-2. **Utensil Care & Dishwashing (`DISHWASHING`)** — Dedicated utensil scrubbing, pressure cooker / heavy kadhai scouring, and pristine sink counter hygiene.
+1. **Professional Home Cooking (`COOKING`)** — Daily customized meals cooked fresh in resident kitchens with personalized spice, oil, and dietary controls.
+2. **Utensil Care & Dishwashing (`DISHWASHING`)** — Dedicated utensil scrubbing, pressure cooker / heavy kadhai scouring, and pristine sink & counter hygiene.
 3. **Complete Kitchen Care (`COMBO`)** — Synchronized back-to-back routine where the cook prepares the meal and the utensil specialist washes the cookware and dinner plates immediately after.
 
 ---
@@ -70,17 +70,10 @@ npm run start
 # OpenAPI Docs available at http://localhost:5000/api/v1/docs
 ```
 
-### 6. Start Frontend Application
-```bash
-cd frontend
-npm install
-npm run dev
-# Frontend runs on http://localhost:5173
-```
-
 ### 6. Start Frontend Web Client
 ```bash
 cd frontend
+npm install
 npm run dev
 # Web application available at http://localhost:5173
 ```
@@ -92,29 +85,29 @@ npm run dev
 cd backend
 npm test
 ```
-*Runs 19 comprehensive Vitest unit and integration tests across pricing, scheduling, recommender, and full lifecycle flows.*
+*Executes 21 passing Vitest unit and integration tests covering dynamic pricing engine (Cooking, Dishwashing, Combo), intelligent scheduling, weighted recommender, and full booking lifecycles.*
 
 ---
 
 ## 📚 Complete Documentation Suite
-- [PRD.md](PRD.md) — Product Requirements Document (MVP to v2.0)
+- [PRD.md](PRD.md) — Product Requirements Document (MVP to v3.0)
 - [TRD.md](TRD.md) — Technical Requirements Document & Engineering Architecture
-- [ARCHITECTURE.md](ARCHITECTURE.md) — Modular Monolith Architecture & Mermaid Diagrams
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Modular Monolith Architecture & System Design
 - [DATABASE.md](DATABASE.md) — MySQL 8.0 Schema, Relationships, and Indexes
 - [API.md](API.md) — REST API Specification with Request & Response Payloads
 - [ALGORITHMS.md](ALGORITHMS.md) — Transparent Mathematical & Heuristic Formulations
 - [SECURITY.md](SECURITY.md) — Multi-Layer Defense, RBAC, OTP, and Audit Trails
 - [TESTING.md](TESTING.md) — Test Strategy, Test Cases, and Coverage Breakdown
 - [DEPLOYMENT.md](DEPLOYMENT.md) — Production Deployment & Cloud Operations Runbook
-- [CHANGELOG.md](CHANGELOG.md) — Complete v1.0 to v2.0 Version History
-- [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) — 100% Verified Task Tracking
+- [CHANGELOG.md](CHANGELOG.md) — Complete v1.0 to v3.0 Version History
+- [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md) — 100% Verified Milestone Tracking
 
 ---
 
 ## 👥 Demo Personas (1-Click Switcher)
 Test all platform workflows using the top-bar persona switcher:
-1. **Resident (Rahul Sharma):** Flat A-101 · Today's cooking OTP `4829`, 7-day meal planner, group savings.
-2. **Cook (Ramesh Kumar):** Chef · Flat route schedule, flat OTP check-in & check-out, monthly earnings.
+1. **Resident (Rahul Sharma):** Flat A-101 · Today's session OTP `4829`, 7-day meal planner, group savings.
+2. **Cook (Ramesh Kumar):** Multi-skilled chef · Flat route schedule, flat OTP check-in & check-out, monthly earnings.
 3. **Cook (Lakshmi Devi):** Chef · South Indian homestyle specialist, leave request desk.
 4. **Society Manager:** Greenwood Heights RWA · Campus gate pass clearance, tower clusters, demand heatmaps.
 5. **Platform Admin:** Superadmin · Cook KYC verification, leave & backup dispatcher, moving average forecast.
