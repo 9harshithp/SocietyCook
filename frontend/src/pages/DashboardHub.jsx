@@ -203,10 +203,21 @@ export function DashboardHub() {
           <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
-                <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">
-                  Daily Appointment
-                </span>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">Today's Cooking Session</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold uppercase text-[#153D32] dark:text-[#E9A15B]">
+                    Daily Appointment
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                    todaySession?.service_type === 'COMBO' ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' :
+                    todaySession?.service_type === 'DISHWASHING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+                    'bg-[#153D32]/10 text-[#153D32] dark:bg-white/10 dark:text-[#E9A15B]'
+                  }`}>
+                    {todaySession?.service_type === 'COMBO' ? '✨ Complete Kitchen Care (Combo)' :
+                     todaySession?.service_type === 'DISHWASHING' ? '🫧 Utensil Care & Dishwashing' :
+                     '🍳 Professional Home Cooking'}
+                  </span>
+                </div>
+                <h2 className="text-lg font-black text-slate-900 dark:text-white mt-1">Today's Kitchen Schedule</h2>
               </div>
               <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                 {todaySession?.status || 'SCHEDULED'}
@@ -216,32 +227,38 @@ export function DashboardHub() {
             {todaySession ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                 <div className="flex items-center gap-4 md:col-span-2">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-xl text-emerald-600 border border-slate-200 dark:border-slate-700">
-                    👨‍🍳
+                  <div className="w-16 h-16 rounded-2xl bg-[#FBF7EF] dark:bg-slate-800 flex items-center justify-center font-bold text-2xl text-[#153D32] dark:text-[#E9A15B] border border-[#DDE9D8] dark:border-slate-700">
+                    {todaySession.service_type === 'DISHWASHING' ? '🫧' : '👨‍🍳'}
                   </div>
                   <div>
                     <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
                       {todaySession.cook_name || 'Ramesh Kumar'}
+                      {todaySession.service_type === 'COMBO' && ' & Utensil Specialist'}
                     </h3>
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{todaySession.slot_label || todaySession.time_slot || '07:00 PM – 07:45 PM'}</span>
+                      <Clock className="w-3.5 h-3.5 text-[#153D32] dark:text-[#E9A15B]" />
+                      <span>{todaySession.slot_label || todaySession.time_slot || '07:30 AM – 08:15 AM'}</span>
                       <span>·</span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300">{todaySession.meal_type || 'Dinner'}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{todaySession.meal_type || 'Breakfast'}</span>
                     </div>
+                    {todaySession.service_type === 'COMBO' && (
+                      <p className="text-[11px] text-[#C47B35] dark:text-[#E9A15B] font-semibold mt-1">
+                        🫧 Utensil Care Slot: 08:15 AM – 08:45 AM (Immediately following cooking)
+                      </p>
+                    )}
                     <p className="text-[11px] text-slate-400 mt-1">
-                      {todaySession.resident_flat || 'Tower A · Flat 101'} · Dedicated slot (Homestyle Fresh Prep)
+                      {todaySession.resident_flat || 'Tower A · Flat 101'} · Dedicated in-home service
                     </p>
                   </div>
                 </div>
 
                 {/* OTP Box for Resident Verification */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-center">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Session Verification OTP</span>
-                  <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-widest my-1 font-mono">
+                <div className="p-4 rounded-2xl bg-[#FBF7EF] dark:bg-slate-800/80 border border-[#DDE9D8] dark:border-slate-700 text-center">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Daily Session OTP</span>
+                  <div className="text-2xl font-black text-[#153D32] dark:text-[#E9A15B] tracking-widest my-1 font-mono">
                     {todaySession.otp_code || '4829'}
                   </div>
-                  <p className="text-[10px] text-slate-500">Share with cook upon kitchen arrival</p>
+                  <p className="text-[10px] text-slate-500">Share with staff upon kitchen arrival</p>
                 </div>
               </div>
             ) : (

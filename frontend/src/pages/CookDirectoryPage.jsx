@@ -9,24 +9,29 @@ import {
   MapPin,
   CheckCircle2,
   Filter,
-  X
+  X,
+  Droplets,
+  Layers,
+  UtensilsCrossed,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
 export function CookDirectoryPage() {
   const { activeSocietyId, showToast } = useAuth();
-  const [cooks, setCooks] = useState([]);
+  const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState('ALL'); // ALL | COOK | DISHWASHER | MULTI_SKILLED
   const [selectedCuisine, setSelectedCuisine] = useState('ALL');
-  const [selectedCook, setSelectedCook] = useState(null);
+  const [selectedPro, setSelectedPro] = useState(null);
 
-  const loadCooks = async () => {
+  const loadProfessionals = async () => {
     try {
       setLoading(true);
       const data = await api.getCooks(activeSocietyId);
-      setCooks(data);
+      setProfessionals(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -35,15 +40,26 @@ export function CookDirectoryPage() {
   };
 
   useEffect(() => {
-    loadCooks();
+    loadProfessionals();
   }, [activeSocietyId]);
 
-  const filteredCooks = cooks.filter((c) => {
-    if (search && !c.name?.toLowerCase().includes(search.toLowerCase())) return false;
+  const filteredList = professionals.filter((p) => {
+    if (search && !p.name?.toLowerCase().includes(search.toLowerCase())) return false;
+    
+    // Service filter
+    if (serviceTypeFilter !== 'ALL') {
+      const type = p.professional_type || 'COOK';
+      if (serviceTypeFilter === 'COOK' && type !== 'COOK' && type !== 'MULTI_SKILLED') return false;
+      if (serviceTypeFilter === 'DISHWASHER' && type !== 'DISHWASHER' && type !== 'MULTI_SKILLED') return false;
+      if (serviceTypeFilter === 'MULTI_SKILLED' && type !== 'MULTI_SKILLED') return false;
+    }
+
+    // Cuisine filter
     if (selectedCuisine !== 'ALL') {
-      const matchCuisine = (c.cuisines || '').toLowerCase().includes(selectedCuisine.toLowerCase());
+      const matchCuisine = (p.cuisines || '').toLowerCase().includes(selectedCuisine.toLowerCase());
       if (!matchCuisine) return false;
     }
+
     return true;
   });
 
@@ -51,166 +67,229 @@ export function CookDirectoryPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Header */}
       <div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-xs font-bold mb-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#153D32]/10 dark:bg-white/10 text-[#153D32] dark:text-[#E9A15B] text-xs font-bold mb-2">
           <ChefHat className="w-3.5 h-3.5" />
-          Society Cook Roster
+          Society Professional Staff
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-          Verified Professional Cooks
+        <h1 className="font-serif text-2xl sm:text-3xl font-black text-[#153D32] dark:text-white">
+          Verified Cooks & Utensil Care Specialists
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
-          Every cook in your society is background verified, Aadhaar validated, and trained in high-standard kitchen hygiene.
+        <p className="text-[#64746B] dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
+          Every professional in your society roster is background verified, police cleared, hygiene certified, and holds active society gate authorization.
         </p>
       </div>
 
+      {/* Service Type Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { id: 'ALL', label: 'All Professionals', icon: Sparkles },
+          { id: 'COOK', label: 'Home Cooks', icon: UtensilsCrossed },
+          { id: 'DISHWASHER', label: 'Utensil Care Specialists', icon: Droplets },
+          { id: 'MULTI_SKILLED', label: 'Multi-Skilled (Cook + Wash)', icon: Layers }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = serviceTypeFilter === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setServiceTypeFilter(tab.id)}
+              className={`px-4 py-2.5 rounded-2xl text-xs font-bold inline-flex items-center gap-2 border transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-[#153D32] text-white border-[#153D32] shadow-sm'
+                  : 'bg-white dark:bg-slate-900 text-[#202A25] dark:text-slate-300 border-[#DDE9D8] dark:border-white/10 hover:border-[#153D32]/40'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#E9A15B]' : 'text-[#64746B]'}`} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Search & Cuisines Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-[#DDE9D8] dark:border-white/10 shadow-xs">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search cook by name..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="Search professional by name..."
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[#DDE9D8] dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#153D32]"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {['ALL', 'North Indian', 'South Indian', 'Mughlai', 'Gujarati', 'Bengali'].map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setSelectedCuisine(c)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                selectedCuisine === c
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-              }`}
-            >
-              {c === 'ALL' ? 'All Cuisines' : c}
-            </button>
-          ))}
-        </div>
+        {serviceTypeFilter !== 'DISHWASHER' && (
+          <div className="flex flex-wrap items-center gap-2">
+            {['ALL', 'North Indian', 'South Indian', 'Mughlai', 'Gujarati', 'Bengali'].map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setSelectedCuisine(c)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  selectedCuisine === c
+                    ? 'bg-[#153D32] text-white'
+                    : 'bg-[#FBF7EF] dark:bg-slate-800 text-[#64746B] dark:text-slate-300 hover:bg-[#DDE9D8]/40'
+                }`}
+              >
+                {c === 'ALL' ? 'All Cuisines' : c}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Cooks Grid */}
+      {/* Professionals Grid */}
       {loading ? (
-        <div className="text-center py-16 text-slate-400 text-xs">Loading verified cooks...</div>
-      ) : filteredCooks.length === 0 ? (
-        <div className="text-center py-16 text-slate-400 text-xs">No cooks matched your search criteria.</div>
+        <div className="text-center py-16 text-slate-400 text-xs">Loading verified professionals...</div>
+      ) : filteredList.length === 0 ? (
+        <div className="text-center py-16 text-slate-400 text-xs">No professionals matched your search criteria.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredCooks.map((cook) => (
-            <div
-              key={cook.id}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-2xl font-black text-emerald-600">
-                    👨‍🍳
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">{cook.name}</h3>
-                    <div className="flex items-center gap-1.5 text-xs text-amber-500 font-bold mt-0.5">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span>{cook.rating || 4.8}</span>
-                      <span className="text-slate-400 font-normal">({cook.total_reviews || 18} reviews)</span>
+          {filteredList.map((pro) => {
+            const isDishwasher = pro.professional_type === 'DISHWASHER';
+            const isMulti = pro.professional_type === 'MULTI_SKILLED';
+
+            return (
+              <div
+                key={pro.id}
+                className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#DDE9D8] dark:border-white/10 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#153D32] to-[#1E5747] text-[#E9A15B] flex items-center justify-center text-lg font-bold border border-[#E9A15B]/30 shadow-xs">
+                        {pro.name?.[0] || 'P'}
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-sm text-[#202A25] dark:text-white truncate max-w-[130px]">
+                          {pro.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 text-xs text-amber-500 font-bold mt-0.5">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          <span>{pro.rating || 4.8}</span>
+                          <span className="text-slate-400 font-normal">({pro.total_reviews || 22})</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Role Badge */}
+                  <div>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      isMulti ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' :
+                      isDishwasher ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+                      'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                    }`}>
+                      {isMulti ? <Layers className="w-3 h-3" /> : isDishwasher ? <Droplets className="w-3 h-3" /> : <ChefHat className="w-3 h-3" />}
+                      {isMulti ? 'Multi-Skilled (Cook + Wash)' : isDishwasher ? 'Utensil Care Specialist' : 'Home Cook'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between text-[#64746B] dark:text-slate-400">
+                      <span>Experience</span>
+                      <span className="font-bold text-[#202A25] dark:text-slate-200">
+                        {pro.experience_years || 6} Years
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[#64746B] dark:text-slate-400">
+                      <span>Verification</span>
+                      <span className="font-bold text-[#153D32] dark:text-emerald-400 flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5" /> Police Cleared
+                      </span>
+                    </div>
+
+                    {!isDishwasher && (
+                      <div className="flex justify-between text-[#64746B] dark:text-slate-400">
+                        <span>Cuisines</span>
+                        <span className="font-bold text-[#202A25] dark:text-slate-200 truncate max-w-[120px]">
+                          {pro.cuisines || 'North, Homestyle'}
+                        </span>
+                      </div>
+                    )}
+
+                    {(isDishwasher || isMulti) && (
+                      <div className="flex justify-between text-[#64746B] dark:text-slate-400">
+                        <span>Utensil Tier</span>
+                        <span className="font-bold text-[#C47B35] dark:text-[#E9A15B]">
+                          {pro.utensil_capacity_tier || 'HEAVY'} Load
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-[11px] text-[#64746B] dark:text-slate-400 line-clamp-2">
+                    {pro.bio || (isDishwasher ? 'Specializes in heavy kadhais, pressure cookers, and meticulous sink counter hygiene.' : 'Experienced in traditional home cooking, fluffy phulkas, and healthy regional meals.')}
+                  </p>
                 </div>
 
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                    <span>Experience</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                      {cook.experience_years || 8} Years
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                    <span>Verification</span>
-                    <span className="font-bold text-emerald-600 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Cleared
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                    <span>Cuisines</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
-                      {cook.cuisines || 'North, Homestyle'}
-                    </span>
-                  </div>
+                <div className="pt-4 border-t border-[#DDE9D8]/80 dark:border-white/10 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPro(pro)}
+                    className="w-full py-2.5 rounded-xl bg-[#FBF7EF] hover:bg-[#DDE9D8]/40 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#202A25] dark:text-slate-200 font-bold text-xs text-center transition-colors cursor-pointer"
+                  >
+                    View Profile & Badges
+                  </button>
                 </div>
-
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
-                  {cook.bio || 'Experienced in traditional home cooking, fluffy phulkas, and authentic regional gravies.'}
-                </p>
               </div>
-
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCook(cook)}
-                  className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs text-center transition-colors"
-                >
-                  View Profile & Badges
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Detailed Cook Profile Modal */}
-      {selectedCook && (
+      {/* Detailed Profile Modal */}
+      {selectedPro && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6">
+          <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-[#DDE9D8] dark:border-white/10 shadow-2xl space-y-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-3xl">
-                  👨‍🍳
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#153D32] to-[#1E5747] text-[#E9A15B] flex items-center justify-center text-xl font-bold border border-[#E9A15B]/30">
+                  {selectedPro.name?.[0] || 'P'}
                 </div>
                 <div>
-                  <h3 className="font-black text-lg text-slate-900 dark:text-white">
-                    {selectedCook.name}
+                  <h3 className="font-black text-lg text-[#202A25] dark:text-white">
+                    {selectedPro.name}
                   </h3>
                   <div className="flex items-center gap-1.5 text-xs text-amber-500 font-bold mt-0.5">
                     <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    <span>{selectedCook.rating || 4.85}</span>
-                    <span className="text-slate-400 font-normal">· {selectedCook.experience_years || 8} yrs exp</span>
+                    <span>{selectedPro.rating || 4.85}</span>
+                    <span className="text-slate-400 font-normal">· {selectedPro.experience_years || 6} yrs exp</span>
                   </div>
                 </div>
               </div>
-              <button type="button" onClick={() => setSelectedCook(null)}>
+              <button type="button" onClick={() => setSelectedPro(null)} className="cursor-pointer">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 space-y-2">
-                <div className="font-extrabold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <div className="p-3 bg-[#153D32]/10 dark:bg-white/5 rounded-2xl border border-[#153D32]/20 dark:border-white/10 space-y-2">
+                <div className="font-extrabold text-[#153D32] dark:text-[#E9A15B] flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-[#153D32] dark:text-[#E9A15B]" />
                   Verified Society Credentials
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px] text-emerald-800 dark:text-emerald-300">
-                  <div>✓ Aadhaar ID Verified</div>
+                <div className="grid grid-cols-2 gap-2 text-[11px] text-[#202A25] dark:text-slate-300">
+                  <div>✓ Government ID Verified</div>
                   <div>✓ Police Record Cleared</div>
                   <div>✓ Hygiene Training Done</div>
-                  <div>✓ Gate Pass Issued</div>
+                  <div>✓ Society RFID Pass Active</div>
                 </div>
               </div>
 
               <div>
-                <h5 className="font-bold text-slate-700 dark:text-slate-300 mb-1">Cuisine Specialties</h5>
-                <p className="text-slate-600 dark:text-slate-400 text-xs">
-                  {selectedCook.cuisines || 'North Indian (Phulkas, Sabzi, Dal), South Indian (Dosa, Sambar)'}
+                <h5 className="font-bold text-[#202A25] dark:text-slate-200 mb-1">Services Offered</h5>
+                <p className="text-[#64746B] dark:text-slate-400 text-xs">
+                  {selectedPro.services_offered || (selectedPro.professional_type === 'DISHWASHER' ? 'Utensil Washing, Sink Sanitization, Counter Clean' : 'Homestyle Cooking, Menu Planning, Utensil Care')}
                 </p>
               </div>
 
               <div>
-                <h5 className="font-bold text-slate-700 dark:text-slate-300 mb-1">Cook Bio</h5>
-                <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
-                  {selectedCook.bio || 'Specialist in healthy, less-oil, and nutrient-dense home meals. Strict on punctuality and kitchen sanitation.'}
+                <h5 className="font-bold text-[#202A25] dark:text-slate-200 mb-1">Professional Bio</h5>
+                <p className="text-[#64746B] dark:text-slate-400 text-xs leading-relaxed">
+                  {selectedPro.bio || 'Meticulous, punctual, and reliable domestic specialist trusted by multiple households in this complex.'}
                 </p>
               </div>
             </div>
@@ -218,10 +297,10 @@ export function CookDirectoryPage() {
             <button
               type="button"
               onClick={() => {
-                showToast(`Cook ${selectedCook.name} added to your preferred group matching priority.`);
-                setSelectedCook(null);
+                showToast(`Professional ${selectedPro.name} requested for your tower group assignment.`);
+                setSelectedPro(null);
               }}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30"
+              className="w-full py-3 rounded-xl bg-[#153D32] hover:bg-[#1E5747] text-white font-bold text-xs shadow-md shadow-[#153D32]/20 cursor-pointer"
             >
               Request for Group Assignment
             </button>

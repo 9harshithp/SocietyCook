@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ChefHat,
   Bell,
@@ -12,9 +12,12 @@ import {
   ShieldCheck,
   Users,
   Calendar,
-  Wallet,
-  TrendingUp,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  UtensilsCrossed,
+  Droplets,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth, DEMO_PERSONAS } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -23,8 +26,11 @@ export function Navbar() {
   const { user, societies, activeSocietyId, setActiveSocietyId, isDarkMode, toggleDarkMode, switchPersona, logout } =
     useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -35,38 +41,40 @@ export function Navbar() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 lg:gap-4">
-        {/* Brand Logo & Society Selector */}
-        <div className="flex items-center gap-3 sm:gap-5 shrink-0">
-          <Link to={user ? '/app' : '/'} className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform shrink-0">
-              <ChefHat className="w-5 h-5" />
+    <header className="sticky top-0 z-50 bg-[#FBF7EF]/90 dark:bg-[#121E19]/90 backdrop-blur-md border-b border-[#DDE9D8]/80 dark:border-white/10 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3 lg:gap-5">
+        {/* Brand Logo & Tagline */}
+        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+          <Link to={user ? '/app' : '/'} className="flex items-center gap-3 group shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#153D32] to-[#1E5747] flex items-center justify-center text-[#E9A15B] shadow-md shadow-[#153D32]/25 group-hover:scale-105 transition-transform shrink-0 border border-[#E9A15B]/30">
+              <ChefHat className="w-5 h-5 text-[#E9A15B]" />
             </div>
-            <div className="shrink-0">
-              <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5 leading-none">
-                SocietyCook
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                  v2.0
+            <div className="shrink-0 text-left">
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className="font-serif font-black text-lg tracking-tight text-[#153D32] dark:text-[#FBF7EF]">
+                  SocietyCook
                 </span>
-              </span>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block mt-0.5">
-                Hire together. Save together.
+                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-[#E9A15B]/15 text-[#C47B35] dark:text-[#E9A15B] border border-[#E9A15B]/30">
+                  v3.0
+                </span>
+              </div>
+              <p className="text-[10px] text-[#64746B] dark:text-[#A4B5AC] font-medium hidden sm:block mt-0.5">
+                More living. Less chores.
               </p>
             </div>
           </Link>
 
-          {/* Society Selector */}
+          {/* Society Selector for Logged-In User */}
           {user && (
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 shrink-0">
-              <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-[#DDE9D8] dark:border-white/10 text-xs font-semibold text-[#202A25] dark:text-slate-200 shrink-0 shadow-xs">
+              <MapPin className="w-3.5 h-3.5 text-[#153D32] dark:text-[#E9A15B] shrink-0" />
               <select
                 value={activeSocietyId}
                 onChange={(e) => setActiveSocietyId(Number(e.target.value))}
-                className="bg-transparent border-none text-xs font-bold focus:outline-none cursor-pointer pr-1"
+                className="bg-transparent border-none text-xs font-bold focus:outline-none cursor-pointer pr-1 text-[#202A25] dark:text-white"
               >
                 {societies.map((s) => (
-                  <option key={s.id} value={s.id} className="dark:bg-slate-900">
+                  <option key={s.id} value={s.id} className="dark:bg-slate-900 text-slate-800 dark:text-white">
                     {s.name}
                   </option>
                 ))}
@@ -75,9 +83,91 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Center: 1-Click Demo Personas Bar (Always Single Line with Fixed Heights) */}
-        <div className="hidden lg:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 shrink-0">
-          <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500 px-2 whitespace-nowrap select-none">
+        {/* Public Navigation Links (When on landing page or not logged in) */}
+        {!user && (
+          <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#202A25] dark:text-slate-200">
+            {/* Services Dropdown */}
+            <div className="relative" onMouseLeave={() => setServicesOpen(false)}>
+              <button
+                type="button"
+                onClick={() => setServicesOpen(!servicesOpen)}
+                onMouseEnter={() => setServicesOpen(true)}
+                className="flex items-center gap-1 hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors py-1 cursor-pointer"
+              >
+                <span>Services</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {servicesOpen && (
+                <div className="absolute top-full -left-4 w-72 pt-2 z-50">
+                  <div className="bg-white dark:bg-[#182821] rounded-2xl shadow-xl border border-[#DDE9D8] dark:border-white/10 p-3 space-y-1 animate-in fade-in slide-in-from-top-1">
+                    <a
+                      href="#services"
+                      onClick={() => setServicesOpen(false)}
+                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#FBF7EF] dark:hover:bg-white/5 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#153D32]/10 dark:bg-emerald-950 flex items-center justify-center text-[#153D32] dark:text-emerald-400 shrink-0 group-hover:bg-[#153D32] group-hover:text-white transition-colors">
+                        <UtensilsCrossed className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#202A25] dark:text-white">Home Cooking</div>
+                        <p className="text-[11px] text-[#64746B] dark:text-slate-400">Fresh daily meals tailored to your taste</p>
+                      </div>
+                    </a>
+
+                    <a
+                      href="#services"
+                      onClick={() => setServicesOpen(false)}
+                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#FBF7EF] dark:hover:bg-white/5 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#E9A15B]/15 dark:bg-amber-950 flex items-center justify-center text-[#C47B35] dark:text-[#E9A15B] shrink-0 group-hover:bg-[#E9A15B] group-hover:text-white transition-colors">
+                        <Droplets className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#202A25] dark:text-white">Utensil Care & Dishwashing</div>
+                        <p className="text-[11px] text-[#64746B] dark:text-slate-400">Spotless sink hygiene & gleaming vessels</p>
+                      </div>
+                    </a>
+
+                    <a
+                      href="#services"
+                      onClick={() => setServicesOpen(false)}
+                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#FBF7EF] dark:hover:bg-white/5 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950 flex items-center justify-center text-teal-700 dark:text-teal-300 shrink-0 group-hover:bg-teal-700 group-hover:text-white transition-colors">
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-[#202A25] dark:text-white flex items-center gap-1.5">
+                          Complete Kitchen Care
+                          <span className="text-[9px] px-1.5 py-0.2 bg-[#E9A15B] text-white font-bold rounded-full">POPULAR</span>
+                        </div>
+                        <p className="text-[11px] text-[#64746B] dark:text-slate-400">Cooking + Dishwashing synchronized</p>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <a href="#how-it-works" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              How It Works
+            </a>
+            <a href="#community-pricing" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              Community Pricing
+            </a>
+            <a href="#for-societies" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              For Societies
+            </a>
+            <a href="#for-professionals" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              For Professionals
+            </a>
+          </nav>
+        )}
+
+        {/* Center: 1-Click Demo Personas Bar */}
+        <div className="hidden xl:flex items-center gap-1.5 bg-white/70 dark:bg-white/5 p-1 rounded-2xl border border-[#DDE9D8] dark:border-white/10 shrink-0 shadow-xs">
+          <span className="text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400 px-2 whitespace-nowrap select-none">
             1-Click Demo:
           </span>
           <div className="flex items-center gap-1 shrink-0">
@@ -93,8 +183,8 @@ export function Navbar() {
                   }}
                   className={`h-7 px-2.5 text-xs font-semibold rounded-xl whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 cursor-pointer ${
                     isActive
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs font-bold'
-                      : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-emerald-600 border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-500/50'
+                      ? 'bg-[#153D32] text-white border-[#153D32] shadow-xs font-bold'
+                      : 'bg-white dark:bg-slate-900 text-[#202A25] dark:text-slate-300 hover:text-[#153D32] border-[#DDE9D8] dark:border-white/10 hover:border-[#153D32]/40'
                   }`}
                   title={p.desc}
                 >
@@ -105,17 +195,17 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Right Tools (Theme toggle, Notifications, User) */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        {/* Right Tools (Theme toggle, Notifications, User Auth) */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Dark Mode Toggle */}
           <button
             type="button"
             onClick={toggleDarkMode}
-            className="w-8 h-8 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 bg-slate-100 dark:bg-slate-800 transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+            className="w-9 h-9 rounded-xl text-[#202A25] hover:text-[#153D32] dark:text-slate-300 dark:hover:text-[#E9A15B] bg-white dark:bg-white/5 border border-[#DDE9D8] dark:border-white/10 transition-colors flex items-center justify-center shrink-0 cursor-pointer shadow-xs"
             title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             aria-label="Toggle theme"
           >
-            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            {isDarkMode ? <Sun className="w-4 h-4 text-[#E9A15B]" /> : <Moon className="w-4 h-4 text-[#153D32]" />}
           </button>
 
           {user ? (
@@ -125,40 +215,40 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center relative cursor-pointer"
+                  className="w-9 h-9 rounded-xl bg-white dark:bg-white/5 border border-[#DDE9D8] dark:border-white/10 text-[#202A25] dark:text-slate-200 hover:bg-[#DDE9D8]/30 dark:hover:bg-white/10 transition-colors flex items-center justify-center relative cursor-pointer shadow-xs"
                   title="Notifications"
                 >
                   <Bell className="w-4 h-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-600 text-white text-[9px] font-bold flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E9A15B] text-white text-[9px] font-black flex items-center justify-center shadow-xs">
                       {unreadCount}
                     </span>
                   )}
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-4 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                      <span className="font-bold uppercase tracking-wider text-slate-500">Notifications</span>
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#182821] rounded-2xl shadow-2xl border border-[#DDE9D8] dark:border-white/10 p-4 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#DDE9D8]/50 dark:border-white/10">
+                      <span className="font-bold uppercase tracking-wider text-[#64746B] dark:text-slate-400">Notifications</span>
                       <button
                         type="button"
                         onClick={() => {
                           api.markNotificationsRead();
                           setNotifications(notifications.map((n) => ({ ...n, is_read: 1 })));
                         }}
-                        className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline text-[11px]"
+                        className="text-[#153D32] dark:text-[#E9A15B] font-semibold hover:underline text-[11px]"
                       >
                         Mark all read
                       </button>
                     </div>
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto mt-2">
+                    <div className="divide-y divide-[#DDE9D8]/40 dark:divide-white/5 max-h-64 overflow-y-auto mt-2">
                       {notifications.length === 0 ? (
                         <p className="text-slate-400 py-4 text-center">No notifications</p>
                       ) : (
                         notifications.map((n) => (
                           <div key={n.id} className="py-2.5">
-                            <span className="font-bold text-slate-900 dark:text-slate-100 block">{n.title}</span>
-                            <p className="text-slate-600 dark:text-slate-300 mt-0.5">{n.message}</p>
+                            <span className="font-bold text-[#202A25] dark:text-slate-100 block">{n.title}</span>
+                            <p className="text-[#64746B] dark:text-slate-300 mt-0.5">{n.message}</p>
                             <span className="text-[10px] text-slate-400 mt-1 block">
                               {String(n.created_at || '').slice(0, 10)}
                             </span>
@@ -171,22 +261,22 @@ export function Navbar() {
               </div>
 
               {/* User Avatar & Logout */}
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800 shrink-0">
-                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+              <div className="flex items-center gap-2 pl-2 border-l border-[#DDE9D8] dark:border-white/10 shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#153D32] text-[#E9A15B] font-bold text-xs flex items-center justify-center shrink-0 shadow-xs border border-[#E9A15B]/30">
                   {user.name?.[0] || 'U'}
                 </div>
                 <div className="hidden xl:block text-left text-xs max-w-[120px] shrink-0">
-                  <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
+                  <span className="font-bold text-[#202A25] dark:text-white block leading-tight truncate">
                     {user.name}
                   </span>
-                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">
+                  <span className="text-[10px] text-[#64746B] dark:text-slate-400 block uppercase font-bold">
                     {user.role}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={logout}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
+                  className="p-1.5 rounded-lg text-[#64746B] hover:text-red-500 hover:bg-red-50 dark:hover:bg-white/5 transition-colors shrink-0 cursor-pointer"
                   title="Sign out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -197,24 +287,34 @@ export function Navbar() {
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 to="/login"
-                className="px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600"
+                className="px-3 py-1.5 text-xs font-bold text-[#202A25] dark:text-slate-200 hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
-                className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors"
+                className="px-4 py-2 text-xs font-bold rounded-xl bg-[#153D32] hover:bg-[#1C4E40] text-white shadow-md shadow-[#153D32]/20 transition-all hover:-translate-y-0.5 border border-[#153D32]"
               >
-                Join
+                Get Started
               </Link>
             </div>
           )}
+
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 rounded-xl text-[#202A25] dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
-      {/* Responsive Demo Persona Bar for Mobile/Tablet (< lg) */}
-      <div className="lg:hidden flex items-center gap-1.5 px-4 py-1.5 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200/80 dark:border-slate-800/80 overflow-x-auto no-scrollbar">
-        <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500 px-1 whitespace-nowrap shrink-0">
+      {/* Responsive Demo Persona Bar for Mobile/Tablet (< xl) */}
+      <div className="xl:hidden flex items-center gap-1.5 px-4 py-1.5 bg-[#F4EFE6] dark:bg-[#101A16] border-t border-[#DDE9D8]/60 dark:border-white/5 overflow-x-auto no-scrollbar">
+        <span className="text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400 px-1 whitespace-nowrap shrink-0">
           Demo:
         </span>
         {DEMO_PERSONAS.map((p) => {
@@ -229,8 +329,8 @@ export function Navbar() {
               }}
               className={`h-6 px-2 text-[11px] font-semibold rounded-lg whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 ${
                 isActive
-                  ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  ? 'bg-[#153D32] text-white border-[#153D32] font-bold shadow-xs'
+                  : 'bg-white dark:bg-slate-800 text-[#202A25] dark:text-slate-300 border-[#DDE9D8] dark:border-white/10'
               }`}
             >
               {p.label}
@@ -238,6 +338,78 @@ export function Navbar() {
           );
         })}
       </div>
+
+      {/* Mobile Menu Drawer */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-[#DDE9D8] dark:border-white/10 bg-[#FBF7EF] dark:bg-[#121E19] px-4 py-4 space-y-3">
+          <div className="space-y-1 font-semibold text-sm text-[#202A25] dark:text-slate-200">
+            <a
+              href="#services"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+            >
+              Household Services
+            </a>
+            <a
+              href="#how-it-works"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+            >
+              How It Works
+            </a>
+            <a
+              href="#community-pricing"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+            >
+              Community Pricing
+            </a>
+            <a
+              href="#for-societies"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+            >
+              For Societies
+            </a>
+            <a
+              href="#for-professionals"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+            >
+              For Professionals
+            </a>
+          </div>
+
+          <div className="pt-2 border-t border-[#DDE9D8]/60 dark:border-white/10 flex flex-col gap-2">
+            {!user ? (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 text-center text-xs font-bold rounded-xl border border-[#153D32] text-[#153D32] dark:text-white"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 text-center text-xs font-bold rounded-xl bg-[#153D32] text-white"
+                >
+                  Get Started
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/app"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full py-2.5 text-center text-xs font-bold rounded-xl bg-[#153D32] text-white"
+              >
+                Go to Dashboard
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }

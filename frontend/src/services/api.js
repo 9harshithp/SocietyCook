@@ -38,14 +38,18 @@ export const api = {
   getSocieties: () => apiClient.get('/societies'),
   getSociety: (id) => apiClient.get(`/societies/${id}`),
 
-  // Cooks
-  getCooks: (societyId) => apiClient.get(`/cooks${societyId ? `?society_id=${societyId}` : ''}`),
+  // Services & Categories (V3 Extension)
+  getServices: () => apiClient.get('/services'),
+
+  // Cooks & Household Professionals
+  getCooks: (societyId, serviceType) =>
+    apiClient.get('/cooks', { params: { society_id: societyId, service_type: serviceType } }),
   getCook: (id) => apiClient.get(`/cooks/${id}`),
   updateCookProfile: (data) => apiClient.post('/cooks/profile', data),
 
   // Groups (Core Community Hiring)
-  getGroups: (societyId, status) =>
-    apiClient.get(`/groups?societyId=${societyId || 1}${status ? `&status=${status}` : ''}`),
+  getGroups: (societyId, status, serviceType) =>
+    apiClient.get(`/groups`, { params: { societyId: societyId || 1, status, service_type: serviceType } }),
   getGroup: (id) => apiClient.get(`/groups/${id}`),
   createGroup: (data) => apiClient.post('/groups', data),
   joinGroup: (id, data) => apiClient.post(`/groups/${id}/join`, data),
@@ -55,7 +59,8 @@ export const api = {
 
   // Pricing
   calculatePricing: (data) => apiClient.post('/pricing/calculate', data),
-  getPricingTiers: (meal) => apiClient.get(`/pricing/tiers?meal=${meal || 'DINNER'}`),
+  getPricingTiers: (meal, service) =>
+    apiClient.get(`/pricing/tiers`, { params: { meal: meal || 'DINNER', service: service || 'COOKING' } }),
 
   // Bookings & Payments
   getBookings: () => apiClient.get('/bookings'),

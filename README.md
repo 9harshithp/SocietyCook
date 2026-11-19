@@ -1,25 +1,37 @@
-# SocietyCook – Community Cook Hiring & Workforce Platform (v2.0)
+# SocietyCook – Premium Household Services Marketplace (v3.0)
 
-> **"Hire together. Save together. Eat better."**  
-> A production-grade hyperlocal domestic cooking platform enabling neighbouring households within gated residential societies to collectively hire verified cooks, receive fresh customized meals in their private kitchens, and benefit from tiered group discounts.
+> **"More living. Less chores."**  
+> *A happier home. A simpler everyday.*  
+> A production-grade hyperlocal household services platform enabling neighbouring households within gated residential societies to collectively hire verified home cooks, dishwashing specialists, and complete kitchen care — scheduled seamlessly in their own homes.
 
-[![Test Suite](https://img.shields.io/badge/Vitest-19%20Passing-brightgreen.svg)](#testing)
-[![Branch](https://img.shields.io/badge/Branch-feature%2Fsocietycook--v2-blue.svg)](#git-branch)
+[![Test Suite](https://img.shields.io/badge/Vitest-21%20Passing-brightgreen.svg)](#testing)
+[![Branch](https://img.shields.io/badge/Branch-feature%2Fsocietycook--v3-blue.svg)](#git-branch)
 [![API Docs](https://img.shields.io/badge/Swagger-OpenAPI%203.0-orange.svg)](#api-documentation)
+
+---
+
+## 🌟 Expanded Household Services
+
+SocietyCook v3.0 expands beyond cook booking into an intelligent, community-first household services marketplace:
+
+1. **Professional Home Cooking (`COOKING`)** — Daily customized meals cooked fresh in resident kitchens with personalized spice and dietary controls.
+2. **Utensil Care & Dishwashing (`DISHWASHING`)** — Dedicated utensil scrubbing, pressure cooker / heavy kadhai scouring, and pristine sink counter hygiene.
+3. **Complete Kitchen Care (`COMBO`)** — Synchronized back-to-back routine where the cook prepares the meal and the utensil specialist washes the cookware and dinner plates immediately after.
 
 ---
 
 ## 🌟 Core Differentiation (vs ChefKart, COOX, Cookzy, Broomees)
 
-| Capability | SocietyCook v2 | Traditional Platforms |
+| Capability | SocietyCook v3 | Traditional Platforms |
 | :--- | :--- | :--- |
 | **Hiring Paradigm** | **Community Demand Clustering** (Flats in same tower share route) | Isolated individual booking |
-| **Pricing** | **Dynamic Volume Discount** (₹4,000–₹4,500/mo) | High rate (₹7,000–₹10,000) + ₹15k brokerage |
-| **Cook Commute** | **0 km (2-minute elevator transit)** | 3–4 hours stressful daily city transit |
-| **Cook Monthly Earnings** | **₹20,000 – ₹28,000/mo** (Fair wage floor guaranteed) | Variable / high agency deductions |
-| **Absenteeism Defense** | **Automated Backup Dispatch in &lt;1 Hr** | 24–48 hr wait or no replacement |
+| **Service Scope** | **Cooking + Utensil Care + Synchronized Combo** | Cooking only or fragmented maids |
+| **Pricing** | **Dynamic Volume Discount** (Up to 35% community savings) | High solo rates + ₹15k brokerage |
+| **Staff Commute** | **0 km (1-minute elevator transit)** | 3–4 hours stressful daily city transit |
+| **Staff Monthly Earnings**| **₹20,000 – ₹35,000/mo** (Fair wage floors guaranteed) | Variable / high agency cuts |
+| **Absenteeism Defense** | **Automated Standby Allocation in &lt;1 Hr** | 24–48 hr wait or no replacement |
 | **Session Verification** | **Daily 4-Digit Resident OTP** | Paper diaries / frequent disputes |
-| **Society Gate Clearance** | **RWA Gate Pass (#SC-8942) + QR check-in** | Manual visitor register entries |
+| **Society Gate Clearance**| **RWA Gate Pass (#SC-8942) + RFID / App Check-in** | Manual visitor register entries |
 
 ---
 
@@ -30,11 +42,11 @@
 - Docker & Docker Compose
 - Git
 
-### 2. Clone and Checkout Feature Branch
+### 2. Clone and Checkout V3 Feature Branch
 ```bash
 git clone https://github.com/9harshithp/SocietyCook.git
 cd SocietyCook
-git checkout feature/societycook-v2
+git checkout feature/societycook-v3
 ```
 
 ### 3. Start Database (Host Port 3307)
@@ -46,8 +58,8 @@ docker compose up -d db
 ### 4. Run Migrations & Realistic Seed Dataset
 ```bash
 cd backend
-node migrations.js   # Non-destructive migrations (31 tables/extensions)
-node seed.js         # Seeds 3 societies, 30 users, cooks, groups, and sessions
+node migrations.js   # Non-destructive migrations (household services & columns)
+node seed.js         # Seeds societies, cooks, dishwashers, combo groups, and sessions
 ```
 
 ### 5. Start Backend Server
@@ -56,6 +68,14 @@ cd backend
 npm run start
 # Server listens on http://localhost:5000
 # OpenAPI Docs available at http://localhost:5000/api/v1/docs
+```
+
+### 6. Start Frontend Application
+```bash
+cd frontend
+npm install
+npm run dev
+# Frontend runs on http://localhost:5173
 ```
 
 ### 6. Start Frontend Web Client

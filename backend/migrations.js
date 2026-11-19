@@ -481,7 +481,61 @@ export async function runMigrations() {
   await safeAddCol('notifications', 'read_at', 'DATETIME NULL');
   await safeAddCol('notifications', 'link_url', 'VARCHAR(255) NULL');
 
-  console.log('✅ SocietyCook v2 database migrations finished successfully!');
+  // =========================================================================
+  // V3 EXTENSION: Household Services & Dishwashing Marketplace
+  // =========================================================================
+  console.log('🔄 Running SocietyCook v3 Household Services & Dishwashing Migrations...');
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS service_categories (
+      id VARCHAR(50) PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      tagline VARCHAR(200) NOT NULL,
+      base_price INT NOT NULL,
+      standard_duration_minutes INT DEFAULT 45,
+      description TEXT NULL,
+      icon_name VARCHAR(50) DEFAULT 'ChefHat',
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Insert standard service categories
+  await query(`
+    INSERT INTO service_categories (id, name, tagline, base_price, standard_duration_minutes, description, icon_name)
+    VALUES
+      ('COOKING', 'Professional Home Cooking', 'Fresh, customized daily meals cooked in your kitchen', 5000, 45, 'Dedicated chef visits daily to prepare breakfast, lunch, or dinner tailored to your spice, dietary and cuisine preferences.', 'ChefHat'),
+      ('DISHWASHING', 'Utensil Washing & Kitchen Care', 'Sparkling clean dishes and spotless countertops every day', 2200, 30, 'Professional dishwashing assistant washes and dries all utensils, pots, thalis and wipes kitchen counters on a recurring daily schedule.', 'Sparkles'),
+      ('COMBO', 'Complete Kitchen Care (Cooking + Dishwashing)', 'Delicious hot meals plus sparkling clean dishes in one coordinated plan', 6800, 75, 'Coordinated daily cooking followed by complete utensil cleaning and kitchen tidying with consolidated billing and zero hassle.', 'UtensilsCrossed')
+    ON DUPLICATE KEY UPDATE name=VALUES(name), tagline=VALUES(tagline), base_price=VALUES(base_price)
+  `);
+
+  // Professional type extensions on cooks table (now service professionals)
+  await safeAddCol('cooks', 'professional_type', "VARCHAR(50) DEFAULT 'COOK'");
+  await safeAddCol('cooks', 'services_offered', "VARCHAR(255) DEFAULT 'COOKING'");
+  await safeAddCol('cooks', 'utensil_capacity_tier', "VARCHAR(50) DEFAULT 'STANDARD'");
+  await safeAddCol('cooks', 'dishwashing_price', "INT DEFAULT 2200");
+  await safeAddCol('cooks', 'dishwashing_experience', "INT DEFAULT 4");
+  await safeAddCol('cooks', 'dishwashing_bio', "TEXT NULL");
+
+  // Bookings extensions for dishwashing & combo
+  await safeAddCol('bookings', 'service_type', "VARCHAR(50) DEFAULT 'COOKING'");
+  await safeAddCol('bookings', 'utensil_load', "VARCHAR(50) DEFAULT 'STANDARD'");
+  await safeAddCol('bookings', 'dishwasher_id', "INT NULL");
+  await safeAddCol('bookings', 'dishwashing_slot_label', "VARCHAR(50) NULL");
+  await safeAddCol('bookings', 'dishwashing_amount', "INT DEFAULT 0");
+
+  // Groups extensions
+  await safeAddCol('cook_groups', 'service_type', "VARCHAR(50) DEFAULT 'COOKING'");
+  await safeAddCol('cook_groups', 'assigned_dishwasher_id', "INT NULL");
+  await safeAddCol('cook_groups', 'utensil_load', "VARCHAR(50) DEFAULT 'STANDARD'");
+
+  // Sessions extensions
+  await safeAddCol('sessions', 'service_type', "VARCHAR(50) DEFAULT 'COOKING'");
+  await safeAddCol('sessions', 'utensil_load', "VARCHAR(50) NULL");
+
+  console.log('✅ SocietyCook v3 Household Services database migrations completed successfully!');
+  console.log('✅ SocietyCook database migrations finished successfully!');
 }
 
 if (process.argv[1]?.endsWith('migrations.js')) {

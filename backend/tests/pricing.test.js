@@ -38,4 +38,39 @@ describe('Dynamic Group Pricing Engine', () => {
     expect(table[4].householdCount).toBe(5);
     expect(table[4].savingsPercentage).toBeGreaterThanOrEqual(40);
   });
+
+  it('calculates dishwashing tiered pricing and utensil load multipliers', () => {
+    const light = calculateGroupPricing({
+      householdCount: 4,
+      serviceType: 'DISHWASHING',
+      utensilLoad: 'LIGHT'
+    });
+    const standard = calculateGroupPricing({
+      householdCount: 4,
+      serviceType: 'DISHWASHING',
+      utensilLoad: 'STANDARD'
+    });
+    const heavy = calculateGroupPricing({
+      householdCount: 4,
+      serviceType: 'DISHWASHING',
+      utensilLoad: 'HEAVY'
+    });
+
+    expect(light.pricePerHousehold).toBeLessThan(standard.pricePerHousehold);
+    expect(heavy.pricePerHousehold).toBeGreaterThan(standard.pricePerHousehold);
+    expect(standard.totalGroupSavings).toBeGreaterThan(0);
+    expect(standard.pricePerHousehold).toBe(1800);
+  });
+
+  it('calculates combo cooking + dishwashing synchronized package pricing', () => {
+    const combo = calculateGroupPricing({
+      householdCount: 5,
+      serviceType: 'COMBO',
+      mealService: 'DINNER'
+    });
+
+    expect(combo.pricePerHousehold).toBe(5100);
+    expect(combo.totalGroupSavings).toBe(29500);
+    expect(combo.cookGrossPayout + combo.dishwasherGrossPayout).toBe(22950);
+  });
 });

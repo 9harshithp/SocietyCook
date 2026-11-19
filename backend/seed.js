@@ -102,72 +102,80 @@ export async function seedDatabase() {
     }
   }
 
-  // 4. Cooks Table: 8 Verified Cooks with User IDs
+  // 4. Cooks Table: 8 Verified Cooks with User IDs and Service Specializations (V3 Expansion)
   const cooks = [
     [
       1, 2, 'South Indian, Vegetarian, Andhra & Tamil',
       'Specialist in traditional homestyle South Indian vegetarian cooking: crisp dosas, soft idlis, authentic sambar, rasam, avial, kootu, and flavorful Andhra curries. 6+ years experience in gated communities.',
       3500, 6, 1, '06:30:00', '21:30:00',
       'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80',
-      'Pure Veg, Jain Option, Low Oil, Sattvic', 4.8, 98.0
+      'Pure Veg, Jain Option, Low Oil, Sattvic', 4.8, 98.0,
+      'MULTI_SKILLED', 'COOKING,DISHWASHING', 2000, 5, 'Expert in delicate glassware, non-stick pans and sparkling sink cleaning.'
     ],
     [
       2, 3, 'North Indian, Punjabi & Mughlai Delicacies',
       'Known as the Phulka Master! Specializes in hot rotis, layered parathas, authentic dal makhani, rajma-chawal, shahi paneer, seasonal sabzi, and nutritious daily khichdi. Highly punctual and hygiene-certified.',
       4000, 8, 1, '07:00:00', '22:00:00',
       'https://images.unsplash.com/photo-1583394293214-28ded15ee548?auto=format&fit=crop&w=400&q=80',
-      'North Indian, High Protein, Custom Spice, Homestyle', 4.9, 99.2
+      'North Indian, High Protein, Custom Spice, Homestyle', 4.9, 99.2,
+      'COOK', 'COOKING', 2200, 4, null
     ],
     [
       3, 11, 'Healthy Fitness Diet, Millets & Salads',
       'Nutritious macro-balanced everyday cooking: multi-millet rotis, quinoa bowls, grilled paneer/tofu, sprout salads, high-protein dals, and light detox meals without refined oil or excess sugar.',
       4500, 5, 1, '06:00:00', '21:00:00',
       'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
-      'High Protein, Low Calorie, Diabetic Friendly, Vegan', 4.7, 97.5
+      'High Protein, Low Calorie, Diabetic Friendly, Vegan', 4.7, 97.5,
+      'MULTI_SKILLED', 'COOKING,DISHWASHING', 2100, 6, 'Kitchen hygiene enthusiast. Ensures complete post-cooking sanitization.'
     ],
     [
       4, 12, 'Bengali, Odia & Homestyle Fish Curry',
       'Authentic East Indian cuisine specialist: Macher Jhol, Shorshe Ilish, Aloo Posto, Kosha Mangsho, light moong dal, and fragrant basmati rice dishes. Served over 40+ families in Whitefield.',
       3800, 7, 1, '07:30:00', '21:30:00',
       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-      'Non-Veg, Fish Specialist, East Indian, Homestyle', 4.8, 98.5
+      'Non-Veg, Fish Specialist, East Indian, Homestyle', 4.8, 98.5,
+      'COOK', 'COOKING', 2200, 3, null
     ],
     [
       5, 13, 'Gujarati, Kathiawadi & Rajasthani Thali',
       'Expert in soft theplas, sev tameta nu shaak, dal dhokli, kadhi khichdi, khandvi, and pure Jain food prepared with strict hygiene without onion/garlic on request.',
       4200, 9, 1, '07:00:00', '21:00:00',
       'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=400&q=80',
-      'Pure Veg, 100% Jain Friendly, Gujarati Thali, Low Spice', 4.9, 99.0
+      'Pure Veg, 100% Jain Friendly, Gujarati Thali, Low Spice', 4.9, 99.0,
+      'COOK', 'COOKING', 2200, 5, null
     ],
     [
       6, 14, 'Hyderabadi, Awadhi & Biryani Delights',
       'Dum biryani master with 10 years experience in royal Mughlai and everyday Nizami cuisine. Expert in slow-cooked dals, kebabs, kormas and fragrant pulao.',
       4800, 10, 1, '07:00:00', '22:00:00',
       'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-      'Non-Veg, Biryani Specialist, Awadhi, Mughlai', 4.9, 98.8
+      'Non-Veg, Biryani Specialist, Awadhi, Mughlai', 4.9, 98.8,
+      'COOK', 'COOKING', 2200, 4, null
     ],
     [
-      7, 15, 'Maharashtrian & Konkani Cuisine',
-      'Homestyle puran poli, batata vada, amti dal, pithla bhakri, and sol kadhi. Experienced with apartment resident schedules in IT corridor.',
-      3900, 6, 1, '06:30:00', '21:00:00',
+      7, 15, 'Dishwashing & Utensil Care Specialist',
+      'Dedicated kitchen hygiene professional: meticulous dishwashing, heavy cookware scrub, pressure cooker degreasing, spotless drying, and counter wipe-downs.',
+      2200, 7, 1, '07:00:00', '21:30:00',
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-      'Maharashtrian, Konkani, Homestyle Comfort', 4.7, 96.5
+      'Utensil Washing, Sink Sanitization, Counter Wipe, Stainless Steel Care', 4.9, 99.5,
+      'DISHWASHER', 'DISHWASHING', 2200, 7, 'Specialized in thorough daily utensil cleaning, pressure cooker degreasing, and leaving sinks clean.'
     ],
     [
-      8, 16, 'Kerala Malabar & Coastal Delicacies',
-      'Specialist in appam with vegetable stew, avial, Malabar parotta, sambar, thoran, and fresh coastal coconut curries. Highly disciplined and hygiene certified.',
-      4100, 8, 1, '07:00:00', '21:30:00',
+      8, 16, 'Dishwashing & Kitchen Assistant',
+      'Punctual household assistant specializing in fast, quiet and hygienic utensil cleaning for morning breakfast and evening dinner cycles.',
+      2100, 6, 1, '06:30:00', '21:00:00',
       'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
-      'Kerala, Coastal, Coconut Curries, Appam Specialist', 4.8, 98.0
+      'Utensil Washing, Non-stick Safe, Eco Dishwashing, Fast Turnaround', 4.8, 98.2,
+      'DISHWASHER', 'DISHWASHING', 2100, 6, 'Eco-friendly dishwashing with gentle handling of delicate ceramics and glassware.'
     ]
   ];
 
-  for (const [id, user_id, cuisine, bio, price, exp, verified, from, to, photo, tags, rating, reliability] of cooks) {
+  for (const [id, user_id, cuisine, bio, price, exp, verified, from, to, photo, tags, rating, reliability, pType, sOffered, dwPrice, dwExp, dwBio] of cooks) {
     await query(
-      `INSERT INTO cooks (id, user_id, cuisine, bio, price, experience, verified, available_from, available_to, photo_url, dietary_tags, rating_avg, reliability_score)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE cuisine=VALUES(cuisine), bio=VALUES(bio), price=VALUES(price), experience=VALUES(experience), verified=VALUES(verified), photo_url=VALUES(photo_url), dietary_tags=VALUES(dietary_tags), rating_avg=VALUES(rating_avg), reliability_score=VALUES(reliability_score)`,
-      [id, user_id, cuisine, bio, price, exp, verified, from, to, photo, tags, rating, reliability]
+      `INSERT INTO cooks (id, user_id, cuisine, bio, price, experience, verified, available_from, available_to, photo_url, dietary_tags, rating_avg, reliability_score, professional_type, services_offered, dishwashing_price, dishwashing_experience, dishwashing_bio)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE cuisine=VALUES(cuisine), bio=VALUES(bio), price=VALUES(price), experience=VALUES(experience), verified=VALUES(verified), photo_url=VALUES(photo_url), dietary_tags=VALUES(dietary_tags), rating_avg=VALUES(rating_avg), reliability_score=VALUES(reliability_score), professional_type=VALUES(professional_type), services_offered=VALUES(services_offered), dishwashing_price=VALUES(dishwashing_price), dishwashing_experience=VALUES(dishwashing_experience), dishwashing_bio=VALUES(dishwashing_bio)`,
+      [id, user_id, cuisine, bio, price, exp, verified, from, to, photo, tags, rating, reliability, pType, sOffered, dwPrice, dwExp, dwBio]
     );
 
     const [u] = await query('SELECT society_id FROM users WHERE id = ?', [user_id]);
@@ -185,19 +193,23 @@ export async function seedDatabase() {
 
   const groups = [
     // Group 1: Tower A Dinner Club in Greenwood Residency (Active with Ramesh - cook_id 2)
-    [1, 1, 1, 'Tower A Evening Dinner Club', 'Daily fresh dinner service shared by 5 flats on 1st floor of Tower A. Zero elevator wait.', 'DINNER', 'North Indian, Punjabi', 'VEGETARIAN', '19:00:00', '22:45:00', 4500, 3, 5, 5, 'ACTIVE', 2, 'GRP-TOWER-A', new Date()],
+    [1, 1, 1, 'Tower A Evening Dinner Club', 'Daily fresh dinner service shared by 5 flats on 1st floor of Tower A. Zero elevator wait.', 'DINNER', 'North Indian, Punjabi', 'VEGETARIAN', '19:00:00', '22:45:00', 4500, 3, 5, 5, 'ACTIVE', 2, 'GRP-TOWER-A', new Date(), 'COOKING', null],
     // Group 2: Prestige ITPL Lunch Box Group (Threshold Reached, Matching)
-    [2, 2, 21, 'Prestige Lunch Box & Fit Meals', 'Clean home-cooked lunch for IT professionals working from home.', 'LUNCH', 'Healthy, Millets, High Protein', 'FITNESS', '12:00:00', '14:30:00', 4200, 3, 4, 3, 'THRESHOLD_REACHED', null, 'GRP-PRESTIGE-L', null],
+    [2, 2, 21, 'Prestige Lunch Box & Fit Meals', 'Clean home-cooked lunch for IT professionals working from home.', 'LUNCH', 'Healthy, Millets, High Protein', 'FITNESS', '12:00:00', '14:30:00', 4200, 3, 4, 3, 'THRESHOLD_REACHED', null, 'GRP-PRESTIGE-L', null, 'COOKING', null],
     // Group 3: Sobha Morning Breakfast & Dosa Group (Recruiting)
-    [3, 3, 26, 'Sobha Silicon Oasis Pure Veg Club', 'Early morning crisp dosas and fluffy idlis for school and office prep.', 'BREAKFAST', 'South Indian, Tamil Brahmin', 'JAIN', '07:00:00', '09:30:00', 4000, 3, 5, 2, 'RECRUITING', null, 'GRP-SOBHA-B', null]
+    [3, 3, 26, 'Sobha Silicon Oasis Pure Veg Club', 'Early morning crisp dosas and fluffy idlis for school and office prep.', 'BREAKFAST', 'South Indian, Tamil Brahmin', 'JAIN', '07:00:00', '09:30:00', 4000, 3, 5, 2, 'RECRUITING', null, 'GRP-SOBHA-B', null, 'COOKING', null],
+    // Group 4: Tower A Morning Dishwashing Syndicate (Active with Dishwashing Specialist - cook_id 7)
+    [4, 1, 1, 'Tower A Morning Utensil Care Club', 'Dedicated daily utensil washing and sparkling sink sanitization right after breakfast.', 'BREAKFAST', 'Utensil Washing', 'STANDARD', '08:00:00', '10:30:00', 2000, 3, 5, 4, 'ACTIVE', 7, 'GRP-TOWER-A-DISH', new Date(), 'DISHWASHING', null],
+    // Group 5: Tower B Complete Kitchen Care Combo (Active with Cook 1 Lakshmi + Dishwasher 8)
+    [5, 1, 10, 'Tower B Complete Kitchen Care Combo', 'Coordinated daily dinner cooking plus complete post-dinner utensil washing and kitchen cleanup.', 'DINNER', 'South & North Indian Comfort', 'VEGETARIAN', '19:30:00', '22:30:00', 6000, 3, 4, 3, 'ACTIVE', 1, 'GRP-TOWER-B-COMBO', new Date(), 'COMBO', 8]
   ];
 
-  for (const [id, socId, creatorId, gName, desc, service, cuisines, diet, tStart, tEnd, budget, minH, maxH, currH, status, cookId, code, actAt] of groups) {
+  for (const [id, socId, creatorId, gName, desc, service, cuisines, diet, tStart, tEnd, budget, minH, maxH, currH, status, cookId, code, actAt, sType, dwId] of groups) {
     await query(
-      `INSERT INTO cook_groups (id, society_id, created_by_resident_id, name, description, meal_service, preferred_cuisines, dietary_pref, preferred_time_start, preferred_time_end, monthly_budget_max, min_households, max_households, current_households, status, assigned_cook_id, invite_code, activated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE status=VALUES(status), current_households=VALUES(current_households), assigned_cook_id=VALUES(assigned_cook_id)`,
-      [id, socId, creatorId, gName, desc, service, cuisines, diet, tStart, tEnd, budget, minH, maxH, currH, status, cookId, code, actAt]
+      `INSERT INTO cook_groups (id, society_id, created_by_resident_id, name, description, meal_service, preferred_cuisines, dietary_pref, preferred_time_start, preferred_time_end, monthly_budget_max, min_households, max_households, current_households, status, assigned_cook_id, invite_code, activated_at, service_type, assigned_dishwasher_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE status=VALUES(status), current_households=VALUES(current_households), assigned_cook_id=VALUES(assigned_cook_id), service_type=VALUES(service_type), assigned_dishwasher_id=VALUES(assigned_dishwasher_id)`,
+      [id, socId, creatorId, gName, desc, service, cuisines, diet, tStart, tEnd, budget, minH, maxH, currH, status, cookId, code, actAt, sType, dwId]
     );
   }
 
@@ -260,23 +272,25 @@ export async function seedDatabase() {
     );
   }
 
-  // 7. Bookings, Payments, Subscriptions & Invoices
+  // 7. Bookings, Payments, Subscriptions & Invoices (Cooking, Dishwashing, Combo)
   const bookingsData = [
-    [1, 6, 2, today, nextMonth, '19:00:00', '19:45:00', 4000, 'ACTIVE', '07:00 PM', 'Dinner', 1, 1],
-    [2, 7, 2, today, nextMonth, '19:45:00', '20:30:00', 4000, 'ACTIVE', '07:45 PM', 'Dinner', 1, 1],
-    [3, 1, 2, today, nextMonth, '20:30:00', '21:15:00', 4000, 'ACTIVE', '08:30 PM', 'Dinner', 1, 1],
-    [4, 8, 2, today, nextMonth, '21:15:00', '22:00:00', 4000, 'ACTIVE', '09:15 PM', 'Dinner', 1, 1],
-    [5, 9, 2, today, nextMonth, '22:00:00', '22:45:00', 4000, 'ACTIVE', '10:00 PM', 'Dinner', 1, 1],
+    [1, 6, 2, today, nextMonth, '19:00:00', '19:45:00', 4000, 'ACTIVE', '07:00 PM', 'Dinner', 1, 1, 'COOKING'],
+    [2, 7, 2, today, nextMonth, '19:45:00', '20:30:00', 4000, 'ACTIVE', '07:45 PM', 'Dinner', 1, 1, 'COOKING'],
+    [3, 1, 2, today, nextMonth, '20:30:00', '21:15:00', 4000, 'ACTIVE', '08:30 PM', 'Dinner', 1, 1, 'COOKING'],
+    [4, 8, 2, today, nextMonth, '21:15:00', '22:00:00', 4000, 'ACTIVE', '09:15 PM', 'Dinner', 1, 1, 'COOKING'],
+    [5, 9, 2, today, nextMonth, '22:00:00', '22:45:00', 4000, 'ACTIVE', '10:00 PM', 'Dinner', 1, 1, 'COOKING'],
     // Lakshmi (cook_id 1) serving Ananya in Flat B-302
-    [6, 10, 1, today, nextMonth, '12:30:00', '13:15:00', 3500, 'ACTIVE', '12:30 PM', 'Lunch', null, null]
+    [6, 10, 1, today, nextMonth, '12:30:00', '13:15:00', 3500, 'ACTIVE', '12:30 PM', 'Lunch', null, null, 'COOKING'],
+    // Dedicated Dishwashing for Rahul (res_id 1) in Flat A-101 with Rekha (cook_id 7)
+    [7, 1, 7, today, nextMonth, '08:30:00', '09:00:00', 1800, 'ACTIVE', '08:30 AM', 'Breakfast Utensils', 4, null, 'DISHWASHING']
   ];
 
-  for (const [id, resId, cId, sDate, eDate, st, et, amt, status, slotLabel, meal, gId, sId] of bookingsData) {
+  for (const [id, resId, cId, sDate, eDate, st, et, amt, status, slotLabel, meal, gId, sId, sType = 'COOKING'] of bookingsData) {
     await query(
-      `INSERT INTO bookings (id, resident_id, cook_id, start_date, end_date, start_time, end_time, amount, status, expires_at, slot_label, meal_type, group_id, schedule_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE status=VALUES(status), amount=VALUES(amount)`,
-      [id, resId, cId, sDate, eDate, st, et, amt, status, slotLabel, meal, gId, sId]
+      `INSERT INTO bookings (id, resident_id, cook_id, start_date, end_date, start_time, end_time, amount, status, expires_at, slot_label, meal_type, group_id, schedule_id, service_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE status=VALUES(status), amount=VALUES(amount), service_type=VALUES(service_type)`,
+      [id, resId, cId, sDate, eDate, st, et, amt, status, slotLabel, meal, gId, sId, sType]
     );
 
     // Payments

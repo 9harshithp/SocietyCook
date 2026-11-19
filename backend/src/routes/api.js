@@ -104,11 +104,30 @@ apiRouter.get('/societies/:id', handle(async (req, res) => {
   res.json({ ...society, blocks });
 }));
 
-// 4. Cooks Discovery & Profiles
+// 4. Services & Household Professionals Discovery
+apiRouter.get('/services', handle(async (req, res) => {
+  const services = await query('SELECT * FROM service_categories WHERE is_active=TRUE ORDER BY base_price ASC');
+  res.json(services);
+}));
+
 apiRouter.get('/cooks', authenticate, handle(async (req, res) => {
   const targetSocietyId = req.query.society_id ? Number(req.query.society_id) : req.user.society_id;
-  const where = targetSocietyId ? 'c.verified=1 AND u.society_id=?' : 'c.verified=1';
+  let where = targetSocietyId ? 'c.verified=1 AND u.society_id=?' : 'c.verified=1';
   const params = targetSocietyId ? [targetSocietyId] : [];
+
+  if (req.query.service_type || req.query.serviceType) {
+    const sType = (req.query.service_type || req.query.serviceType).toUpperCase();
+    if (sType === 'DISHWASHING') {
+      where += " AND (c.professional_type = 'DISHWASHER' OR c.professional_type = 'MULTI_SKILLED')";
+    } else if (sType === 'COOKING') {
+      where += " AND (c.professional_type = 'COOK' OR c.professional_type = 'MULTI_SKILLED')";
+    }
+  }
+
+  if (req.query.professional_type || req.query.professionalType) {
+    where += ' AND c.professional_type=?';
+    params.push(req.query.professional_type || req.query.professionalType);
+  }
 
   const cooks = await query(`
     SELECT c.*, u.name, u.email, u.phone, u.society_id, s.name as society_name,
@@ -282,22 +301,29 @@ apiRouter.post('/groups/:id/activate', authenticate, handle(async (req, res) => 
   res.json(result);
 }));
 
-// 6. Dynamic Pricing Calculator
+// 6. Dynamic Pricing Calculator (Cooking, Dishwashing, Combo)
 apiRouter.post('/pricing/calculate', (req, res) => {
   const schema = z.object({
     householdCount: z.number().int().min(1).max(10).default(5),
     mealService: z.enum(['BREAKFAST', 'LUNCH', 'DINNER', 'MULTIPLE']).default('DINNER'),
+    serviceType: z.enum(['COOKING', 'DISHWASHING', 'COMBO', 'cooking', 'dishwashing', 'combo']).optional().default('COOKING'),
+    utensilLoad: z.enum(['LIGHT', 'STANDARD', 'HEAVY', 'light', 'standard', 'heavy']).optional().default('STANDARD'),
     householdSize: z.number().int().min(1).max(6).default(2),
     commissionPct: z.number().min(0).max(30).default(10)
   });
   const data = schema.parse(req.body);
-  const result = calculateGroupPricing(data);
+  const result = calculateGroupPricing({
+    ...data,
+    serviceType: data.serviceType.toUpperCase(),
+    utensilLoad: data.utensilLoad.toUpperCase()
+  });
   res.json(result);
 });
 
 apiRouter.get('/pricing/tiers', (req, res) => {
-  const meal = req.query.meal || 'DINNER';
-  const table = generateGroupPricingTable(meal);
+  const meal = (req.query.meal || req.query.mealService || 'DINNER').toUpperCase();
+  const serviceType = (req.query.service || req.query.serviceType || 'COOKING').toUpperCase();
+  const table = generateGroupPricingTable(meal, serviceType);
   res.json(table);
 });
 
@@ -332,28 +358,39 @@ apiRouter.post('/bookings', authenticate, requireRoles(['RESIDENT']), handle(asy
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
     mealType: z.string().optional().default('Dinner'),
-    slotLabel: z.string().optional()
+    slotLabel: z.string().optional(),
+    serviceType: z.enum(['COOKING', 'DISHWASHING', 'COMBO', 'cooking', 'dishwashing', 'combo']).optional().default('COOKING'),
+    utensilLoad: z.enum(['LIGHT', 'STANDARD', 'HEAVY', 'light', 'standard', 'heavy']).optional().default('STANDARD'),
+    dishwasherId: z.coerce.number().optional()
   });
   const b = schema.parse(req.body);
+  const sType = b.serviceType.toUpperCase();
+  const uLoad = b.utensilLoad.toUpperCase();
 
   const start = new Date(b.startDate + 'T00:00:00Z');
   const end = new Date(+start + 29 * 86400000).toISOString().slice(0, 10);
   const [h, m] = b.startTime.split(':').map(Number);
-  const minutes = h * 60 + m + 45;
+  const durationMinutes = sType === 'DISHWASHING' ? 30 : sType === 'COMBO' ? 75 : 45;
+  const minutes = h * 60 + m + durationMinutes;
   const stop = `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
   const [cook] = await query('SELECT c.*, u.society_id, u.name FROM cooks c JOIN users u ON u.id=c.user_id WHERE c.id=?', [b.cookId]);
-  if (!cook || !cook.verified) return res.status(404).json({ success: false, message: 'Cook not available' });
+  if (!cook || !cook.verified) return res.status(404).json({ success: false, message: 'Service professional not available' });
+
+  let totalAmount = sType === 'DISHWASHING' ? (cook.dishwashing_price || 2200) : cook.price;
+  if (sType === 'COMBO') {
+    totalAmount = Math.round((cook.price + (cook.dishwashing_price || 2200)) * 0.9); // 10% combo discount
+  }
 
   const label = b.slotLabel || `${(h % 12 || 12).toString().padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
   const result = await query(
-    `INSERT INTO bookings (resident_id, cook_id, start_date, end_date, start_time, end_time, amount, expires_at, slot_label, meal_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE), ?, ?)`,
-    [req.user.id, cook.id, b.startDate, end, b.startTime + ':00', stop + ':00', cook.price, label, b.mealType]
+    `INSERT INTO bookings (resident_id, cook_id, start_date, end_date, start_time, end_time, amount, expires_at, slot_label, meal_type, service_type, utensil_load, dishwasher_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE), ?, ?, ?, ?, ?)`,
+    [req.user.id, cook.id, b.startDate, end, b.startTime + ':00', stop + ':00', totalAmount, label, b.mealType, sType, uLoad, b.dishwasherId || null]
   );
 
-  res.status(201).json({ id: result.insertId, amount: cook.price, slotLabel: label });
+  res.status(201).json({ id: result.insertId, amount: totalAmount, slotLabel: label, serviceType: sType });
 }));
 
 apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) => {

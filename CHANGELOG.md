@@ -6,6 +6,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - 2026-11-19
+
+### Premium Redesign & Household Services Expansion (v3.0 Release)
+- **New Branch:** Developed on dedicated Git branch `feature/societycook-v3`.
+- **Brand Identity & Creative Direction:**
+  - Taglines: Primary: **More living. Less chores.** | Supporting: **A happier home. A simpler everyday.**
+  - Palette: Deep Forest Green (`#153D32`), Warm Terracotta (`#E9A15B`), Warm Cream (`#FBF7EF`), Soft Sage (`#DDE9D8`), Charcoal (`#202A25`), White (`#FFFFFF`), Muted Gray-Green (`#64746B`).
+  - Typography: Editorial serif headings with `Playfair Display` paired with `Plus Jakarta Sans` for functional UI and body text.
+- **Household Services Expansion:**
+  - Database support for 3 distinct initial service categories:
+    1. `COOKING`: Professional Home Cooking (fresh custom meals in private kitchens)
+    2. `DISHWASHING`: Utensil Care & Dishwashing (spotless vessels, pressure cookers, sink & counter hygiene)
+    3. `COMBO`: Complete Kitchen Care (synchronized cooking followed immediately by utensil washing)
+  - Non-destructive database migrations (`backend/migrations.js`):
+    - Added `service_categories` table with extensible category flags.
+    - Added `professional_type` (`COOK`, `DISHWASHER`, `MULTI_SKILLED`), `utensil_capacity_tier`, `dishwashing_price` to `cooks` table.
+    - Added `service_type`, `utensil_load`, `dishwasher_id`, `dishwashing_slot_label`, and `dishwashing_amount` to `bookings`, `cook_groups`, and `sessions`.
+- **Dynamic Pricing Engine Expansion:**
+  - Added `DISHWASHING_VOLUME_TIERS` (₹2,200 down to ₹1,500/mo) and `COMBO_VOLUME_TIERS` (₹6,500 down to ₹4,600/mo).
+  - Added `UTENSIL_LOAD_MULTIPLIERS` (`LIGHT`: 0.9, `STANDARD`: 1.0, `HEAVY`: 1.25).
+  - Coordinated compensation split for combo care (65% primary cook / 35% dishwasher) with guaranteed income floors.
+  - Vitest test suite expanded to 21 passing tests covering all service algorithms.
+- **Redesigned Public Landing Page (`LandingPage.jsx`):**
+  - Section A: Refined brand navbar with services dropdown, anchor links, theme toggle, and 1-click persona switcher.
+  - Section B: Cinematic asymmetrical hero section with high-res warm kitchen photography, floating trust badges, and interactive Service Finder bar.
+  - Section C: Trust and value proposition strip highlighting society clusters, up to 35% savings, 100% verified staff, zero commute gaps, and backup continuity.
+  - Section D: Signature Service Showcase featuring 3 editorial cards with authentic local photography.
+  - Section E: Lifestyle storytelling section ("Spend your evenings on what actually matters").
+  - Section F: Community-first tower visualizer showing elevator-synchronized visits between flats.
+  - Section G: Interactive Community Savings Calculator supporting Cooking, Utensil Care, and Combo care with real-time breakdowns.
+  - Section H: 4-step friction-free onboarding timeline.
+  - Section I: Sample daily tower routine with tabbed schedule previews.
+  - Section J: Meet Your Professionals card grid with real API data and credentials.
+  - Section K: Workforce dignity and empowerment benefits.
+  - Section L: Residential Society Partnerships (RWA) with interactive demo request dialog.
+  - Section M: Animated accessible FAQ accordion.
+  - Section N: Full-width conversion banner with serene home photography.
+  - Section O: Comprehensive editorial footer.
+- **Frontend Hub & Dashboard Enhancements:**
+  - `CookDirectoryPage`: Added service category filters (`ALL`, `COOK`, `DISHWASHER`, `MULTI_SKILLED`) and utensil load indicators.
+  - `GroupHub`: Added service category filtering, service badges on cards, and updated creation form for dishwashing & combo clusters.
+  - `DashboardHub`: Added multi-service support for daily appointments showing cook and dishwasher windows side by side with shared OTP.
+- **High-Resolution Local Photographic Assets:**
+  - Downloaded and curated 7 high-resolution local assets stored in `frontend/public/images/`.
+
+---
+
 ## [2.0.0] - 2026-11-19
 
 ### Major Architecture & Feature Upgrade (v2 Production Release)
