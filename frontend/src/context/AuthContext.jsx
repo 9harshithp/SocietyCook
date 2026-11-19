@@ -16,7 +16,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [activeSocietyId, setActiveSocietyId] = useState(1);
   const [societies, setSocieties] = useState([]);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem('sc_theme');
+    if (saved === 'dark') return true;
+    if (saved === 'light') return false;
+    return Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
   const [toast, setToast] = useState(null); // { type: 'success' | 'error', message: '' }
 
   const showToast = (message, type = 'success') => {
@@ -25,16 +31,18 @@ export function AuthProvider({ children }) {
   };
 
   const toggleDarkMode = () => {
-    const next = !isDarkMode;
-    setIsDarkMode(next);
-    if (next) {
+    setIsDarkMode((prev) => !prev);
+  };
+
+  useEffect(() => {
+    if (isDarkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('sc_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('sc_theme', 'light');
     }
-  };
+  }, [isDarkMode]);
 
   const fetchMe = async () => {
     try {
@@ -60,13 +68,6 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    // Check saved theme
-    const savedTheme = localStorage.getItem('sc_theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-
     loadSocieties();
     const token = sessionStorage.getItem('sc_access_token') || sessionStorage.getItem('sc_token');
     if (token) {
@@ -138,3 +139,4 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+
