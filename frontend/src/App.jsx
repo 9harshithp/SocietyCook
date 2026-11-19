@@ -84,7 +84,23 @@ export function App() {
                   }
                 />
                 <Route
+                  path="/app/groups"
+                  element={
+                    <ProtectedRoute>
+                      <GroupHub />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/groups/:id"
+                  element={
+                    <ProtectedRoute>
+                      <GroupDetailsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/groups/:id"
                   element={
                     <ProtectedRoute>
                       <GroupDetailsPage />
@@ -100,7 +116,23 @@ export function App() {
                   }
                 />
                 <Route
+                  path="/app/cooks"
+                  element={
+                    <ProtectedRoute>
+                      <CookDirectoryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/schedule"
+                  element={
+                    <ProtectedRoute>
+                      <ScheduleCalendarPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/schedule"
                   element={
                     <ProtectedRoute>
                       <ScheduleCalendarPage />
@@ -110,7 +142,15 @@ export function App() {
                 <Route
                   path="/billing"
                   element={
-                    <ProtectedRoute allowedRoles={['RESIDENT', 'ADMIN']}>
+                    <ProtectedRoute>
+                      <BillingPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/billing"
+                  element={
+                    <ProtectedRoute>
                       <BillingPage />
                     </ProtectedRoute>
                   }
@@ -118,7 +158,15 @@ export function App() {
                 <Route
                   path="/analytics"
                   element={
-                    <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                    <ProtectedRoute>
+                      <AnalyticsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/app/analytics"
+                  element={
+                    <ProtectedRoute>
                       <AnalyticsPage />
                     </ProtectedRoute>
                   }
