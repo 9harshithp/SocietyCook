@@ -1,3 +1,8 @@
+import dns from 'dns';
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch (e) {}
+
 import mysql from 'mysql2/promise';
 import { ENV } from './env.js';
 
@@ -8,15 +13,33 @@ const isSsl =
   ENV.DATABASE_URL.includes('ssl') ||
   process.env.DB_SSL === 'true';
 
-export const db = mysql.createPool({
-  uri: ENV.DATABASE_URL,
+const poolConfig = {
   waitForConnections: true,
   connectionLimit: 15,
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000,
-  ...(isSsl ? { ssl: { rejectUnauthorized: false } } : {})
-});
+  connectTimeout: 30000,
+  ...(isSsl ? { ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: false } } : {})
+};
+
+if (ENV.DATABASE_URL.startsWith('mysql://')) {
+  try {
+    const u = new URL(ENV.DATABASE_URL);
+    poolConfig.host = u.hostname;
+    poolConfig.port = Number(u.port) || 3306;
+    poolConfig.user = decodeURIComponent(u.username);
+    poolConfig.password = decodeURIComponent(u.password);
+    const dbName = u.pathname.replace(/^\//, '');
+    poolConfig.database = dbName && dbName !== 'sys' ? dbName : 'test';
+  } catch (e) {
+    poolConfig.uri = ENV.DATABASE_URL;
+  }
+} else {
+  poolConfig.uri = ENV.DATABASE_URL;
+}
+
+export const db = mysql.createPool(poolConfig);
 
 export const query = async (sql, args = []) => {
   const [rows] = await db.execute(sql, args);
