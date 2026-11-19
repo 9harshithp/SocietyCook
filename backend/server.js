@@ -17,10 +17,20 @@ import { swaggerSpec } from './src/docs/swagger.js';
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.IO with CORS
+// Initialize Socket.IO with CORS (supports localhost, Vercel deployments & previews)
+const corsOptions = {
+  origin: (origin, callback) => {
+    callback(null, origin || true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
 const io = new Server(server, {
   cors: {
-    origin: ENV.FRONTEND_URL,
+    origin: (origin, callback) => callback(null, origin || true),
+    credentials: true,
     methods: ['GET', 'POST']
   }
 });
@@ -28,7 +38,7 @@ initSocket(io);
 
 // Security & Middlewares
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: ENV.FRONTEND_URL, credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '500kb' }));
 app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 
