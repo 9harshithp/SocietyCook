@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *), :is(.dark, .dark *) &);
 
 @theme {
   --font-serif: "Playfair Display", Georgia, serif;
@@ -31,10 +31,11 @@
     --border-color: #E2DBD0;
   }
 
-  .dark {
+  :root.dark, .dark, [data-theme="dark"] {
     --bg-light: #0D1613;
-    --text-dark: #FBF7EF;
+    --text-dark: #EDE8DF;
     --border-color: #1A2E26;
+    color-scheme: dark;
   }
 
   body {
@@ -43,11 +44,47 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.2s ease, color 0.2s ease;
+    overflow-x: hidden;
+  }
+
+  html.dark body, body.dark {
+    background-color: #0D1613;
+    color: #EDE8DF;
   }
 
   h1, h2, h3, .font-serif {
     font-family: var(--font-serif);
   }
+}
+
+/* Guaranteed dark overrides for high specificity and rock-solid theme switching */
+html.dark .bg-\[\#FBF7EF\], [data-theme="dark"] .bg-\[\#FBF7EF\] {
+  background-color: #0D1613 !important;
+}
+html.dark .bg-\[\#F4EFE6\], [data-theme="dark"] .bg-\[\#F4EFE6\] {
+  background-color: #101A16 !important;
+}
+html.dark .bg-slate-50, [data-theme="dark"] .bg-slate-50 {
+  background-color: #0A0F0D !important;
+}
+html.dark .bg-white, [data-theme="dark"] .bg-white {
+  background-color: #14231D !important;
+  color: #EDE8DF !important;
+}
+html.dark .text-\[\#202A25\], [data-theme="dark"] .text-\[\#202A25\] {
+  color: #EDE8DF !important;
+}
+html.dark .text-slate-900, [data-theme="dark"] .text-slate-900 {
+  color: #F8FAFC !important;
+}
+html.dark .text-slate-800, [data-theme="dark"] .text-slate-800 {
+  color: #EDE8DF !important;
+}
+html.dark .border-\[\#DDE9D8\], [data-theme="dark"] .border-\[\#DDE9D8\] {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.dark .border-\[\#E6DFD3\], [data-theme="dark"] .border-\[\#E6DFD3\] {
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Custom modern scrollbars */

@@ -54,9 +54,9 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors">
+          <div className="min-h-screen flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613] text-[#202A25] dark:text-[#EDE8DF] font-sans transition-colors overflow-x-hidden w-full">
             <Navbar />
-            <main className="flex-1">
+            <main className="flex-1 w-full overflow-x-hidden">
               <Routes>
                 {/* Public Marketing & Info */}
                 <Route path="/" element={<LandingPage />} />

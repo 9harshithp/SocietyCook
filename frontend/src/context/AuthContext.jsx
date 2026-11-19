@@ -37,9 +37,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
+      if (document.body) document.body.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
       localStorage.setItem('sc_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      if (document.body) document.body.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem('sc_theme', 'light');
     }
   }, [isDarkMode]);

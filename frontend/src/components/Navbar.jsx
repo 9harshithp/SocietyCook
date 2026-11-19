@@ -165,35 +165,29 @@ export function Navbar() {
           </nav>
         )}
 
-        {/* Center: 1-Click Demo Personas Bar */}
-        <div className="hidden xl:flex items-center gap-1.5 bg-white/70 dark:bg-white/5 p-1 rounded-2xl border border-[#DDE9D8] dark:border-white/10 shrink-0 shadow-xs">
-          <span className="text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400 px-2 whitespace-nowrap select-none">
-            1-Click Demo:
-          </span>
-          <div className="flex items-center gap-1 shrink-0">
-            {DEMO_PERSONAS.map((p) => {
-              const isActive = user?.email === p.email;
-              return (
-                <button
-                  key={p.email}
-                  type="button"
-                  onClick={async () => {
-                    await switchPersona(p.email);
-                    navigate('/app');
-                  }}
-                  className={`h-7 px-2.5 text-xs font-semibold rounded-xl whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 cursor-pointer ${
-                    isActive
-                      ? 'bg-[#153D32] text-white border-[#153D32] shadow-xs font-bold'
-                      : 'bg-white dark:bg-slate-900 text-[#202A25] dark:text-slate-300 hover:text-[#153D32] border-[#DDE9D8] dark:border-white/10 hover:border-[#153D32]/40'
-                  }`}
-                  title={p.desc}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {/* In-App Navigation Links (When logged in) */}
+        {user && (
+          <nav className="hidden lg:flex items-center gap-5 text-xs font-bold text-[#202A25] dark:text-slate-200">
+            <Link to="/app" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              Dashboard
+            </Link>
+            <Link to="/app/groups" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              Groups
+            </Link>
+            <Link to="/app/cooks" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              Cooks
+            </Link>
+            <Link to="/app/schedule" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              Schedule
+            </Link>
+            <Link to="/app/billing" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              Billing
+            </Link>
+            <Link to="/app/analytics" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
+              Analytics
+            </Link>
+          </nav>
+        )}
 
         {/* Right Tools (Theme toggle, Notifications, User Auth) */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -312,72 +306,133 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Responsive Demo Persona Bar for Mobile/Tablet (< xl) */}
-      <div className="xl:hidden flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-[#F4EFE6] dark:bg-[#101A16] border-t border-[#DDE9D8]/60 dark:border-white/5 overflow-x-auto no-scrollbar scroll-smooth">
-        <span className="text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400 px-1 whitespace-nowrap shrink-0">
-          Demo:
-        </span>
-        {DEMO_PERSONAS.map((p) => {
-          const isActive = user?.email === p.email;
-          return (
-            <button
-              key={p.email}
-              type="button"
-              onClick={async () => {
-                await switchPersona(p.email);
-                navigate('/app');
-              }}
-              className={`h-6 px-2 text-[11px] font-semibold rounded-lg whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 cursor-pointer ${
-                isActive
-                  ? 'bg-[#153D32] text-white border-[#153D32] font-bold shadow-xs'
-                  : 'bg-white dark:bg-slate-800 text-[#202A25] dark:text-slate-300 border-[#DDE9D8] dark:border-white/10'
-              }`}
-            >
-              {p.label}
-            </button>
-          );
-        })}
+      {/* Unified 1-Click Demo Persona Bar (Fits screen width 100% on all viewports) */}
+      <div className="w-full bg-[#F4EFE6]/90 dark:bg-[#101A16] border-t border-[#DDE9D8]/70 dark:border-white/5 py-1.5 transition-colors overflow-hidden">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 flex items-center justify-between sm:justify-start gap-1 sm:gap-2">
+          <span className="hidden sm:inline-flex text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400 px-1 whitespace-nowrap shrink-0">
+            1-Click Demo:
+          </span>
+          <div className="grid grid-cols-5 sm:flex sm:flex-wrap items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
+            {DEMO_PERSONAS.map((p) => {
+              const isActive = user?.email === p.email;
+              const shortName =
+                p.role === 'SOCIETY_MANAGER'
+                  ? 'Manager'
+                  : p.role === 'ADMIN'
+                  ? 'Admin'
+                  : p.label.replace('Cook (', '').replace('Resident (', '').replace(')', '');
+              return (
+                <button
+                  key={p.email}
+                  type="button"
+                  onClick={async () => {
+                    await switchPersona(p.email);
+                    navigate('/app');
+                  }}
+                  className={`h-7 px-1 sm:px-2.5 text-[11px] sm:text-xs font-semibold rounded-lg sm:rounded-xl truncate flex items-center justify-center transition-all border shrink-0 cursor-pointer text-center ${
+                    isActive
+                      ? 'bg-[#153D32] dark:bg-[#E9A15B] text-white dark:text-[#153D32] border-[#153D32] dark:border-[#E9A15B] shadow-xs font-bold'
+                      : 'bg-white dark:bg-slate-900 text-[#202A25] dark:text-slate-300 hover:text-[#153D32] dark:hover:text-[#E9A15B] border-[#DDE9D8] dark:border-white/10 hover:border-[#153D32]/40'
+                  }`}
+                  title={`${p.label} (${p.desc})`}
+                >
+                  <span className="sm:hidden">{shortName}</span>
+                  <span className="hidden sm:inline">{p.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-[#DDE9D8] dark:border-white/10 bg-[#FBF7EF] dark:bg-[#121E19] px-4 py-4 space-y-3">
           <div className="space-y-1 font-semibold text-sm text-[#202A25] dark:text-slate-200">
-            <a
-              href="#services"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
-            >
-              Household Services
-            </a>
-            <a
-              href="#how-it-works"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
-            >
-              How It Works
-            </a>
-            <a
-              href="#community-pricing"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
-            >
-              Community Pricing
-            </a>
-            <a
-              href="#for-societies"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
-            >
-              For Societies
-            </a>
-            <a
-              href="#for-professionals"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
-            >
-              For Professionals
-            </a>
+            {!user ? (
+              <>
+                <a
+                  href="#services"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Household Services
+                </a>
+                <a
+                  href="#how-it-works"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  How It Works
+                </a>
+                <a
+                  href="#community-pricing"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Community Pricing
+                </a>
+                <a
+                  href="#for-societies"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  For Societies
+                </a>
+                <a
+                  href="#for-professionals"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  For Professionals
+                </a>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/app"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/app/groups"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Community Groups
+                </Link>
+                <Link
+                  to="/app/cooks"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Cooks Directory
+                </Link>
+                <Link
+                  to="/app/schedule"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Schedule
+                </Link>
+                <Link
+                  to="/app/billing"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Billing & Invoices
+                </Link>
+                <Link
+                  to="/app/analytics"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2 rounded-xl hover:bg-[#DDE9D8]/30 dark:hover:bg-white/5"
+                >
+                  Analytics & Reports
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="pt-2 border-t border-[#DDE9D8]/60 dark:border-white/10 flex flex-col gap-2">
