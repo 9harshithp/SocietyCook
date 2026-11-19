@@ -3,6 +3,8 @@ import { ENV } from './env.js';
 
 const isSsl =
   ENV.DATABASE_URL.includes('aivencloud') ||
+  ENV.DATABASE_URL.includes('tidbcloud') ||
+  ENV.DATABASE_URL.includes('railway') ||
   ENV.DATABASE_URL.includes('ssl') ||
   process.env.DB_SSL === 'true';
 

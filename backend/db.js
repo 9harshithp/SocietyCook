@@ -1,8 +1,17 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-const dbUrl = process.env.DATABASE_URL || '';
-const isSsl = dbUrl.includes('aivencloud') || dbUrl.includes('ssl') || process.env.DB_SSL === 'true';
+const dbUrl =
+  process.env.DATABASE_URL ||
+  process.env.MYSQL_URL ||
+  process.env.MYSQLPUBLICURL ||
+  '';
+const isSsl =
+  dbUrl.includes('aivencloud') ||
+  dbUrl.includes('tidbcloud') ||
+  dbUrl.includes('railway') ||
+  dbUrl.includes('ssl') ||
+  process.env.DB_SSL === 'true';
 
 export const db = mysql.createPool({
   uri: dbUrl,
