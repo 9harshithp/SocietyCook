@@ -284,16 +284,16 @@ export function Navbar() {
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <Link
                 to="/login"
-                className="px-3 py-1.5 text-xs font-bold text-[#202A25] dark:text-slate-200 hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors"
+                className="px-2.5 py-1.5 text-xs font-bold text-[#202A25] dark:text-slate-200 hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
-                className="px-4 py-2 text-xs font-bold rounded-xl bg-[#153D32] hover:bg-[#1C4E40] text-white shadow-md shadow-[#153D32]/20 transition-all hover:-translate-y-0.5 border border-[#153D32]"
+                className="hidden sm:inline-flex px-3.5 py-2 text-xs font-bold rounded-xl bg-[#153D32] hover:bg-[#1C4E40] text-white shadow-md shadow-[#153D32]/20 transition-all hover:-translate-y-0.5 border border-[#153D32]"
               >
                 Get Started
               </Link>
@@ -304,7 +304,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl text-[#202A25] dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
+            className="lg:hidden p-2 rounded-xl text-[#202A25] dark:text-white hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
             aria-label="Toggle mobile menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -313,7 +313,7 @@ export function Navbar() {
       </div>
 
       {/* Responsive Demo Persona Bar for Mobile/Tablet (< xl) */}
-      <div className="xl:hidden flex items-center gap-1.5 px-4 py-1.5 bg-[#F4EFE6] dark:bg-[#101A16] border-t border-[#DDE9D8]/60 dark:border-white/5 overflow-x-auto no-scrollbar">
+      <div className="xl:hidden flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-[#F4EFE6] dark:bg-[#101A16] border-t border-[#DDE9D8]/60 dark:border-white/5 overflow-x-auto no-scrollbar scroll-smooth">
         <span className="text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400 px-1 whitespace-nowrap shrink-0">
           Demo:
         </span>
@@ -327,7 +327,7 @@ export function Navbar() {
                 await switchPersona(p.email);
                 navigate('/app');
               }}
-              className={`h-6 px-2 text-[11px] font-semibold rounded-lg whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 ${
+              className={`h-6 px-2 text-[11px] font-semibold rounded-lg whitespace-nowrap inline-flex items-center justify-center transition-all border shrink-0 cursor-pointer ${
                 isActive
                   ? 'bg-[#153D32] text-white border-[#153D32] font-bold shadow-xs'
                   : 'bg-white dark:bg-slate-800 text-[#202A25] dark:text-slate-300 border-[#DDE9D8] dark:border-white/10'
