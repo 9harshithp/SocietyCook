@@ -58,3 +58,4 @@ Implemented via `@graph` array directly in `<head>`:
 ### Google Search Console & Business Profile Setup:
 - **Google Search Console:** Submit `sitemap.xml` via GSC property dashboard; verify ownership via DNS TXT record or HTML tag.
 - **Google Business Profile:** Verified under "Domestic Help Service / Home Health & Household Agency" with primary operating service area covering Bengaluru East and South residential corridors.
+

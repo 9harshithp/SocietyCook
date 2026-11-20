@@ -46,3 +46,4 @@
 | | V13.2.1 — Rate limiting on public and sensitive routes | IP-based sliding window rate limiter | 429 Too Many Requests verified | **PASS** |
 | **V14. Configuration** | V14.1.1 — Content Security Policy and frame prevention | Helmet configured with CSP and `frameguard: deny` | Headers verified via cURL | **PASS** |
 | | V14.2.1 — Multi-stage non-root container deployment | Dockerfile uses `USER node` and Alpine base | Container config inspected | **PASS** |
+

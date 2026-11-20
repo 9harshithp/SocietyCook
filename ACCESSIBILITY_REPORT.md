@@ -39,3 +39,4 @@ Target Size (Minimum)          2.5.8 Level AA    PASS (Touch targets > 44px)
    - Society Partnership (RWA) modal incorporates focus trapping, Esc key dismissal, and backdrop click handlers.
 4. **Accessible Images:**
    - All photographic imagery provides concise, descriptive `alt` text. Decorative icons are accompanied by screen-reader accessible names or marked `aria-hidden="true"`.
+

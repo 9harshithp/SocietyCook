@@ -65,3 +65,4 @@ SELECT 'payments', COUNT(*) FROM payments;
 
 ### Step 4: Execute Migrations
 Run `npm run migrate` in the backend directory to ensure any newly added tables or columns are applied non-destructively.
+

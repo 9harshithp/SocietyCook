@@ -117,3 +117,4 @@ All enterprise compliance, testing, and operational runbooks are published in th
 - [`DEPLOYMENT.md`](file:///home/gs/Downloads/SocietyCook/DEPLOYMENT.md) — Docker Compose & Production Hosting Guide
 - [`ARCHITECTURE.md`](file:///home/gs/Downloads/SocietyCook/ARCHITECTURE.md) — System Design & Multi-Tenant Separation
 - [`RELEASE_CHECKLIST.md`](file:///home/gs/Downloads/SocietyCook/RELEASE_CHECKLIST.md) — Production Staging Quality Gate
+

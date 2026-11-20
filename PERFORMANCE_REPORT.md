@@ -46,3 +46,4 @@ MOBILE             95             100               96          100
    - Slashed initial JavaScript bundle down to 373 KB (108 KB gzipped).
 5. **Vercel Edge Caching:**
    - Added 1-year immutable caching (`max-age=31536000, immutable`) for `/images/*` and `/assets/*` in `vercel.json`.
+

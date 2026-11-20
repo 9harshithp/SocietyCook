@@ -84,3 +84,4 @@ All application events and operational logs follow standardized structured JSON:
 - **Readiness Probe (`GET /api/v1/health`):**
   - Performs quick database connectivity check (`SELECT 1`).
   - Returns HTTP 200 when ready to receive traffic, HTTP 503 if database pool is exhausted.
+

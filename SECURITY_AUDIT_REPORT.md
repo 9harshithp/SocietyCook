@@ -135,3 +135,4 @@ SEVERITY SUMMARY:
 - **Vulnerability:** No `robots.txt` or `sitemap.xml` existed, leaving private dashboard paths unprotected from indexing and search engines without crawl guidance.
 - **Business Impact:** Lower search ranking discoverability and accidental indexing of authenticated route structures.
 - **Remediation:** Deploy `robots.txt` disallowing `/app/` and `/admin/` while providing `sitemap.xml` with canonical links for public pages.
+

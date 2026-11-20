@@ -70,3 +70,4 @@ jobs:
         run: |
           npx -y @cyclonedx/cyclonedx-npm --output-file backend-bom.json --package-lock-only backend/package-lock.json || true
           npx -y @cyclonedx/cyclonedx-npm --output-file frontend-bom.json --package-lock-only frontend/package-lock.json || true
+

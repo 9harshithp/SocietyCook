@@ -49,3 +49,4 @@ flowchart TD
 ## 2. Disaster Recovery Verification Drills
 - **Schedule:** Semi-annual simulated disaster drill (next drill: May 2027).
 - **Procedure:** Stand up a replica environment from scratch using only backup dumps and the `enterprise-hardening` branch, verifying that complete platform restoration finishes in under 45 minutes.
+

@@ -38,3 +38,4 @@
 4. **Data Protection Officer (DPO) & Grievance Redressal:**
    - Designated Grievance Officer email: `grievance@societycook.in`.
    - Guaranteed response timeline within 7 business days.
+

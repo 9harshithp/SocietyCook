@@ -85,3 +85,4 @@
 ### Test Case 9: SQL Injection Probing on Cook Search and Filter
 - **Target:** `GET /api/v1/cooks?society_id=1' OR '1'='1` and `service_type=COOKING'; DROP TABLE users;--`
 - **Verification:** Both parameters validated with Zod/Number casting and parameterized via `mysql2.execute` prepared statements. HTTP 400 or sanitized query execution. Zero SQL injection possible. **[PASS]**
+

@@ -154,3 +154,4 @@ flowchart TB
 | **TM-10** | Security Headers | T, I | **MEDIUM** | VULNERABLE (CSP disabled) | **RESOLVED** (Strict Helmet & CSP) |
 | **TM-11** | SEO Crawl Control | I | **LOW** | MISSING (No robots/sitemap) | **RESOLVED** (Robots.txt & Sitemap) |
 | **TM-12** | Container Security | E | **MEDIUM** | MISSING (No Dockerfile) | **RESOLVED** (Non-root multi-stage) |
+

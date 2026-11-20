@@ -31,3 +31,4 @@
 
 ## 2. Formal Compliance Statement
 SocietyCook satisfies all foundational technical requirements for DPDP Act readiness, CERT-In logging compliance, and PCI DSS SAQ A eligibility. Full formal certification requires organizational audit by an accredited third-party assessor.
+
