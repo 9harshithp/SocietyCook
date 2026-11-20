@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SocietyCook — You are Currently Offline</title>
+  <meta name="theme-color" content="#153D32">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <style>
+    :root {
+      --bg: #FBF7EF;
+      --card-bg: #FFFFFF;
+      --text: #202A25;
+      --muted: #64746B;
+      --primary: #153D32;
+      --accent: #E9A15B;
+      --border: #DDE9D8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0D1613;
+        --card-bg: #15221C;
+        --text: #EDE8DF;
+        --muted: #A4B5AC;
+        --primary: #E9A15B;
+        --border: rgba(255, 255, 255, 0.1);
+      }
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .offline-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1.75rem;
+      padding: 2.5rem 2rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    }
+    .icon-wrapper {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 1.5rem auto;
+      border-radius: 1.25rem;
+      background: rgba(21, 61, 50, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      background: rgba(233, 161, 91, 0.15);
+      color: #964208;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      .badge { color: #E9A15B; }
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+    p {
+      font-size: 0.875rem;
+      line-height: 1.55;
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+    }
+    .security-note {
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.03);
+      padding: 0.75rem 1rem;
+      border-radius: 0.875rem;
+      border: 1px dashed var(--border);
+      margin-bottom: 1.75rem;
+      text-align: left;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      border-radius: 1rem;
+      background: #153D32;
+      color: #FFFFFF;
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .btn:hover {
+      background: #1E5747;
+      transform: translateY(-1px);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-card">
+    <div class="icon-wrapper">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#153D32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+    <div class="badge">Offline Protection</div>
+    <h1>No Internet Connection</h1>
+    <p>
+      SocietyCook requires an active internet connection to access live kitchen schedules, manage OTP attendance, and process secure payments.
+    </p>
+    <div class="security-note">
+      🔒 <strong>Enterprise Security Policy:</strong> Sensitive personal data, financial tokens, and private door access are never stored offline to safeguard resident privacy.
+    </div>
+    <button class="btn" onclick="window.location.reload()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+      </svg>
+      Try Reconnecting
+    </button>
+  </div>
+</body>
+</html>
+

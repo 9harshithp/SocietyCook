@@ -35,6 +35,7 @@ import {
   Home
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getRoleDashboardPath } from '../layouts/DashboardLayout';
 import { api } from '../services/api';
 import {
   trackServiceExploration,
@@ -190,19 +191,39 @@ export function LandingPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-                <a
-                  href="#service-finder"
-                  className="px-7 py-3.5 rounded-2xl bg-[#153D32] hover:bg-[#1E5244] text-white font-bold text-sm shadow-lg shadow-[#153D32]/20 inline-flex items-center justify-center gap-2.5 transition-all hover:-translate-y-0.5 cursor-pointer"
-                >
-                  <span>Find Services in Your Tower</span>
-                  <ArrowRight className="w-4 h-4 text-[#E9A15B]" />
-                </a>
-                <a
-                  href="#community-pricing"
-                  className="px-7 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 hover:border-[#153D32]/40 text-[#202A25] dark:text-white font-bold text-sm shadow-xs transition-colors text-center cursor-pointer"
-                >
-                  Calculate Group Savings
-                </a>
+                {user ? (
+                  <>
+                    <Link
+                      to={getRoleDashboardPath(user.role)}
+                      className="px-7 py-3.5 rounded-2xl bg-[#153D32] hover:bg-[#1E5244] text-white font-bold text-sm shadow-lg shadow-[#153D32]/20 inline-flex items-center justify-center gap-2.5 transition-all hover:-translate-y-0.5 cursor-pointer"
+                    >
+                      <span>Go to {user.role === 'ADMIN' ? 'Command Center' : user.role === 'SOCIETY_MANAGER' ? 'Campus Hub' : user.role === 'COOK' ? 'Professional Portal' : 'Resident Dashboard'}</span>
+                      <ArrowRight className="w-4 h-4 text-[#E9A15B]" />
+                    </Link>
+                    <Link
+                      to="/app/settings"
+                      className="px-7 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 hover:border-[#153D32]/40 text-[#202A25] dark:text-white font-bold text-sm shadow-xs transition-colors text-center cursor-pointer"
+                    >
+                      Settings & PWA
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <a
+                      href="#service-finder"
+                      className="px-7 py-3.5 rounded-2xl bg-[#153D32] hover:bg-[#1E5244] text-white font-bold text-sm shadow-lg shadow-[#153D32]/20 inline-flex items-center justify-center gap-2.5 transition-all hover:-translate-y-0.5 cursor-pointer"
+                    >
+                      <span>Find Services in Your Tower</span>
+                      <ArrowRight className="w-4 h-4 text-[#E9A15B]" />
+                    </a>
+                    <a
+                      href="#community-pricing"
+                      className="px-7 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 hover:border-[#153D32]/40 text-[#202A25] dark:text-white font-bold text-sm shadow-xs transition-colors text-center cursor-pointer"
+                    >
+                      Calculate Group Savings
+                    </a>
+                  </>
+                )}
               </div>
 
               {/* Editorial Hairline Trust Indicators */}
@@ -1565,12 +1586,22 @@ export function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link
-              to="/register"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#E9A15B] hover:bg-[#D48943] text-[#153D32] font-black text-xs uppercase tracking-wider shadow-xl transition-all hover:scale-103 cursor-pointer"
-            >
-              Get Started in Your Society
-            </Link>
+            {user ? (
+              <Link
+                to={getRoleDashboardPath(user.role)}
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#E9A15B] hover:bg-[#D48943] text-[#153D32] font-black text-xs uppercase tracking-wider shadow-xl transition-all hover:scale-103 cursor-pointer inline-flex items-center justify-center gap-2"
+              >
+                <span>Return to Dashboard</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <Link
+                to="/register"
+                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#E9A15B] hover:bg-[#D48943] text-[#153D32] font-black text-xs uppercase tracking-wider shadow-xl transition-all hover:scale-103 cursor-pointer"
+              >
+                Get Started in Your Society
+              </Link>
+            )}
             <a
               href="#service-finder"
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition-colors cursor-pointer"

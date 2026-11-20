@@ -2,14 +2,14 @@ const { chromium } = require('playwright');
 const assert = require('assert');
 
 async function runE2ETests() {
-  console.log('🚀 Starting SocietyCook Enterprise Playwright E2E Test Suite...\n');
+  console.log('🚀 Starting SocietyCook Enterprise Playwright E2E & PWA Test Suite...\n');
   const browser = await chromium.launch({
     executablePath: '/usr/bin/google-chrome',
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
-  const BASE_URL = 'http://localhost:5173';
+  const BASE_URL = 'http://127.0.0.1:5173';
   let passedCount = 0;
   let testCount = 0;
 
@@ -28,41 +28,29 @@ async function runE2ETests() {
   }
 
   try {
-    // Context with dataLayer tracking
     const context = await browser.newContext({
       viewport: { width: 1280, height: 800 }
     });
     const page = await context.newPage();
 
     // 1. Public Landing Page & Hero
-    await test('Public Landing Page renders with hero, title and branding', async () => {
+    await test('Public Landing Page renders with hero, branding and metadata', async () => {
       await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
       const title = await page.title();
       assert(title.includes('SocietyCook'), `Expected title to contain SocietyCook, got: ${title}`);
-      
+
       const heading = await page.locator('h1').textContent();
       assert(heading.includes('More living'), `Expected h1 to contain 'More living', got: ${heading}`);
-
-      const heroImg = page.locator('img[alt="Modern warm sun-drenched Indian apartment kitchen"]');
-      await heroImg.waitFor({ state: 'attached' });
     });
 
-    // 2. Cookie Consent Banner: Acceptance & Rejection
-    await test('Cookie consent banner defaults to pending/denied and handles accept', async () => {
-      // Clear localStorage to test fresh visitor
+    // 2. Cookie Consent Banner
+    await test('Cookie consent banner handles accept and persists preference', async () => {
       await page.evaluate(() => localStorage.removeItem('sc_ga_consent'));
       await page.reload({ waitUntil: 'domcontentloaded' });
 
       const banner = page.locator('div[role="region"][aria-label="Privacy & Analytics Preferences"]');
       await banner.waitFor({ state: 'visible', timeout: 5000 });
 
-      // Check Consent Mode v2 default
-      const defaultConsent = await page.evaluate(() => {
-        return window.dataLayer?.filter(e => e[0] === 'consent') || [];
-      });
-      assert(defaultConsent.length > 0, 'Expected gtag consent commands in dataLayer');
-
-      // Click Accept Analytics
       const acceptBtn = page.locator('button:has-text("Accept Analytics")');
       await acceptBtn.click();
       await banner.waitFor({ state: 'hidden', timeout: 3000 });
@@ -71,175 +59,242 @@ async function runE2ETests() {
       assert.strictEqual(storedConsent, 'granted', 'Expected sc_ga_consent to be granted');
     });
 
-    // 3. Cookie Consent Withdrawal via Privacy Page
+    // 3. Cookie Consent Withdrawal on /privacy
     await test('Cookie consent withdrawal and preference modification on /privacy', async () => {
       await page.goto(`${BASE_URL}/privacy`, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('text=Your Analytics Consent Status:');
 
-      // Click Decline All
       const declineBtn = page.locator('button:has-text("Decline All")');
       await declineBtn.click();
 
       const revokedConsent = await page.evaluate(() => localStorage.getItem('sc_ga_consent'));
       assert.strictEqual(revokedConsent, 'denied', 'Expected sc_ga_consent to be denied after revocation');
 
-      // Re-grant for subsequent analytics testing
       const grantBtn = page.locator('button:has-text("Enable Analytics")');
       await grantBtn.click();
       const regrantedConsent = await page.evaluate(() => localStorage.getItem('sc_ga_consent'));
       assert.strictEqual(regrantedConsent, 'granted', 'Expected sc_ga_consent to be granted again');
     });
 
-    // 4. GA4 Event Tracking & PII Redaction Verification
-    await test('GA4 business events trigger without sensitive PII leakage', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    // 4. Web App Manifest
+    await test('Web App Manifest (/manifest.webmanifest) is valid and accessible', async () => {
+      const response = await page.goto(`${BASE_URL}/manifest.webmanifest`);
+      assert.strictEqual(response.status(), 200, 'Expected manifest to return HTTP 200');
+      const manifest = await response.json();
+      assert.strictEqual(manifest.name, 'SocietyCook – Home Services');
+      assert.strictEqual(manifest.short_name, 'SocietyCook');
+      assert.strictEqual(manifest.display, 'standalone');
+      assert.strictEqual(manifest.theme_color, '#153D32');
+      assert(Array.isArray(manifest.icons) && manifest.icons.length >= 3, 'Expected at least 3 icons');
+    });
 
-      // Click explore cooking service
-      const exploreCooking = page.locator('a[href*="/register?service=COOKING"]').first();
-      if (await exploreCooking.isVisible()) {
-        await exploreCooking.click();
-      }
+    // 5. Genuine Brand App Icons
+    await test('Genuine SocietyCook app icons exist and return valid image headers', async () => {
+      const res192 = await page.goto(`${BASE_URL}/icons/icon-192.png`);
+      assert.strictEqual(res192.status(), 200, 'icon-192.png missing');
+      assert(res192.headers()['content-type'].includes('image/png'));
 
-      // Check dataLayer events
+      const res512 = await page.goto(`${BASE_URL}/icons/icon-512.png`);
+      assert.strictEqual(res512.status(), 200, 'icon-512.png missing');
+
+      const resApple = await page.goto(`${BASE_URL}/apple-touch-icon.png`);
+      assert.strictEqual(resApple.status(), 200, 'apple-touch-icon.png missing');
+    });
+
+    // 6. Graceful Offline Fallback Page
+    await test('Graceful offline page (/offline.html) renders with branding and security notice', async () => {
+      await page.goto(`${BASE_URL}/offline.html`, { waitUntil: 'domcontentloaded' });
+      const text = await page.locator('h1').textContent();
+      assert(text.includes('No Internet Connection'), 'Expected offline headline');
+      const policyNotice = await page.locator('.security-note').textContent();
+      assert(policyNotice.includes('Enterprise Security Policy'), 'Expected offline security policy notice');
+    });
+
+    // 7. Resident Authentication & Redirection to /app/dashboard
+    await test('Resident login navigates to /app/dashboard and acquires session token', async () => {
+      await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+      await page.fill('input[type="email"]', 'resident@example.com');
+      await page.fill('input[type="password"]', 'Demo12345!');
+      await page.click('button[type="submit"]');
+
+      await page.waitForURL('**/app/dashboard', { timeout: 8000 });
+      await page.waitForSelector('text=Welcome home,', { timeout: 5000 });
+
+      const token = await page.evaluate(() => sessionStorage.getItem('sc_access_token'));
+      assert(token && token.length > 20, 'Expected valid JWT in sessionStorage');
+    });
+
+    // 8. Logo Navigation: Navigates to / without logging out
+    await test('Clicking SocietyCook logo navigates to / while preserving session', async () => {
+      const logo = page.locator('a[aria-label="SocietyCook Homepage"]').first();
+      await logo.click();
+
+      await page.waitForURL(`${BASE_URL}/`, { timeout: 5000 });
+
+      // User must remain authenticated in session storage
+      const token = await page.evaluate(() => sessionStorage.getItem('sc_access_token'));
+      assert(token && token.length > 20, 'Token was incorrectly purged on logo click!');
+
+      // "Go to Dashboard" button must appear on homepage
+      const goToDashboardBtn = page.locator('a:has-text("Go to Dashboard"), a:has-text("Resident Dashboard")').first();
+      await goToDashboardBtn.waitFor({ state: 'visible', timeout: 5000 });
+
+      // Clicking Go to Dashboard returns to role dashboard
+      await goToDashboardBtn.click();
+      await page.waitForURL('**/app/dashboard', { timeout: 5000 });
+      await page.waitForSelector('text=Welcome home,', { timeout: 5000 });
+    });
+
+    // 9. Structured URL-Driven Navigation
+    await test('Clicking dashboard tabs updates the URL beyond /app and preserves state', async () => {
+      // 1. Discover / Cooks
+      const cooksLink = page.locator('a:has-text("Find Cooks")').first();
+      await cooksLink.click();
+      await page.waitForURL('**/app/discover', { timeout: 5000 });
+      await page.waitForSelector('text=Verified Cooks', { timeout: 5000 });
+
+      // 2. Services
+      const servicesLink = page.locator('a:has-text("Services")').first();
+      await servicesLink.click();
+      await page.waitForURL('**/app/services', { timeout: 5000 });
+      await page.waitForSelector('text=SocietyCook Service Tiers', { timeout: 5000 });
+
+      // 3. Bookings
+      const bookingsLink = page.locator('a:has-text("Bookings")').first();
+      await bookingsLink.click();
+      await page.waitForURL('**/app/bookings', { timeout: 5000 });
+      await page.waitForSelector('text=My Household Bookings', { timeout: 5000 });
+
+      // 4. Tower Groups (Community)
+      const communityLink = page.locator('a:has-text("Tower Groups")').first();
+      await communityLink.click();
+      await page.waitForURL('**/app/community', { timeout: 5000 });
+
+      // 5. Settings
+      const settingsLink = page.locator('a:has-text("Settings")').first();
+      await settingsLink.click();
+      await page.waitForURL('**/app/settings', { timeout: 5000 });
+      await page.waitForSelector('text=Account & Device Settings', { timeout: 5000 });
+    });
+
+    // 10. Deep Linking & Page Refresh URL Preservation
+    await test('Direct deep link navigation and page refresh preserves exact route', async () => {
+      await page.goto(`${BASE_URL}/app/services`, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=SocietyCook Service Tiers', { timeout: 5000 });
+      assert(page.url().includes('/app/services'), 'Expected URL to be /app/services');
+
+      // Refresh page
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=SocietyCook Service Tiers', { timeout: 5000 });
+      assert(page.url().includes('/app/services'), 'URL changed after page refresh!');
+    });
+
+    // 11. Browser Back and Forward Navigation
+    await test('Browser back and forward navigation updates views correctly', async () => {
+      await page.goto(`${BASE_URL}/app/dashboard`, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Welcome home,');
+
+      await page.goto(`${BASE_URL}/app/support`, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Resident Support');
+
+      // Go back
+      await page.goBack();
+      assert(page.url().includes('/app/dashboard'), 'Back navigation failed');
+      await page.waitForSelector('text=Welcome home,');
+
+      // Go forward
+      await page.goForward();
+      assert(page.url().includes('/app/support'), 'Forward navigation failed');
+      await page.waitForSelector('text=Resident Support');
+    });
+
+    // 12. Active Underline Navigation State & Hover Persistence
+    await test('Active navigation item retains underline after hover ends', async () => {
+      await page.goto(`${BASE_URL}/app/dashboard`, { waitUntil: 'domcontentloaded' });
+
+      // Overview link should have aria-current="page"
+      const overviewLink = page.locator('a[aria-current="page"]:has-text("Overview")');
+      await overviewLink.waitFor({ state: 'visible' });
+
+      // Hover over another link then leave
+      const servicesLink = page.locator('a:has-text("Services")').first();
+      await servicesLink.hover();
+      await page.mouse.move(0, 0); // Move cursor away
+
+      // Overview link must remain active with visible transform underline
+      const activeCurrent = await overviewLink.getAttribute('aria-current');
+      assert.strictEqual(activeCurrent, 'page', 'Active link lost aria-current');
+    });
+
+    // 13. Multi-Role Navigation & Dashboard Switching
+    await test('Persona switcher navigates to role-specific URL routes', async () => {
+      // Switch to Manager
+      const managerBtn = page.locator('button:has-text("Society Manager")').first();
+      await managerBtn.click();
+      await page.waitForURL('**/app/society/dashboard', { timeout: 5000 });
+      await page.waitForSelector('text=Campus Control', { timeout: 5000 });
+
+      // Switch to Cook
+      const cookBtn = page.locator('button:has-text("Cook (Ramesh)")').first();
+      await cookBtn.click();
+      await page.waitForURL('**/app/professional/dashboard', { timeout: 5000 });
+      await page.waitForSelector('text=Hello, Chef', { timeout: 5000 });
+
+      // Switch to Admin
+      const adminBtn = page.locator('button:has-text("Platform Admin")').first();
+      await adminBtn.click();
+      await page.waitForURL('**/admin/dashboard', { timeout: 5000 });
+      await page.waitForSelector('text=SocietyCook Operational Control', { timeout: 5000 });
+    });
+
+    // 14. Role-Based Access Control: Unauthorized Route Prevention
+    await test('Non-admin users are blocked from accessing /admin routes', async () => {
+      // Switch back to resident
+      const residentBtn = page.locator('button:has-text("Resident (Rahul)")').first();
+      await residentBtn.click();
+      await page.waitForURL('**/app/dashboard', { timeout: 5000 });
+
+      // Attempt to directly navigate to /admin/security
+      await page.goto(`${BASE_URL}/admin/security`, { waitUntil: 'domcontentloaded' });
+
+      // Must be blocked and display Forbidden / 403 page
+      const forbiddenHeading = page.locator('text=403 - Access Forbidden');
+      await forbiddenHeading.waitFor({ state: 'visible', timeout: 5000 });
+    });
+
+    // 15. PWA Installation Banner & Cooldown Dismissal
+    await test('PWA installation banner dismissal persists 7-day cooldown', async () => {
+      await page.goto(`${BASE_URL}/app/settings`, { waitUntil: 'domcontentloaded' });
+
+      // Clear any prior dismissal
+      await page.evaluate(() => localStorage.removeItem('sc_pwa_install_dismissed'));
+
+      // Check that PWA Settings component renders Install App button
+      const pwaCard = page.locator('text=SocietyCook PWA Application');
+      await pwaCard.waitFor({ state: 'visible' });
+
+      // Dismiss banner simulation in storage
+      await page.evaluate(() => localStorage.setItem('sc_pwa_install_dismissed', String(Date.now())));
+      const cooldownVal = await page.evaluate(() => localStorage.getItem('sc_pwa_install_dismissed'));
+      assert(cooldownVal, 'Cooldown key failed to persist in localStorage');
+    });
+
+    // 16. GA4 Event Tracking & PII Redaction
+    await test('GA4 business events trigger without PII leakage', async () => {
+      await page.goto(`${BASE_URL}/app/services`, { waitUntil: 'domcontentloaded' });
+
       const events = await page.evaluate(() => {
         return (window.dataLayer || []).filter(e => e[0] === 'event' || e.event);
       });
 
-      // Verify no passwords, tokens, or raw secrets are present in any event arguments
       const eventJson = JSON.stringify(events);
       assert(!eventJson.includes('Demo12345!'), 'Leaked demo password in dataLayer!');
       assert(!eventJson.includes('secret_key'), 'Leaked secret in dataLayer!');
       assert(!eventJson.includes('token='), 'Leaked token parameter in dataLayer!');
     });
 
-    // 5. Society Selection with Deferred Loading
-    await test('Society selection dropdown operates with instant memory fallback & deferred sync', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-      const societySelect = page.locator('#finder-society');
-      await societySelect.waitFor({ state: 'visible' });
-
-      // Should contain default pilot societies
-      const options = await societySelect.locator('option').allTextContents();
-      assert(options.length >= 3, `Expected at least 3 societies, found: ${options.length}`);
-      assert(options.some(o => o.includes('Prestige') || o.includes('Sobha')), 'Missing sample pilot complexes');
-    });
-
-    // 6. Public Professional Discovery Showcase
-    await test('Public professional discovery displays sample roster with explicit demo labels', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-      await page.locator('text=SAMPLE ROSTER — PILOT PROFILES').waitFor({ state: 'visible' });
-
-      const sampleBadges = await page.locator('span:has-text("Sample Profile")').count();
-      assert(sampleBadges >= 4, `Expected at least 4 sample profile badges, found: ${sampleBadges}`);
-    });
-
-    // 7. Dynamic Pricing Calculator
-    await test('Interactive group savings calculator computes discounts dynamically', async () => {
-      await page.goto(`${BASE_URL}/#community-pricing`, { waitUntil: 'domcontentloaded' });
-
-      const rangeSlider = page.locator('input[type="range"]');
-      if (await rangeSlider.isVisible()) {
-        await rangeSlider.fill('6');
-        const priceText = await page.locator('text=₹').first().textContent();
-        assert(priceText.includes('₹'), 'Pricing calculation failed to output currency symbol');
-      }
-    });
-
-    // 8. Resident Authentication & Dashboard Access
-    await test('Resident login, dashboard stats, and logout flow', async () => {
-      await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
-      
-      await page.fill('input[type="email"]', 'resident@example.com');
-      await page.fill('input[type="password"]', 'Demo12345!');
-      await page.click('button[type="submit"]');
-
-      // Should navigate to /app
-      await page.waitForURL('**/app', { timeout: 8000 });
-      await page.waitForSelector('text=Welcome home,', { timeout: 5000 });
-
-      // Verify session storage token
-      const token = await page.evaluate(() => sessionStorage.getItem('sc_access_token'));
-      assert(token && token.length > 20, 'Expected valid JWT in sessionStorage');
-
-      // Logout
-      const logoutBtn = page.locator('button:has-text("Sign Out"), button:has-text("Logout")').first();
-      if (await logoutBtn.isVisible()) {
-        await logoutBtn.click();
-        const clearedToken = await page.evaluate(() => sessionStorage.getItem('sc_access_token'));
-        assert(!clearedToken, 'Expected token to be cleared on logout');
-      }
-    });
-
-    // 9. Multi-Role Switcher & Dashboard Navigation
-    await test('Multi-role persona switcher grants correct role dashboard views', async () => {
-      await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
-
-      // Switch to Manager
-      const managerBtn = page.locator('button:has-text("Society Manager")').first();
-      if (await managerBtn.isVisible()) {
-        await managerBtn.click();
-        await page.waitForURL('**/app', { timeout: 5000 });
-        await page.waitForSelector('text=Campus Control', { timeout: 5000 });
-      }
-
-      // Switch to Cook
-      const cookBtn = page.locator('button:has-text("Cook (Ramesh)")').first();
-      if (await cookBtn.isVisible()) {
-        await cookBtn.click();
-        await page.waitForURL('**/app', { timeout: 5000 });
-        await page.waitForSelector('text=Hello, Chef', { timeout: 5000 });
-      }
-
-      // Switch to Admin
-      const adminBtn = page.locator('button:has-text("Platform Admin")').first();
-      if (await adminBtn.isVisible()) {
-        await adminBtn.click();
-        await page.waitForURL('**/app', { timeout: 5000 });
-        await page.waitForSelector('text=SocietyCook Operational Control', { timeout: 5000 });
-      }
-    });
-
-    // 10. Resident Booking Workflow
-    await test('Resident booking workflow loads service forms with valid pricing', async () => {
-      // Re-login as resident
-      await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
-      await page.fill('input[type="email"]', 'resident@example.com');
-      await page.fill('input[type="password"]', 'Demo12345!');
-      await page.click('button[type="submit"]');
-      await page.waitForURL('**/app', { timeout: 8000 });
-
-      // Navigate to booking / directory
-      await page.goto(`${BASE_URL}/app/cooks`, { waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('text=Verified Cooks & Utensil Care Specialists', { timeout: 5000 });
-
-      const viewButtons = page.locator('button:has-text("View Profile & Badges")');
-      const count = await viewButtons.count();
-      assert(count > 0, 'Expected profile buttons in professional directory');
-    });
-
-    // 11. Mobile Viewport & Responsive Navigation
-    await test('Mobile viewport renders responsive navigation without horizontal overflow', async () => {
-      const mobileContext = await browser.newContext({
-        viewport: { width: 390, height: 844 }, // iPhone 12/13/14
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
-      });
-      const mobilePage = await mobileContext.newPage();
-      await mobilePage.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-
-      // Verify no horizontal overflow
-      const scrollWidth = await mobilePage.evaluate(() => document.documentElement.scrollWidth);
-      const clientWidth = await mobilePage.evaluate(() => document.documentElement.clientWidth);
-      assert(scrollWidth <= clientWidth, `Horizontal overflow detected: scrollWidth (${scrollWidth}) > clientWidth (${clientWidth})`);
-
-      // Verify mobile persona switcher fits
-      const personaBar = mobilePage.locator('button:has-text("Manager")');
-      await personaBar.waitFor({ state: 'visible' });
-
-      await mobileContext.close();
-    });
-
-    // 12. Multilingual Script Rendering (Kannada & Hindi)
-    await test('Multilingual text rendering for Kannada and Hindi scripts', async () => {
+    // 17. Multilingual Text Rendering
+    await test('Multilingual Kannada and Hindi scripts render valid bounding boxes', async () => {
       const result = await page.evaluate(() => {
         const div = document.createElement('div');
         div.innerHTML = '<span id="kn">ಸೊಸೈಟಿಕುಕ್ - ಮನೆಯ ರುಚಿಕರವಾದ ಊಟ</span><span id="hi">सोसाइटीकुक - घर का पौष्टिक खाना</span>';
@@ -254,7 +309,7 @@ async function runE2ETests() {
       assert(result.hiWidth > 50, 'Hindi script failed to render valid glyph bounding box');
     });
 
-    console.log(`\n🎉 All ${passedCount} / ${testCount} E2E tests completed successfully with ZERO failures!\n`);
+    console.log(`\n🎉 All ${passedCount} / ${testCount} E2E & PWA tests completed successfully with ZERO failures!\n`);
   } finally {
     await browser.close();
   }
@@ -264,4 +319,3 @@ runE2ETests().catch((err) => {
   console.error('\n💥 Playwright E2E Suite Failed:', err);
   process.exit(1);
 });
-

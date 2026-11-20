@@ -1,16 +1,20 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PWAProvider } from './context/PWAContext';
 import { Navbar } from './components/Navbar';
 import { LandingPage } from './pages/LandingPage';
 import { CookieConsentBanner } from './components/CookieConsentBanner';
+import { InstallAppBanner } from './components/InstallAppBanner';
+import { UpdateNotificationBanner } from './components/UpdateNotificationBanner';
 import { initAnalytics, trackPageView } from './services/analytics';
+import { registerServiceWorker } from './serviceWorkerRegistration';
+import { DashboardLayout, getRoleDashboardPath } from './layouts/DashboardLayout';
 
 // Lazy-loaded routes for optimal mobile performance and minimal initial bundle size
 const LoginPage = React.lazy(() => import('./pages/AuthPages').then(m => ({ default: m.LoginPage })));
 const RegisterPage = React.lazy(() => import('./pages/AuthPages').then(m => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = React.lazy(() => import('./pages/AuthPages').then(m => ({ default: m.ForgotPasswordPage })));
-const DashboardHub = React.lazy(() => import('./pages/DashboardHub').then(m => ({ default: m.DashboardHub })));
 const GroupHub = React.lazy(() => import('./pages/GroupHub').then(m => ({ default: m.GroupHub })));
 const GroupDetailsPage = React.lazy(() => import('./pages/GroupDetailsPage').then(m => ({ default: m.GroupDetailsPage })));
 const CookDirectoryPage = React.lazy(() => import('./pages/CookDirectoryPage').then(m => ({ default: m.CookDirectoryPage })));
@@ -21,6 +25,34 @@ const TermsPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ de
 const PrivacyPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ default: m.PrivacyPage })));
 const NotFoundPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ default: m.NotFoundPage })));
 const ForbiddenPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ default: m.ForbiddenPage })));
+
+// Resident Views
+const ResidentOverviewPage = React.lazy(() => import('./pages/dashboard/ResidentViews').then(m => ({ default: m.ResidentOverviewPage })));
+const ResidentServicesPage = React.lazy(() => import('./pages/dashboard/ResidentViews').then(m => ({ default: m.ResidentServicesPage })));
+const ResidentBookingsPage = React.lazy(() => import('./pages/dashboard/ResidentViews').then(m => ({ default: m.ResidentBookingsPage })));
+const ResidentNotificationsPage = React.lazy(() => import('./pages/dashboard/ResidentViews').then(m => ({ default: m.ResidentNotificationsPage })));
+const ResidentSupportPage = React.lazy(() => import('./pages/dashboard/ResidentViews').then(m => ({ default: m.ResidentSupportPage })));
+const ResidentProfilePage = React.lazy(() => import('./pages/dashboard/ResidentViews').then(m => ({ default: m.ResidentProfilePage })));
+const ResidentSettingsPage = React.lazy(() => import('./pages/dashboard/ResidentViews').then(m => ({ default: m.ResidentSettingsPage })));
+
+// Professional Views
+const ProfessionalDashboardPage = React.lazy(() => import('./pages/dashboard/ProfessionalViews').then(m => ({ default: m.ProfessionalDashboardPage })));
+const ProfessionalEarningsPage = React.lazy(() => import('./pages/dashboard/ProfessionalViews').then(m => ({ default: m.ProfessionalEarningsPage })));
+const ProfessionalAvailabilityPage = React.lazy(() => import('./pages/dashboard/ProfessionalViews').then(m => ({ default: m.ProfessionalAvailabilityPage })));
+const ProfessionalProfilePage = React.lazy(() => import('./pages/dashboard/ProfessionalViews').then(m => ({ default: m.ProfessionalProfilePage })));
+
+// Society Manager Views
+const SocietyDashboardPage = React.lazy(() => import('./pages/dashboard/SocietyViews').then(m => ({ default: m.SocietyDashboardPage })));
+const SocietyHouseholdsPage = React.lazy(() => import('./pages/dashboard/SocietyViews').then(m => ({ default: m.SocietyHouseholdsPage })));
+const SocietyProfessionalsPage = React.lazy(() => import('./pages/dashboard/SocietyViews').then(m => ({ default: m.SocietyProfessionalsPage })));
+const SocietyComplaintsPage = React.lazy(() => import('./pages/dashboard/SocietyViews').then(m => ({ default: m.SocietyComplaintsPage })));
+const SocietySettingsPage = React.lazy(() => import('./pages/dashboard/SocietyViews').then(m => ({ default: m.SocietySettingsPage })));
+
+// Admin Views
+const AdminDashboardPage = React.lazy(() => import('./pages/dashboard/AdminViews').then(m => ({ default: m.AdminDashboardPage })));
+const AdminSocietiesPage = React.lazy(() => import('./pages/dashboard/AdminViews').then(m => ({ default: m.AdminSocietiesPage })));
+const AdminVerificationPage = React.lazy(() => import('./pages/dashboard/AdminViews').then(m => ({ default: m.AdminVerificationPage })));
+const AdminSecurityPage = React.lazy(() => import('./pages/dashboard/AdminViews').then(m => ({ default: m.AdminSecurityPage })));
 
 // Protected Route Guard
 function ProtectedRoute({ children, allowedRoles }) {
@@ -62,11 +94,13 @@ function AnalyticsListener() {
 export function App() {
   useEffect(() => {
     initAnalytics();
+    registerServiceWorker();
   }, []);
 
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <PWAProvider>
+        <BrowserRouter>
           <AnalyticsListener />
           <div className="min-h-screen flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613] text-[#202A25] dark:text-[#EDE8DF] font-sans transition-colors overflow-x-hidden w-full">
             <Navbar />
@@ -79,7 +113,7 @@ export function App() {
                 }
               >
                 <Routes>
-                  {/* Public Marketing & Info */}
+                  {/* Public Marketing & Legal Pages */}
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
@@ -87,121 +121,195 @@ export function App() {
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/privacy" element={<PrivacyPage />} />
 
-                  {/* Core Application Protected Views */}
-                <Route
-                  path="/app"
-                  element={
-                    <ProtectedRoute>
-                      <DashboardHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/groups"
-                  element={
-                    <ProtectedRoute>
-                      <GroupHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/app/groups"
-                  element={
-                    <ProtectedRoute>
-                      <GroupHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/groups/:id"
-                  element={
-                    <ProtectedRoute>
-                      <GroupDetailsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/app/groups/:id"
-                  element={
-                    <ProtectedRoute>
-                      <GroupDetailsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/cooks"
-                  element={
-                    <ProtectedRoute>
-                      <CookDirectoryPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/app/cooks"
-                  element={
-                    <ProtectedRoute>
-                      <CookDirectoryPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/schedule"
-                  element={
-                    <ProtectedRoute>
-                      <ScheduleCalendarPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/app/schedule"
-                  element={
-                    <ProtectedRoute>
-                      <ScheduleCalendarPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/billing"
-                  element={
-                    <ProtectedRoute>
-                      <BillingPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/app/billing"
-                  element={
-                    <ProtectedRoute>
-                      <BillingPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/analytics"
-                  element={
-                    <ProtectedRoute>
-                      <AnalyticsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/app/analytics"
-                  element={
-                    <ProtectedRoute>
-                      <AnalyticsPage />
-                    </ProtectedRoute>
-                  }
-                />
+                  {/* Nested Application Layout & URL-Driven Dashboard Architecture */}
+                  <Route
+                    path="/app"
+                    element={
+                      <ProtectedRoute>
+                        <DashboardLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    {/* Resident Sub-Routes */}
+                    <Route path="dashboard" element={<ResidentOverviewPage />} />
+                    <Route path="discover" element={<CookDirectoryPage />} />
+                    <Route path="cooks" element={<CookDirectoryPage />} />
+                    <Route path="services" element={<ResidentServicesPage />} />
+                    <Route path="bookings" element={<ResidentBookingsPage />} />
+                    <Route path="bookings/:bookingId" element={<ResidentBookingsPage />} />
+                    <Route path="community" element={<GroupHub />} />
+                    <Route path="community/:id" element={<GroupDetailsPage />} />
+                    <Route path="groups" element={<GroupHub />} />
+                    <Route path="groups/:id" element={<GroupDetailsPage />} />
+                    <Route path="subscriptions" element={<BillingPage />} />
+                    <Route path="billing" element={<BillingPage />} />
+                    <Route path="payments" element={<BillingPage />} />
+                    <Route path="notifications" element={<ResidentNotificationsPage />} />
+                    <Route path="support" element={<ResidentSupportPage />} />
+                    <Route path="profile" element={<ResidentProfilePage />} />
+                    <Route path="settings" element={<ResidentSettingsPage />} />
+                    <Route path="schedule" element={<ScheduleCalendarPage />} />
+                    <Route path="analytics" element={<AnalyticsPage />} />
 
-                {/* 404 Catch-All */}
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </React.Suspense>
-          </main>
-          <CookieConsentBanner />
+                    {/* Professional Sub-Routes */}
+                    <Route
+                      path="professional/dashboard"
+                      element={
+                        <ProtectedRoute allowedRoles={['COOK', 'ADMIN']}>
+                          <ProfessionalDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="professional/schedule"
+                      element={
+                        <ProtectedRoute allowedRoles={['COOK', 'ADMIN']}>
+                          <ScheduleCalendarPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="professional/bookings"
+                      element={
+                        <ProtectedRoute allowedRoles={['COOK', 'ADMIN']}>
+                          <ProfessionalDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="professional/attendance"
+                      element={
+                        <ProtectedRoute allowedRoles={['COOK', 'ADMIN']}>
+                          <ProfessionalDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="professional/earnings"
+                      element={
+                        <ProtectedRoute allowedRoles={['COOK', 'ADMIN']}>
+                          <ProfessionalEarningsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="professional/availability"
+                      element={
+                        <ProtectedRoute allowedRoles={['COOK', 'ADMIN']}>
+                          <ProfessionalAvailabilityPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="professional/profile"
+                      element={
+                        <ProtectedRoute allowedRoles={['COOK', 'ADMIN']}>
+                          <ProfessionalProfilePage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Society Manager Sub-Routes */}
+                    <Route
+                      path="society/dashboard"
+                      element={
+                        <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                          <SocietyDashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="society/households"
+                      element={
+                        <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                          <SocietyHouseholdsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="society/professionals"
+                      element={
+                        <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                          <SocietyProfessionalsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="society/community"
+                      element={
+                        <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                          <GroupHub />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="society/analytics"
+                      element={
+                        <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                          <AnalyticsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="society/complaints"
+                      element={
+                        <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                          <SocietyComplaintsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="society/settings"
+                      element={
+                        <ProtectedRoute allowedRoles={['SOCIETY_MANAGER', 'ADMIN']}>
+                          <SocietySettingsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Route>
+
+                  {/* Administrator Nested Layout & Routes */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute allowedRoles={['ADMIN']}>
+                        <DashboardLayout />
+                      </ProtectedRoute>
+                    }
+                  >
+                    <Route index element={<AdminDashboardPage />} />
+                    <Route path="dashboard" element={<AdminDashboardPage />} />
+                    <Route path="users" element={<AdminDashboardPage />} />
+                    <Route path="societies" element={<AdminSocietiesPage />} />
+                    <Route path="professionals" element={<AdminVerificationPage />} />
+                    <Route path="bookings" element={<AdminDashboardPage />} />
+                    <Route path="payments" element={<AdminDashboardPage />} />
+                    <Route path="verification" element={<AdminVerificationPage />} />
+                    <Route path="security" element={<AdminSecurityPage />} />
+                    <Route path="audit-logs" element={<AdminSecurityPage />} />
+                    <Route path="settings" element={<AdminSecurityPage />} />
+                  </Route>
+
+                  {/* Backward-Compatibility Top-Level Aliases */}
+                  <Route path="/groups" element={<Navigate to="/app/community" replace />} />
+                  <Route path="/groups/:id" element={<ProtectedRoute><GroupDetailsPage /></ProtectedRoute>} />
+                  <Route path="/cooks" element={<Navigate to="/app/discover" replace />} />
+                  <Route path="/schedule" element={<Navigate to="/app/schedule" replace />} />
+                  <Route path="/billing" element={<Navigate to="/app/subscriptions" replace />} />
+                  <Route path="/analytics" element={<Navigate to="/app/analytics" replace />} />
+
+                  {/* 404 Catch-All */}
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </React.Suspense>
+            </main>
+            <CookieConsentBanner />
+            <InstallAppBanner />
+            <UpdateNotificationBanner />
           </div>
         </BrowserRouter>
-      </AuthProvider>
+      </PWAProvider>
+    </AuthProvider>
   );
 }
 
