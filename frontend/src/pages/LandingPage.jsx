@@ -217,7 +217,7 @@ export function LandingPage() {
 
             {/* Right Visual Image Frame */}
             <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[4/5] max-w-md mx-auto group">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[16/10] sm:aspect-[4/5] max-w-md mx-auto group">
                 <picture>
                   <source media="(max-width: 640px)" srcSet="/images/hero_kitchen_indian-mobile.webp" type="image/webp" />
                   <source srcSet="/images/hero_kitchen_indian.webp" type="image/webp" />
@@ -226,8 +226,8 @@ export function LandingPage() {
                     alt="Modern warm sun-drenched Indian apartment kitchen"
                     fetchPriority="high"
                     decoding="async"
-                    width="800"
-                    height="1000"
+                    width="1200"
+                    height="669"
                     className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700"
                   />
                 </picture>
