@@ -58,7 +58,7 @@ export function Navbar() {
                   v3.0
                 </span>
               </div>
-              <p className="text-[10px] text-[#64746B] dark:text-[#A4B5AC] font-medium hidden sm:block mt-0.5">
+              <p className="text-[10px] text-[#42524A] dark:text-[#A4B5AC] font-medium hidden sm:block mt-0.5">
                 More living. Less chores.
               </p>
             </div>
@@ -113,7 +113,7 @@ export function Navbar() {
                       </div>
                       <div>
                         <div className="font-bold text-xs text-[#202A25] dark:text-white">Home Cooking</div>
-                        <p className="text-[11px] text-[#64746B] dark:text-slate-400">Fresh daily meals tailored to your taste</p>
+                        <p className="text-[11px] text-[#42524A] dark:text-slate-400">Fresh daily meals tailored to your taste</p>
                       </div>
                     </a>
 
@@ -127,7 +127,7 @@ export function Navbar() {
                       </div>
                       <div>
                         <div className="font-bold text-xs text-[#202A25] dark:text-white">Utensil Care & Dishwashing</div>
-                        <p className="text-[11px] text-[#64746B] dark:text-slate-400">Spotless sink hygiene & gleaming vessels</p>
+                        <p className="text-[11px] text-[#42524A] dark:text-slate-400">Spotless sink hygiene & gleaming vessels</p>
                       </div>
                     </a>
 
@@ -144,7 +144,7 @@ export function Navbar() {
                           Complete Kitchen Care
                           <span className="text-[9px] px-1.5 py-0.2 bg-[#E9A15B] text-white font-bold rounded-full">POPULAR</span>
                         </div>
-                        <p className="text-[11px] text-[#64746B] dark:text-slate-400">Cooking + Dishwashing synchronized</p>
+                        <p className="text-[11px] text-[#42524A] dark:text-slate-400">Cooking + Dishwashing synchronized</p>
                       </div>
                     </a>
                   </div>
@@ -226,7 +226,7 @@ export function Navbar() {
                 {showNotifications && (
                   <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#182821] rounded-2xl shadow-2xl border border-[#DDE9D8] dark:border-white/10 p-4 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
                     <div className="flex items-center justify-between pb-2 border-b border-[#DDE9D8]/50 dark:border-white/10">
-                      <span className="font-bold uppercase tracking-wider text-[#64746B] dark:text-slate-400">Notifications</span>
+                      <span className="font-bold uppercase tracking-wider text-[#42524A] dark:text-slate-400">Notifications</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -245,7 +245,7 @@ export function Navbar() {
                         notifications.map((n) => (
                           <div key={n.id} className="py-2.5">
                             <span className="font-bold text-[#202A25] dark:text-slate-100 block">{n.title}</span>
-                            <p className="text-[#64746B] dark:text-slate-300 mt-0.5">{n.message}</p>
+                            <p className="text-[#42524A] dark:text-slate-300 mt-0.5">{n.message}</p>
                             <span className="text-[10px] text-slate-400 mt-1 block">
                               {String(n.created_at || '').slice(0, 10)}
                             </span>
@@ -266,14 +266,14 @@ export function Navbar() {
                   <span className="font-bold text-[#202A25] dark:text-white block leading-tight truncate">
                     {user.name}
                   </span>
-                  <span className="text-[10px] text-[#64746B] dark:text-slate-400 block uppercase font-bold">
+                  <span className="text-[10px] text-[#42524A] dark:text-slate-400 block uppercase font-bold">
                     {user.role}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={logout}
-                  className="p-1.5 rounded-lg text-[#64746B] hover:text-red-500 hover:bg-red-50 dark:hover:bg-white/5 transition-colors shrink-0 cursor-pointer"
+                  className="p-1.5 rounded-lg text-[#42524A] hover:text-red-500 hover:bg-red-50 dark:hover:bg-white/5 transition-colors shrink-0 cursor-pointer"
                   title="Sign out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -312,7 +312,7 @@ export function Navbar() {
       {/* Unified 1-Click Demo Persona Bar (Fits screen width 100% on all viewports) */}
       <div className="w-full bg-[#F4EFE6]/90 dark:bg-[#101A16] border-t border-[#DDE9D8]/70 dark:border-white/5 py-1.5 transition-colors overflow-hidden">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 flex items-center justify-between sm:justify-start gap-1 sm:gap-2">
-          <span className="hidden sm:inline-flex text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400 px-1 whitespace-nowrap shrink-0">
+          <span className="hidden sm:inline-flex text-[10px] uppercase font-black tracking-wider text-[#42524A] dark:text-slate-400 px-1 whitespace-nowrap shrink-0">
             1-Click Demo:
           </span>
           <div className="grid grid-cols-5 sm:flex sm:flex-wrap items-center gap-1 sm:gap-1.5 w-full sm:w-auto">

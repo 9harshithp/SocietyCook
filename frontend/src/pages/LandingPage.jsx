@@ -177,7 +177,7 @@ export function LandingPage() {
               </h1>
 
               {/* Sub-headline prose */}
-              <p className="text-base sm:text-lg text-[#64746B] dark:text-slate-300 max-w-xl font-medium leading-relaxed">
+              <p className="text-base sm:text-lg text-[#42524A] dark:text-slate-300 max-w-xl font-medium leading-relaxed">
                 Transform daily home life with verified in-home cooking and utensil care specialists — shared seamlessly with neighbours in your apartment tower at up to 35% community savings.
               </p>
 
@@ -199,7 +199,7 @@ export function LandingPage() {
               </div>
 
               {/* Editorial Hairline Trust Indicators */}
-              <div className="pt-4 border-t border-[#E6DFD3] dark:border-white/10 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs font-semibold text-[#64746B] dark:text-slate-400">
+              <div className="pt-4 border-t border-[#E6DFD3] dark:border-white/10 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs font-semibold text-[#42524A] dark:text-slate-400">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-[#153D32] dark:text-[#E9A15B]" />
                   450+ Verified Society Staff
@@ -269,7 +269,7 @@ export function LandingPage() {
 
           {/* Integrated Floating Service Finder Console */}
           <div id="service-finder" className="mt-12 bg-white dark:bg-[#14231D] rounded-3xl p-5 sm:p-7 shadow-xl border border-[#E6DFD3] dark:border-white/10">
-            <div className="text-xs uppercase font-extrabold tracking-wider text-[#64746B] dark:text-slate-400 mb-4 flex items-center gap-2">
+            <div className="text-xs uppercase font-extrabold tracking-wider text-[#42524A] dark:text-slate-400 mb-4 flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 text-[#153D32] dark:text-[#E9A15B]" />
               Check Live Specialist Availability in Your Society
             </div>
@@ -356,7 +356,7 @@ export function LandingPage() {
                 <Building2 className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Society Clusters</h4>
-              <p className="text-[11px] text-[#64746B] dark:text-slate-400 leading-tight">Same tower flats share route</p>
+              <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Same tower flats share route</p>
             </div>
 
             <div className="space-y-2 p-3 rounded-2xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3]/80 dark:border-white/5">
@@ -364,7 +364,7 @@ export function LandingPage() {
                 <Percent className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Up to 35% Savings</h4>
-              <p className="text-[11px] text-[#64746B] dark:text-slate-400 leading-tight">Demand lowers household rate</p>
+              <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Demand lowers household rate</p>
             </div>
 
             <div className="space-y-2 p-3 rounded-2xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3]/80 dark:border-white/5">
@@ -372,7 +372,7 @@ export function LandingPage() {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">100% Verified Staff</h4>
-              <p className="text-[11px] text-[#64746B] dark:text-slate-400 leading-tight">Police clearance & trials</p>
+              <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Police clearance & trials</p>
             </div>
 
             <div className="space-y-2 p-3 rounded-2xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3]/80 dark:border-white/5">
@@ -380,7 +380,7 @@ export function LandingPage() {
                 <Clock className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Zero Commute Gaps</h4>
-              <p className="text-[11px] text-[#64746B] dark:text-slate-400 leading-tight">Staff walks in minutes</p>
+              <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Staff walks in minutes</p>
             </div>
 
             <div className="col-span-2 md:col-span-1 space-y-2 p-3 rounded-2xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3]/80 dark:border-white/5">
@@ -388,7 +388,7 @@ export function LandingPage() {
                 <RefreshCw className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Guaranteed Backup</h4>
-              <p className="text-[11px] text-[#64746B] dark:text-slate-400 leading-tight">Pre-cleared standby coverage</p>
+              <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Pre-cleared standby coverage</p>
             </div>
 
           </div>
@@ -408,7 +408,7 @@ export function LandingPage() {
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#153D32] dark:text-white tracking-tight">
             Our Signature Services
           </h2>
-          <p className="text-sm sm:text-base text-[#64746B] dark:text-slate-300 mt-3 font-medium">
+          <p className="text-sm sm:text-base text-[#42524A] dark:text-slate-300 mt-3 font-medium">
             Designed specifically for modern apartment residences. Choose tailored cooking, sparkling dish hygiene, or an integrated kitchen care plan.
           </p>
         </div>
@@ -419,6 +419,7 @@ export function LandingPage() {
           <div className="bg-white dark:bg-[#14231D] rounded-3xl overflow-hidden border border-[#E6DFD3] dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col group">
             <div className="relative aspect-[16/10] overflow-hidden">
               <picture>
+                <source media="(max-width: 640px)" srcSet="/images/service_home_cooking-mobile.webp" type="image/webp" />
                 <source srcSet="/images/service_home_cooking.webp" type="image/webp" />
                 <img
                   src="/images/service_home_cooking.jpg"
@@ -445,7 +446,7 @@ export function LandingPage() {
                     From ₹2,800/mo
                   </span>
                 </div>
-                <p className="text-xs text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
                   Fresh, nutritious daily meals prepared exclusively in your kitchen. North Indian, South Indian, Jain, and customized dietary profiles.
                 </p>
 
@@ -485,6 +486,7 @@ export function LandingPage() {
           <div className="bg-white dark:bg-[#14231D] rounded-3xl overflow-hidden border border-[#E6DFD3] dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col group">
             <div className="relative aspect-[16/10] overflow-hidden">
               <picture>
+                <source media="(max-width: 640px)" srcSet="/images/service_dishwashing-mobile.webp" type="image/webp" />
                 <source srcSet="/images/service_dishwashing.webp" type="image/webp" />
                 <img
                   src="/images/service_dishwashing.jpg"
@@ -511,7 +513,7 @@ export function LandingPage() {
                     From ₹1,500/mo
                   </span>
                 </div>
-                <p className="text-xs text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
                   Spotless dishwashing with thorough sink area sanitization, grease-free kadhais, and pressure cooker care.
                 </p>
 
@@ -555,6 +557,7 @@ export function LandingPage() {
 
             <div className="relative aspect-[16/10] overflow-hidden">
               <picture>
+                <source media="(max-width: 640px)" srcSet="/images/service_combo_care-mobile.webp" type="image/webp" />
                 <source srcSet="/images/service_combo_care.webp" type="image/webp" />
                 <img
                   src="/images/service_combo_care.jpg"
@@ -581,7 +584,7 @@ export function LandingPage() {
                     From ₹4,600/mo
                   </span>
                 </div>
-                <p className="text-xs text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
                   The ultimate kitchen peace of mind. Cook prepares your meals, followed immediately by professional dish and counter sanitization.
                 </p>
 
@@ -639,7 +642,7 @@ export function LandingPage() {
                 Spend your evenings on what actually matters.
               </h2>
 
-              <p className="text-sm sm:text-base text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+              <p className="text-sm sm:text-base text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
                 Between high-pressure professional work, child pickups, and urban traffic, the last thing you should face at the end of the day is chopping vegetables or facing a sink piled with heavy cookware.
               </p>
 
@@ -650,7 +653,7 @@ export function LandingPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Fresh, warm food right on time</h4>
-                    <p className="text-xs text-[#64746B] dark:text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed">
                       No greasy restaurant takeaways or cold delivery boxes. Nutritious home-cooked food tailored for your family.
                     </p>
                   </div>
@@ -662,7 +665,7 @@ export function LandingPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Gleaming countertops and clean sink</h4>
-                    <p className="text-xs text-[#64746B] dark:text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed">
                       Wake up to an empty, sanitized dish rack and spotless surfaces every morning. Clean peace of mind before your day begins.
                     </p>
                   </div>
@@ -674,6 +677,7 @@ export function LandingPage() {
             <div className="lg:col-span-6">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[4/3]">
                 <picture>
+                  <source media="(max-width: 640px)" srcSet="/images/lifestyle_family_meal-mobile.webp" type="image/webp" />
                   <source srcSet="/images/lifestyle_family_meal.webp" type="image/webp" />
                   <img
                     src="/images/lifestyle_family_meal.jpg"
@@ -714,7 +718,7 @@ export function LandingPage() {
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#153D32] dark:text-white tracking-tight">
             Good neighbours. Better living.
           </h2>
-          <p className="text-sm sm:text-base text-[#64746B] dark:text-slate-300 mt-3 font-medium">
+          <p className="text-sm sm:text-base text-[#42524A] dark:text-slate-300 mt-3 font-medium">
             Traditional domestic hiring forces staff through hours of city traffic.
             In SocietyCook, verified specialists move seamlessly between flats in your own apartment tower.
           </p>
@@ -744,7 +748,7 @@ export function LandingPage() {
                   </div>
                   <div>
                     <div className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Flat A-402 (Sharma Family)</div>
-                    <div className="text-[11px] text-[#64746B] dark:text-slate-400">Breakfast & Lunch + Utensil Care</div>
+                    <div className="text-[11px] text-[#42524A] dark:text-slate-400">Breakfast & Lunch + Utensil Care</div>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 text-xs">
@@ -758,7 +762,7 @@ export function LandingPage() {
               </div>
 
               {/* Elevator Transition */}
-              <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-[#64746B] dark:text-slate-400 py-1">
+              <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-[#42524A] dark:text-slate-400 py-1">
                 <div className="h-4 w-px bg-[#E6DFD3] dark:bg-white/20" />
                 <span>Zero road transit • 1-minute elevator ride</span>
                 <div className="h-4 w-px bg-[#E6DFD3] dark:bg-white/20" />
@@ -772,7 +776,7 @@ export function LandingPage() {
                   </div>
                   <div>
                     <div className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Flat A-501 (Iyer Residence)</div>
-                    <div className="text-[11px] text-[#64746B] dark:text-slate-400">South Indian Routine + Full Kitchen Care</div>
+                    <div className="text-[11px] text-[#42524A] dark:text-slate-400">South Indian Routine + Full Kitchen Care</div>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 text-xs">
@@ -786,7 +790,7 @@ export function LandingPage() {
               </div>
 
               {/* Elevator Transition */}
-              <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-[#64746B] dark:text-slate-400 py-1">
+              <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-[#42524A] dark:text-slate-400 py-1">
                 <div className="h-4 w-px bg-[#E6DFD3] dark:bg-white/20" />
                 <span>Zero road transit • 1-minute elevator ride</span>
                 <div className="h-4 w-px bg-[#E6DFD3] dark:bg-white/20" />
@@ -800,7 +804,7 @@ export function LandingPage() {
                   </div>
                   <div>
                     <div className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Flat A-603 (Verma Family)</div>
-                    <div className="text-[11px] text-[#64746B] dark:text-slate-400">North Indian Homestyle Lunch Prep</div>
+                    <div className="text-[11px] text-[#42524A] dark:text-slate-400">North Indian Homestyle Lunch Prep</div>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5 text-xs">
@@ -842,7 +846,7 @@ export function LandingPage() {
                 <ShieldCheck className="w-8 h-8 text-[#153D32] dark:text-[#E9A15B] shrink-0" />
                 <div className="text-xs">
                   <span className="font-bold block text-[#202A25] dark:text-white">OTP-Verified Session Check-in</span>
-                  <span className="text-[#64746B] dark:text-slate-400 font-medium">Zero disputes. You only pay for verified days.</span>
+                  <span className="text-[#42524A] dark:text-slate-400 font-medium">Zero disputes. You only pay for verified days.</span>
                 </div>
               </div>
             </div>
@@ -865,7 +869,7 @@ export function LandingPage() {
             <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#153D32] dark:text-white tracking-tight">
               Community Savings Calculator
             </h2>
-            <p className="text-sm sm:text-base text-[#64746B] dark:text-slate-300 mt-3 font-medium">
+            <p className="text-sm sm:text-base text-[#42524A] dark:text-slate-300 mt-3 font-medium">
               See exactly how much you and your neighbours save as your apartment group expands from 2 to 8 households.
             </p>
           </div>
@@ -880,7 +884,7 @@ export function LandingPage() {
                 className={`py-2.5 px-2 sm:px-4 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   calcService === 'COOKING'
                     ? 'bg-[#153D32] text-white shadow-xs'
-                    : 'text-[#64746B] dark:text-slate-300 hover:text-[#153D32]'
+                    : 'text-[#42524A] dark:text-slate-300 hover:text-[#153D32]'
                 }`}
               >
                 <ChefHat className="w-3.5 h-3.5 shrink-0" />
@@ -893,7 +897,7 @@ export function LandingPage() {
                 className={`py-2.5 px-2 sm:px-4 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   calcService === 'DISHWASHING'
                     ? 'bg-[#153D32] text-white shadow-xs'
-                    : 'text-[#64746B] dark:text-slate-300 hover:text-[#153D32]'
+                    : 'text-[#42524A] dark:text-slate-300 hover:text-[#153D32]'
                 }`}
               >
                 <Droplets className="w-3.5 h-3.5 shrink-0" />
@@ -906,7 +910,7 @@ export function LandingPage() {
                 className={`py-2.5 px-2 sm:px-4 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   calcService === 'COMBO'
                     ? 'bg-[#153D32] text-white shadow-xs'
-                    : 'text-[#64746B] dark:text-slate-300 hover:text-[#153D32]'
+                    : 'text-[#42524A] dark:text-slate-300 hover:text-[#153D32]'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 shrink-0" />
@@ -937,7 +941,7 @@ export function LandingPage() {
                     onChange={(e) => setCalcHouseholds(Number(e.target.value))}
                     className="w-full accent-[#153D32] cursor-pointer h-2 bg-[#E6DFD3] dark:bg-slate-700 rounded-lg appearance-none"
                   />
-                  <div className="flex justify-between text-[10px] text-[#64746B] dark:text-slate-400 font-bold mt-1.5">
+                  <div className="flex justify-between text-[10px] text-[#42524A] dark:text-slate-400 font-bold mt-1.5">
                     <span>1 Flat (Solo)</span>
                     <span>4 Flats (Optimal)</span>
                     <span>8 Flats (Max Savings)</span>
@@ -999,7 +1003,7 @@ export function LandingPage() {
                 )}
 
                 {/* Fair wage floor note */}
-                <div className="p-3.5 rounded-2xl bg-white dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 text-xs text-[#64746B] dark:text-slate-400">
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 text-xs text-[#42524A] dark:text-slate-400">
                   <strong className="text-[#202A25] dark:text-white flex items-center gap-1.5 mb-0.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#153D32] dark:text-[#E9A15B]" />
                     Guaranteed Fair Staff Compensation:
@@ -1011,14 +1015,14 @@ export function LandingPage() {
               {/* Output Display Card */}
               <div className="bg-white dark:bg-[#0E2922] rounded-3xl p-6 sm:p-8 border border-[#E6DFD3] dark:border-white/10 shadow-lg space-y-6">
                 <div>
-                  <span className="text-[10px] uppercase font-black tracking-wider text-[#64746B] dark:text-slate-400">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-[#42524A] dark:text-slate-400">
                     Your Household Rate
                   </span>
                   <div className="flex items-baseline gap-3 mt-1">
                     <span className="font-serif text-3xl sm:text-4xl font-extrabold text-[#153D32] dark:text-white">
                       ₹{pricingResult.groupPrice.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-xs text-[#64746B] dark:text-slate-400 font-bold">/ month</span>
+                    <span className="text-xs text-[#42524A] dark:text-slate-400 font-bold">/ month</span>
                     {pricingResult.savingsPercent > 0 && (
                       <span className="ml-auto text-xs font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                         {pricingResult.savingsPercent}% SAVED
@@ -1028,7 +1032,7 @@ export function LandingPage() {
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-[#E6DFD3] dark:border-white/10 text-xs">
-                  <div className="flex justify-between text-[#64746B] dark:text-slate-400">
+                  <div className="flex justify-between text-[#42524A] dark:text-slate-400">
                     <span>Individual market rate:</span>
                     <span className="line-through font-bold">₹{pricingResult.individualPrice.toLocaleString('en-IN')}</span>
                   </div>
@@ -1074,7 +1078,7 @@ export function LandingPage() {
           <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#153D32] dark:text-white tracking-tight">
             A simpler everyday, in four steps.
           </h2>
-          <p className="text-sm sm:text-base text-[#64746B] dark:text-slate-300 mt-3 font-medium">
+          <p className="text-sm sm:text-base text-[#42524A] dark:text-slate-300 mt-3 font-medium">
             From discovering your society group to enjoying warm homestyle meals and a spotless kitchen.
           </p>
         </div>
@@ -1089,7 +1093,7 @@ export function LandingPage() {
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
               Join or Form a Group
             </h3>
-            <p className="text-xs text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+            <p className="text-xs text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
               Find an active group in your apartment tower or create a new one with your desired meal schedule and utensil load.
             </p>
           </div>
@@ -1102,7 +1106,7 @@ export function LandingPage() {
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
               Match Top Verified Staff
             </h3>
-            <p className="text-xs text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+            <p className="text-xs text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
               Once threshold is met, our algorithm matches top-rated cooks and dishwashers who already operate near your society.
             </p>
           </div>
@@ -1115,7 +1119,7 @@ export function LandingPage() {
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
               OTP-Verified Visits
             </h3>
-            <p className="text-xs text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+            <p className="text-xs text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
               Staff arrives at your exact scheduled window. Verify daily check-in with your 4-digit OTP. Zero disputes.
             </p>
           </div>
@@ -1128,7 +1132,7 @@ export function LandingPage() {
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
               Guaranteed Backup
             </h3>
-            <p className="text-xs text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+            <p className="text-xs text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
               When your assigned staff takes planned leaves, an automated standby professional covers the slot seamlessly.
             </p>
           </div>
@@ -1150,7 +1154,7 @@ export function LandingPage() {
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#153D32] dark:text-white tracking-tight">
               Sample Daily Tower Routine
             </h2>
-            <p className="text-sm text-[#64746B] dark:text-slate-300 mt-2 font-medium">
+            <p className="text-sm text-[#42524A] dark:text-slate-300 mt-2 font-medium">
               See how a typical 4-flat cluster operates seamlessly in the morning and evening.
             </p>
           </div>
@@ -1195,7 +1199,7 @@ export function LandingPage() {
 
             {/* Desktop Table View (>= sm) */}
             <div className="hidden sm:block space-y-3">
-              <div className="grid grid-cols-12 text-[11px] font-extrabold uppercase text-[#64746B] dark:text-slate-400 px-4 pb-2 border-b border-[#E6DFD3] dark:border-white/10">
+              <div className="grid grid-cols-12 text-[11px] font-extrabold uppercase text-[#42524A] dark:text-slate-400 px-4 pb-2 border-b border-[#E6DFD3] dark:border-white/10">
                 <span className="col-span-3">Time Slot</span>
                 <span className="col-span-3">Household</span>
                 <span className="col-span-4">Dedicated Activity</span>
@@ -1209,7 +1213,7 @@ export function LandingPage() {
                 >
                   <span className="col-span-3 font-bold text-[#153D32] dark:text-[#E9A15B]">{row.time}</span>
                   <span className="col-span-3 font-bold text-[#202A25] dark:text-white">{row.flat}</span>
-                  <span className="col-span-4 text-[#64746B] dark:text-slate-300">{row.task}</span>
+                  <span className="col-span-4 text-[#42524A] dark:text-slate-300">{row.task}</span>
                   <span className="col-span-2 text-right">
                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                       row.status === 'Completed' ? 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300' :
@@ -1241,7 +1245,7 @@ export function LandingPage() {
                     </span>
                   </div>
                   <div className="font-bold text-[#202A25] dark:text-white text-sm">{row.flat}</div>
-                  <div className="text-[#64746B] dark:text-slate-300 font-medium">{row.task}</div>
+                  <div className="text-[#42524A] dark:text-slate-300 font-medium">{row.task}</div>
                 </div>
               ))}
             </div>
@@ -1264,7 +1268,7 @@ export function LandingPage() {
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#153D32] dark:text-white tracking-tight">
               Meet Top Society Professionals
             </h2>
-            <p className="text-sm text-[#64746B] dark:text-slate-300 mt-2 font-medium">
+            <p className="text-sm text-[#42524A] dark:text-slate-300 mt-2 font-medium">
               Vetted through police verification, food safety checks, and practical kitchen trials.
             </p>
           </div>
@@ -1307,7 +1311,7 @@ export function LandingPage() {
                   </span>
                 </div>
 
-                <p className="text-xs text-[#64746B] dark:text-slate-300 mt-2 line-clamp-2 font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-300 mt-2 line-clamp-2 font-medium">
                   {pro.bio || 'Specializes in North Indian homestyle gravies, phulkas and meticulous kitchen hygiene.'}
                 </p>
 
@@ -1315,7 +1319,7 @@ export function LandingPage() {
                   {(pro.specialties || ['North Indian', 'Healthy Diet']).slice(0, 2).map((s, idx) => (
                     <span
                       key={idx}
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FBF7EF] dark:bg-white/5 text-[#64746B] dark:text-slate-300 border border-[#E6DFD3] dark:border-white/5"
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FBF7EF] dark:bg-white/5 text-[#42524A] dark:text-slate-300 border border-[#E6DFD3] dark:border-white/5"
                     >
                       {s}
                     </span>
@@ -1324,7 +1328,7 @@ export function LandingPage() {
               </div>
 
               <div className="pt-3 border-t border-[#E6DFD3] dark:border-white/10 flex items-center justify-between text-xs">
-                <span className="text-[#64746B] dark:text-slate-400 font-medium">
+                <span className="text-[#42524A] dark:text-slate-400 font-medium">
                   {pro.experience_years || 5}+ yrs exp
                 </span>
                 <Link
@@ -1355,7 +1359,7 @@ export function LandingPage() {
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#153D32] dark:text-white leading-tight">
                 Better opportunities, closer to home.
               </h2>
-              <p className="text-sm text-[#64746B] dark:text-slate-300 leading-relaxed font-medium">
+              <p className="text-sm text-[#42524A] dark:text-slate-300 leading-relaxed font-medium">
                 SocietyCook is committed to transforming informal domestic work into organized, well-compensated, dignified professions.
               </p>
             </div>
@@ -1367,7 +1371,7 @@ export function LandingPage() {
                   <Coins className="w-4 h-4" />
                 </div>
                 <h4 className="font-bold text-sm text-[#202A25] dark:text-white">2.5x Higher Earnings</h4>
-                <p className="text-xs text-[#64746B] dark:text-slate-400 mt-1 leading-relaxed font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Earn ₹20,000 to ₹35,000/mo by serving 4-6 clustered flats without unpaid travel downtime.
                 </p>
               </div>
@@ -1377,7 +1381,7 @@ export function LandingPage() {
                   <Navigation className="w-4 h-4" />
                 </div>
                 <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Zero Commute Expenses</h4>
-                <p className="text-xs text-[#64746B] dark:text-slate-400 mt-1 leading-relaxed font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Work in one gated society. Save up to ₹3,500/mo on bus and auto fares.
                 </p>
               </div>
@@ -1387,7 +1391,7 @@ export function LandingPage() {
                   <Clock className="w-4 h-4" />
                 </div>
                 <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Predictable Fixed Hours</h4>
-                <p className="text-xs text-[#64746B] dark:text-slate-400 mt-1 leading-relaxed font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Firm 45-minute cooking and 30-minute washing windows with punctuality bonuses.
                 </p>
               </div>
@@ -1397,7 +1401,7 @@ export function LandingPage() {
                   <HeartPulse className="w-4 h-4" />
                 </div>
                 <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Paid Leave & Medical Fund</h4>
-                <p className="text-xs text-[#64746B] dark:text-slate-400 mt-1 leading-relaxed font-medium">
+                <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Guaranteed backup covers your leaves without resident complaints or salary cuts.
                 </p>
               </div>
@@ -1482,7 +1486,7 @@ export function LandingPage() {
                     <ChevronDown className={`w-4 h-4 text-[#153D32] dark:text-[#E9A15B] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isOpen && (
-                    <div id={`faq-answer-${index}`} role="region" className="px-5 pb-5 pt-1 text-xs text-[#64746B] dark:text-slate-300 leading-relaxed border-t border-[#E6DFD3]/50 dark:border-white/5 font-medium animate-in fade-in">
+                    <div id={`faq-answer-${index}`} role="region" className="px-5 pb-5 pt-1 text-xs text-[#42524A] dark:text-slate-300 leading-relaxed border-t border-[#E6DFD3]/50 dark:border-white/5 font-medium animate-in fade-in">
                       {faq.a}
                     </div>
                   )}
@@ -1500,6 +1504,7 @@ export function LandingPage() {
       <section className="relative py-24 sm:py-32 overflow-hidden">
         <div className="absolute inset-0">
           <picture>
+            <source media="(max-width: 640px)" srcSet="/images/conversion_banner_home-mobile.webp" type="image/webp" />
             <source srcSet="/images/conversion_banner_home.webp" type="image/webp" />
             <img
               src="/images/conversion_banner_home.jpg"
@@ -1641,7 +1646,7 @@ export function LandingPage() {
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <h3 className="font-serif text-xl font-bold text-[#153D32] dark:text-white">Demo Scheduled!</h3>
-                <p className="text-xs text-[#64746B] dark:text-slate-300">
+                <p className="text-xs text-[#42524A] dark:text-slate-300">
                   Our Community Manager will connect with you within 2 hours to coordinate the trial in your apartment complex.
                 </p>
               </div>
@@ -1654,7 +1659,7 @@ export function LandingPage() {
                 <h3 className="font-serif text-2xl font-bold text-[#153D32] dark:text-white mb-2">
                   Schedule Society Demo
                 </h3>
-                <p className="text-xs text-[#64746B] dark:text-slate-300 mb-6">
+                <p className="text-xs text-[#42524A] dark:text-slate-300 mb-6">
                   Experience a 2-day zero-cost trial of coordinated cooking and dishwashing in your apartment tower.
                 </p>
 
