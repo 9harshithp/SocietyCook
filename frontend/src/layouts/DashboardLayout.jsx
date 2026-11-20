@@ -122,38 +122,34 @@ export function DashboardLayout() {
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613]">
-      {/* Sub-navigation Header with Left-to-Right Animated Underline */}
-      <div className="bg-white/80 dark:bg-[#121E19]/80 backdrop-blur-md border-b border-[#DDE9D8] dark:border-white/10 sticky top-[61px] z-30 transition-colors">
+      {/* Role Navigation Bar with Left-to-Right Animated Underline */}
+      <div className="bg-white/90 dark:bg-[#121E19]/90 backdrop-blur-md border-b border-[#DDE9D8] dark:border-white/10 sticky top-[61px] z-30 transition-colors shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between py-2 border-b border-[#DDE9D8]/40 dark:border-white/5 text-[11px] font-semibold text-[#42524A] dark:text-slate-400">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-[#153D32] dark:text-[#E9A15B]">{roleTitle}</span>
-              <span>·</span>
-              <span className="truncate max-w-[200px]">{user?.name}</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#153D32]/10 dark:bg-white/10 text-[#153D32] dark:text-[#E9A15B] text-[10px] font-bold">
-              <ShieldCheck className="w-3 h-3" />
+          <div className="flex items-center justify-between gap-4 py-1.5">
+            {/* Scrollable Navigation Strip */}
+            <nav
+              aria-label={`${roleTitle} Navigation`}
+              className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar py-1 flex-1 min-w-0"
+            >
+              {currentNav.map((item) => (
+                <PremiumNavLink
+                  key={item.to}
+                  to={item.to}
+                  icon={item.icon}
+                  exact={item.exact}
+                  badge={item.badge}
+                >
+                  {item.label}
+                </PremiumNavLink>
+              ))}
+            </nav>
+
+            {/* Role Verification Badge */}
+            <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#153D32]/10 dark:bg-white/10 text-[#153D32] dark:text-[#E9A15B] text-[11px] font-bold shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5" />
               <span>{roleBadge}</span>
             </div>
           </div>
-
-          {/* Scrollable Navigation Strip */}
-          <nav
-            aria-label={`${roleTitle} Navigation`}
-            className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar py-1"
-          >
-            {currentNav.map((item) => (
-              <PremiumNavLink
-                key={item.to}
-                to={item.to}
-                icon={item.icon}
-                exact={item.exact}
-                badge={item.badge}
-              >
-                {item.label}
-              </PremiumNavLink>
-            ))}
-          </nav>
         </div>
       </div>
 

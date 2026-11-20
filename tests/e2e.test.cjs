@@ -9,7 +9,7 @@ async function runE2ETests() {
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
-  const BASE_URL = 'http://127.0.0.1:5173';
+  const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:5173';
   let passedCount = 0;
   let testCount = 0;
 

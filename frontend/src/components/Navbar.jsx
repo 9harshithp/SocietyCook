@@ -46,6 +46,7 @@ export function Navbar() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
   const isPublicPage = location.pathname === '/' || location.pathname === '/terms' || location.pathname === '/privacy';
+  const isInsideApp = location.pathname.startsWith('/app') || location.pathname.startsWith('/admin');
   const roleDashboardUrl = getRoleDashboardPath(user?.role);
 
   return (
@@ -96,8 +97,8 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Public Navigation Links (When unauthenticated) */}
-        {!user && (
+        {/* Public Navigation Links: Rendered on public/marketing pages (never duplicated inside app portal) */}
+        {!isInsideApp && (
           <nav aria-label="Public Marketing Navigation" className="hidden lg:flex items-center gap-6 text-xs font-semibold text-[#202A25] dark:text-slate-200">
             {/* Services Dropdown */}
             <div className="relative" onMouseLeave={() => setServicesOpen(false)}>
@@ -177,30 +178,6 @@ export function Navbar() {
             <a href="#for-professionals" className="hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors">
               For Professionals
             </a>
-          </nav>
-        )}
-
-        {/* In-App Navigation Links (When authenticated): Uses PremiumNavLink with Underline Animation */}
-        {user && (
-          <nav aria-label="Main Application Navigation" className="hidden lg:flex items-center gap-5 text-xs">
-            <PremiumNavLink to={roleDashboardUrl} exact={true}>
-              Dashboard
-            </PremiumNavLink>
-            <PremiumNavLink to="/app/discover">
-              Cooks
-            </PremiumNavLink>
-            <PremiumNavLink to="/app/community" badge="Save 32%">
-              Tower Groups
-            </PremiumNavLink>
-            <PremiumNavLink to="/app/schedule">
-              Schedule
-            </PremiumNavLink>
-            <PremiumNavLink to="/app/subscriptions">
-              Billing
-            </PremiumNavLink>
-            <PremiumNavLink to="/app/analytics">
-              Analytics
-            </PremiumNavLink>
           </nav>
         )}
 
