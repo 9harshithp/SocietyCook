@@ -219,8 +219,8 @@ export function LandingPage() {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[16/10] sm:aspect-[4/5] max-w-md mx-auto group">
                 <picture>
-                  <source media="(max-width: 640px)" srcSet="/images/hero_kitchen_indian-mobile.webp" type="image/webp" />
-                  <source srcSet="/images/hero_kitchen_indian.webp" type="image/webp" />
+                  <source media="(max-width: 640px)" srcSet="/images/hero_kitchen_indian-mobile.webp" type="image/webp" width="480" height="300" />
+                  <source srcSet="/images/hero_kitchen_indian.webp" type="image/webp" width="1200" height="669" />
                   <img
                     src="/images/hero_kitchen_indian.jpg"
                     alt="Modern warm sun-drenched Indian apartment kitchen"

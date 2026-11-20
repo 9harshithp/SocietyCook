@@ -11,18 +11,21 @@
   <meta name="theme-color" content="#153D32">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
 
-  <!-- LCP Image Preload for Mobile & Desktop -->
+  <!-- Immediate Module Script Discovery in Head -->
+  <script type="module" src="/src/main.jsx"></script>
+
+  <!-- Critical LCP Image Preload for Mobile & Desktop -->
   <link rel="preload" as="image" href="/images/hero_kitchen_indian-mobile.webp" type="image/webp" media="(max-width: 640px)" fetchpriority="high">
   <link rel="preload" as="image" href="/images/hero_kitchen_indian.webp" type="image/webp" media="(min-width: 641px)" fetchpriority="high">
 
+  <!-- Asynchronous Zero-Render-Blocking Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Streamlined Non-render-blocking Google Fonts -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" as="style">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
   <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   </noscript>
+
   <script>
     (function() {
       try {
@@ -42,6 +45,5 @@
 </head>
 <body class="bg-[#FBF7EF] dark:bg-[#0D1613] text-[#202A25] dark:text-[#EDE8DF] font-sans antialiased selection:bg-[#E9A15B]/30 selection:text-[#153D32] transition-colors duration-200 overflow-x-hidden min-h-screen">
   <div id="root" class="overflow-x-hidden"></div>
-  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
