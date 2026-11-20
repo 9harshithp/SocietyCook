@@ -1,9 +1,11 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { LandingPage } from './pages/LandingPage';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
+import { initAnalytics, trackPageView } from './services/analytics';
 
 // Lazy-loaded routes for optimal mobile performance and minimal initial bundle size
 const LoginPage = React.lazy(() => import('./pages/AuthPages').then(m => ({ default: m.LoginPage })));
@@ -56,11 +58,27 @@ function ProtectedRoute({ children, allowedRoles }) {
   return children;
 }
 
+// SPA Navigation Listener for Duplicate-Free Google Analytics 4 Tracking
+function AnalyticsListener() {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(location.pathname + location.search, document.title);
+  }, [location.pathname, location.search]);
+
+  return null;
+}
+
 export function App() {
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <AnalyticsListener />
           <div className="min-h-screen flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613] text-[#202A25] dark:text-[#EDE8DF] font-sans transition-colors overflow-x-hidden w-full">
             <Navbar />
             <main className="flex-1 w-full overflow-x-hidden">
@@ -191,6 +209,7 @@ export function App() {
               </Routes>
             </React.Suspense>
           </main>
+          <CookieConsentBanner />
           </div>
         </BrowserRouter>
       </AuthProvider>

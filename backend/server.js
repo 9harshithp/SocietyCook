@@ -56,9 +56,17 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", 'https://checkout.razorpay.com'],
-        connectSrc: ["'self'", 'https://api.razorpay.com', 'wss:', 'ws:'],
-        imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://checkout.razorpay.com', 'https://www.googletagmanager.com'],
+        connectSrc: [
+          "'self'",
+          'https://api.razorpay.com',
+          'wss:',
+          'ws:',
+          'https://*.google-analytics.com',
+          'https://*.analytics.google.com',
+          'https://*.googletagmanager.com'
+        ],
+        imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://*.google-analytics.com', 'https://*.googletagmanager.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         frameSrc: ["'self'", 'https://api.razorpay.com'],

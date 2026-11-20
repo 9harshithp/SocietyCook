@@ -36,6 +36,13 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import {
+  trackServiceExploration,
+  trackProfessionalSearch,
+  trackSocietyLead,
+  trackProfessionalLead,
+  trackBookingStart
+} from '../services/analytics';
 
 export function LandingPage() {
   const { user, societies } = useAuth();
@@ -131,6 +138,7 @@ export function LandingPage() {
 
   const handleFinderSubmit = (e) => {
     e.preventDefault();
+    trackProfessionalSearch({ service: finderService, society: finderSociety });
     if (user) {
       navigate(`/app/cooks?service=${finderService}`);
     } else {
@@ -140,6 +148,7 @@ export function LandingPage() {
 
   const handleRwaSubmit = (e) => {
     e.preventDefault();
+    trackSocietyLead({ flats: rwaForm.flats, societyName: rwaForm.society });
     setRwaSuccess(true);
     setTimeout(() => {
       setShowRwaModal(false);
@@ -886,7 +895,10 @@ export function LandingPage() {
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-8 p-1.5 bg-white dark:bg-white/5 rounded-2xl border border-[#E6DFD3] dark:border-white/10">
               <button
                 type="button"
-                onClick={() => setCalcService('COOKING')}
+                onClick={() => {
+                  setCalcService('COOKING');
+                  trackServiceExploration('COOKING');
+                }}
                 className={`py-2.5 px-2 sm:px-4 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   calcService === 'COOKING'
                     ? 'bg-[#153D32] text-white shadow-xs'
@@ -899,7 +911,10 @@ export function LandingPage() {
 
               <button
                 type="button"
-                onClick={() => setCalcService('DISHWASHING')}
+                onClick={() => {
+                  setCalcService('DISHWASHING');
+                  trackServiceExploration('DISHWASHING');
+                }}
                 className={`py-2.5 px-2 sm:px-4 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   calcService === 'DISHWASHING'
                     ? 'bg-[#153D32] text-white shadow-xs'
@@ -912,7 +927,10 @@ export function LandingPage() {
 
               <button
                 type="button"
-                onClick={() => setCalcService('COMBO')}
+                onClick={() => {
+                  setCalcService('COMBO');
+                  trackServiceExploration('COMBO');
+                }}
                 className={`py-2.5 px-2 sm:px-4 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   calcService === 'COMBO'
                     ? 'bg-[#153D32] text-white shadow-xs'

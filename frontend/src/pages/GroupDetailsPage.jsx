@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { trackSubscriptionActivated } from '../services/analytics';
 
 export function GroupDetailsPage() {
   const { id } = useParams();
@@ -78,6 +79,7 @@ export function GroupDetailsPage() {
     try {
       setActionLoading(true);
       await api.activateGroup(id);
+      trackSubscriptionActivated({ subscriptionId: id, planTier: 'COMMUNITY_GROUP' });
       showToast('Group activated! Schedules and daily sessions generated.');
       loadGroupDetails();
     } catch (err) {

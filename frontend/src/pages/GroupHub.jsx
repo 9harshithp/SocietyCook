@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { trackGroupCreated, trackGroupJoined } from '../services/analytics';
 
 export function GroupHub() {
   const { user, activeSocietyId, showToast } = useAuth();
@@ -78,6 +79,7 @@ export function GroupHub() {
         max_members: Number(maxMembers),
         budget_per_household: Number(budget)
       });
+      trackGroupCreated({ serviceType, targetSize: maxMembers, mealType: mealService });
       showToast('Group created! Invite neighbours to reach the discount threshold.');
       setShowCreateModal(false);
       loadGroups();
@@ -92,6 +94,7 @@ export function GroupHub() {
         preferred_slot: joinSlot,
         dietary_preferences: 'Homestyle Veg'
       });
+      trackGroupJoined({ groupId, societyId: activeSocietyId });
       showToast('Successfully joined community group!');
       setShowJoinModal(null);
       loadGroups();

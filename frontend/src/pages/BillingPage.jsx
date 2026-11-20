@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { trackCheckoutStart, trackPaymentSuccess, trackSubscriptionActivated } from '../services/analytics';
 
 export function BillingPage() {
   const { user, showToast } = useAuth();
@@ -44,6 +45,16 @@ export function BillingPage() {
   const handlePayDemo = async (id) => {
     try {
       await api.payDemo(id);
+      trackPaymentSuccess({
+        transactionId: 'DEMO_' + id + '_' + Date.now(),
+        value: activeBooking?.amount || 4000,
+        currency: 'INR',
+        isDemo: true
+      });
+      trackSubscriptionActivated({
+        subscriptionId: id,
+        planTier: 'RESIDENTIAL_MONTHLY'
+      });
       showToast('Payment successful! Subscription active.');
       setShowPayModal(false);
       loadBilling();
@@ -135,8 +146,14 @@ SocietyCook Technologies Private Limited
           <button
             type="button"
             onClick={() => {
-              setPayingBookingId(activeBooking?.id || 1);
+              const bId = activeBooking?.id || 1;
+              setPayingBookingId(bId);
               setShowPayModal(true);
+              trackCheckoutStart({
+                serviceType: activeBooking?.service_type || 'COOKING',
+                planId: bId,
+                amount: activeBooking?.amount || 4000
+              });
             }}
             className="px-6 py-3 rounded-2xl bg-white text-emerald-800 font-bold text-xs hover:bg-slate-100 shadow-md transition-transform active:scale-95"
           >

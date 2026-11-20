@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { trackProfessionalSearch } from '../services/analytics';
 
 export function CookDirectoryPage() {
   const { activeSocietyId, showToast } = useAuth();
@@ -93,7 +94,10 @@ export function CookDirectoryPage() {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setServiceTypeFilter(tab.id)}
+              onClick={() => {
+                setServiceTypeFilter(tab.id);
+                trackProfessionalSearch({ service: tab.id });
+              }}
               className={`px-4 py-2.5 rounded-2xl text-xs font-bold inline-flex items-center gap-2 border transition-all cursor-pointer ${
                 isActive
                   ? 'bg-[#153D32] text-white border-[#153D32] shadow-sm'

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ChefHat, ShieldCheck, Mail, Lock, User, Phone, Building2, MapPin, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { trackLogin, trackRegistrationStart, trackRegistrationComplete } from '../services/analytics';
 
 export function LoginPage() {
   const { login, showToast } = useAuth();
@@ -16,6 +17,7 @@ export function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
+      trackLogin('credentials');
       navigate('/app');
     } catch (err) {
       showToast(err.message, 'error');
@@ -106,6 +108,14 @@ export function RegisterPage() {
   const [flatNumber, setFlatNumber] = useState('');
   const [blockName, setBlockName] = useState('Tower A');
   const [loading, setLoading] = useState(false);
+  const [hasStartedRegister, setHasStartedRegister] = useState(false);
+
+  const handleStartRegister = () => {
+    if (!hasStartedRegister) {
+      setHasStartedRegister(true);
+      trackRegistrationStart();
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -121,6 +131,7 @@ export function RegisterPage() {
         flat_number: flatNumber,
         block_name: blockName
       });
+      trackRegistrationComplete('credentials');
       showToast('Account registered successfully! Please sign in.');
       navigate('/login');
     } catch (err) {
@@ -165,7 +176,7 @@ export function RegisterPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs font-semibold">
+        <form onSubmit={handleSubmit} onFocus={handleStartRegister} className="space-y-4 text-xs font-semibold">
           <div>
             <label className="block text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
             <div className="relative">

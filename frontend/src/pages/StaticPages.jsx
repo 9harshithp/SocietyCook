@@ -1,6 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, FileText, AlertTriangle, ArrowLeft, ChefHat } from 'lucide-react';
+import { ShieldCheck, FileText, AlertTriangle, ArrowLeft, ChefHat, Check } from 'lucide-react';
+import { getConsentStatus, setConsentStatus } from '../services/analytics';
+
+function PrivacyConsentControl() {
+  const [status, setStatus] = useState(() => getConsentStatus());
+  const [savedMsg, setSavedMsg] = useState(false);
+
+  const handleUpdate = (newStatus) => {
+    setConsentStatus(newStatus);
+    setStatus(newStatus);
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 3000);
+  };
+
+  return (
+    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="font-bold text-xs text-slate-900 dark:text-white">Your Analytics Consent Status:</span>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+          status === 'granted' 
+            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+            : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+        }`}>
+          {status === 'granted' ? 'Active / Granted' : 'Declined / Denied'}
+        </span>
+      </div>
+      <p className="text-[11px] text-slate-500">
+        You can revoke or enable performance analytics storage at any time. When declined, no analytics cookies are placed.
+      </p>
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          onClick={() => handleUpdate('granted')}
+          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer"
+        >
+          Enable Analytics
+        </button>
+        <button
+          type="button"
+          onClick={() => handleUpdate('denied')}
+          className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold cursor-pointer"
+        >
+          Decline All
+        </button>
+        {savedMsg && (
+          <span className="text-[11px] text-emerald-600 font-bold inline-flex items-center gap-1">
+            <Check className="w-3.5 h-3.5" /> Preference saved
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function TermsPage() {
   return (
@@ -90,6 +142,19 @@ export function PrivacyPage() {
           <p>
             Sensitive credentials such as passwords and session tokens are protected using industry-standard bcrypt hashing and cryptographically signed JWTs with short expiry. Role-Based Access Control (RBAC) ensures residents cannot view other towers' private session notes or financial payout ledgers.
           </p>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">4. Cookies, Google Analytics & Privacy Controls</h2>
+          <p>
+            SocietyCook uses Google Analytics 4 (Measurement ID: <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px] font-mono">G-RGG1E9LQ89</code>) under Google Consent Mode v2 to evaluate operational site performance and tower cluster formation trends. 
+          </p>
+          <p>
+            We enforce strict data sanitization rules: passwords, email addresses, phone numbers, apartment flat numbers, identity proofs, and payment credentials are mathematically scrubbed and never transmitted to analytics servers. Financial conversions are only reported for verified transactions, excluding demo/test payments.
+          </p>
+          <div className="pt-2">
+            <PrivacyConsentControl />
+          </div>
         </section>
       </div>
 
