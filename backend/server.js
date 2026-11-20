@@ -23,12 +23,14 @@ const corsOptions = {
     // Allow non-browser requests (e.g. server-to-server, curl, tests) with no origin header
     if (!origin) return callback(null, true);
 
-    const isAllowed = ENV.ALLOWED_ORIGINS.some((allowed) => {
-      if (allowed === origin) return true;
-      // Support Vercel preview branch deployments
-      if (allowed.includes('vercel.app') && origin.endsWith('.vercel.app')) return true;
-      return false;
-    });
+    const isDevelopment = ENV.NODE_ENV !== 'production';
+    const isAllowed =
+      ENV.ALLOWED_ORIGINS.some((allowed) => {
+        if (allowed === origin) return true;
+        // Support Vercel preview branch deployments
+        if (allowed.includes('vercel.app') && origin.endsWith('.vercel.app')) return true;
+        return false;
+      }) || (isDevelopment && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
 
     if (isAllowed) {
       callback(null, true);
@@ -43,7 +45,18 @@ const corsOptions = {
 
 const io = new Server(server, {
   cors: {
-    origin: ENV.ALLOWED_ORIGINS,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const isDevelopment = ENV.NODE_ENV !== 'production';
+      const isAllowed =
+        ENV.ALLOWED_ORIGINS.some((allowed) => {
+          if (allowed === origin) return true;
+          if (allowed.includes('vercel.app') && origin.endsWith('.vercel.app')) return true;
+          return false;
+        }) || (isDevelopment && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
+      if (isAllowed) callback(null, true);
+      else callback(new Error('CORS blocked'));
+    },
     credentials: true,
     methods: ['GET', 'POST']
   }

@@ -11,8 +11,13 @@ if (isProduction && (!jwtSecret || jwtSecret.length < 32 || jwtSecret.includes('
 const defaultAllowedOrigins = [
   'https://societycook.vercel.app',
   'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
   'http://localhost:3000',
-  'http://127.0.0.1:5173'
+  'http://localhost:4173',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:5175'
 ];
 
 const envAllowedOrigins = process.env.ALLOWED_ORIGINS
