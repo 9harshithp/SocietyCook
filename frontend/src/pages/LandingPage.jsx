@@ -209,7 +209,7 @@ export function LandingPage() {
               <div className="pt-4 border-t border-[#E6DFD3] dark:border-white/10 flex flex-wrap items-center gap-y-2 gap-x-6 text-xs font-semibold text-[#42524A] dark:text-slate-400">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-[#153D32] dark:text-[#E9A15B]" />
-                  450+ Verified Society Staff
+                  Multi-Tier Staff Verification
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-[#153D32] dark:text-[#E9A15B]" />
@@ -246,10 +246,10 @@ export function LandingPage() {
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 dark:bg-[#153D32]/90 backdrop-blur-md text-[11px] font-extrabold text-[#153D32] dark:text-white shadow-sm border border-white/40">
                     <Building2 className="w-3.5 h-3.5 text-[#964208] dark:text-[#E9A15B]" />
-                    Tower A Morning Schedule
+                    Sample Morning Route (Simulation)
                   </span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E9A15B] text-[#153D32] text-[10px] font-black uppercase tracking-wider shadow-sm">
-                    Live Cluster
+                    Demo Model
                   </span>
                 </div>
 
@@ -265,8 +265,8 @@ export function LandingPage() {
                     Fresh homestyle cooking followed by sparkling dish sanitization.
                   </p>
                   <div className="flex items-center justify-between text-xs text-white/80 mt-2 pt-2 border-t border-white/15">
-                    <span>Greenwood Residency (Bellandur)</span>
-                    <span className="font-bold text-[#E9A15B]">32% Saved</span>
+                    <span>Sample Pilot Complex (Bellandur)</span>
+                    <span className="font-bold text-[#E9A15B]">32% Projected Savings</span>
                   </div>
                 </div>
               </div>
@@ -1241,10 +1241,10 @@ export function LandingPage() {
                   <span className="col-span-2 text-right">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                       row.status === 'Completed' ? 'bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-200' :
-                      row.status === 'Active Now' ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100' :
+                      row.status.includes('Active') ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100' :
                       'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100'
                     }`}>
-                      {row.status === 'Active Now' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />}
+                      {row.status.includes('Active') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />}
                       {row.status}
                     </span>
                   </span>
@@ -1263,10 +1263,10 @@ export function LandingPage() {
                     <span className="font-bold text-[#153D32] dark:text-[#E9A15B]">{row.time}</span>
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                       row.status === 'Completed' ? 'bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-200' :
-                      row.status === 'Active Now' ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100' :
+                      row.status.includes('Active') ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100' :
                       'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100'
                     }`}>
-                      {row.status === 'Active Now' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />}
+                      {row.status.includes('Active') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />}
                       {row.status}
                     </span>
                   </div>
@@ -1289,20 +1289,20 @@ export function LandingPage() {
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#153D32]/10 dark:bg-white/10 text-[#153D32] dark:text-[#E9A15B] text-xs font-bold mb-3">
               <ShieldCheck className="w-3.5 h-3.5" />
-              VERIFIED EXPERTISE
+              SAMPLE ROSTER — PILOT PROFILES
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#153D32] dark:text-white tracking-tight">
-              Meet Top Society Professionals
+              Explore Sample Professional Profiles
             </h2>
             <p className="text-sm text-[#42524A] dark:text-slate-300 mt-2 font-medium">
-              Vetted through police verification, food safety checks, and practical kitchen trials.
+              Illustrative profiles demonstrating skill standards, dietary specialties, and living-wage compensation benchmarks.
             </p>
           </div>
           <Link
             to={user ? '/app/cooks' : '/register'}
             className="mt-4 md:mt-0 inline-flex items-center gap-2 text-xs font-bold text-[#153D32] dark:text-[#E9A15B] hover:underline"
           >
-            <span>View All Society Staff</span>
+            <span>Explore Pilot Staff Pool</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -1318,18 +1318,20 @@ export function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#153D32] to-[#1E5244] text-[#E9A15B] font-bold text-lg flex items-center justify-center border border-[#E9A15B]/30">
                     {pro.name?.[0] || 'P'}
                   </div>
-                  <div className="flex items-center gap-1 bg-[#FBF7EF] dark:bg-white/5 px-2 py-1 rounded-lg text-xs font-bold text-[#964208] dark:text-[#E9A15B]">
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <span>{pro.rating || 4.9}</span>
+                  <div className="flex items-center gap-1 bg-[#FBF7EF] dark:bg-white/5 px-2 py-1 rounded-lg text-[11px] font-bold text-[#964208] dark:text-[#E9A15B]">
+                    <Star className="w-3 h-3 fill-current" />
+                    <span>Benchmark {pro.rating || 4.9}</span>
                   </div>
                 </div>
 
                 <div className="mt-4">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <h3 className="font-bold text-sm text-[#202A25] dark:text-white truncate">
                       {pro.name}
                     </h3>
-                    <BadgeCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 shrink-0">
+                      Sample Profile
+                    </span>
                   </div>
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[#964208] dark:text-[#E9A15B] block mt-0.5">
                     {pro.professional_type === 'MULTI_SKILLED' ? 'Multi-Skilled Cook & Utensil Care' :
@@ -1355,18 +1357,21 @@ export function LandingPage() {
 
               <div className="pt-3 border-t border-[#E6DFD3] dark:border-white/10 flex items-center justify-between text-xs">
                 <span className="text-[#42524A] dark:text-slate-400 font-medium">
-                  {pro.experience_years || 5}+ yrs exp
+                  {pro.experience_years || 5}+ yrs exp (Ref)
                 </span>
                 <Link
                   to={user ? `/app/cooks` : `/register`}
                   className="font-bold text-[#153D32] dark:text-[#E9A15B] hover:underline cursor-pointer"
                 >
-                  View Profile
+                  View Sample
                 </Link>
               </div>
             </div>
           ))}
         </div>
+        <p className="text-[11px] text-[#42524A] dark:text-slate-400 mt-5 text-center font-medium italic">
+          *Demonstration profiles. Actual certified staff are vetted and assigned from your local residential society pool upon group activation.
+        </p>
       </section>
 
 
@@ -1613,13 +1618,16 @@ export function LandingPage() {
 
             {/* Covered Societies */}
             <div className="md:col-span-3 space-y-3">
-              <div className="font-bold text-white uppercase tracking-wider text-[11px]">Active Societies</div>
-              <ul className="space-y-2 text-[#A4B5AC]">
-                <li>Greenwood Residency, Bellandur</li>
-                <li>Palm Meadows, Whitefield</li>
-                <li>Silver Oak Enclave, HSR Layout</li>
-                <li>Prestige Tech Vista, Kadubeesanahalli</li>
+              <div className="font-bold text-white uppercase tracking-wider text-[11px]">Pilot & Target Societies</div>
+              <ul className="space-y-2 text-[#A4B5AC] text-xs">
+                <li>Greenwood Residency (Bellandur) - Pilot</li>
+                <li>Palm Meadows (Whitefield) - Target</li>
+                <li>Silver Oak Enclave (HSR Layout) - Target</li>
+                <li>Prestige Tech Vista (Kadubeesanahalli) - Target</li>
               </ul>
+              <p className="text-[10px] text-[#A4B5AC]/80 italic">
+                *Sample residential clusters for demonstration. Verified service activation occurs upon formal RWA clearance.
+              </p>
             </div>
 
             {/* Contact & Legal */}
@@ -1810,7 +1818,7 @@ const DEFAULT_PROS = [
 
 const SCHEDULE_ITEMS = [
   { time: '07:30 – 08:15 AM', flat: 'Flat B-201', task: 'Breakfast Prep (Poha, Upma & Chai)', status: 'Completed' },
-  { time: '08:15 – 08:45 AM', flat: 'Flat B-201', task: 'Utensil Washing & Sink Sanitization', status: 'Active Now' },
+  { time: '08:15 – 08:45 AM', flat: 'Flat B-201', task: 'Utensil Washing & Sink Sanitization', status: 'Active (Demo)' },
   { time: '08:15 – 09:00 AM', flat: 'Flat B-304', task: 'Fresh Phulkas & Paneer Sabzi', status: 'Scheduled' },
   { time: '09:00 – 09:30 AM', flat: 'Flat B-304', task: 'Heavy Kadhais & Cooker Care', status: 'Upcoming' },
   { time: '09:00 – 09:45 AM', flat: 'Flat B-402', task: 'South Indian Meals & Sambhar', status: 'Upcoming' }

@@ -12,9 +12,9 @@ export const DEMO_PERSONAS = [
 ];
 
 const DEFAULT_SOCIETIES = [
-  { id: 1, name: 'Prestige Falcon City', city: 'Bengaluru' },
-  { id: 2, name: 'Sobha Dream Acres', city: 'Bengaluru' },
-  { id: 3, name: 'Brigade Gateway', city: 'Bengaluru' }
+  { id: 1, name: 'Prestige Falcon City (Sample Pilot)', city: 'Bengaluru' },
+  { id: 2, name: 'Sobha Dream Acres (Sample Pilot)', city: 'Bengaluru' },
+  { id: 3, name: 'Brigade Gateway (Sample Pilot)', city: 'Bengaluru' }
 ];
 
 export function AuthProvider({ children }) {

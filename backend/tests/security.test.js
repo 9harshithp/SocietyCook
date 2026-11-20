@@ -96,4 +96,21 @@ describe('SocietyCook Enterprise Security & Tenant Isolation Tests', () => {
 
     expect(res.status).toBe(422);
   });
+
+  it('enforces strict role-based access control (blocks resident from admin analytics)', async () => {
+    const res = await request(app)
+      .get('/api/v1/analytics/admin')
+      .set('Authorization', `Bearer ${residentToken}`);
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toContain('Access denied');
+  });
+
+  it('blocks unauthenticated requests from accessing admin cook verification', async () => {
+    const res = await request(app)
+      .post('/api/v1/admin/cooks/1/verify')
+      .send({ verified: true });
+
+    expect(res.status).toBe(401);
+  });
 });

@@ -1,0 +1,10 @@
+{
+  "name": "societycook-workspace",
+  "private": true,
+  "scripts": {
+    "test:e2e": "node tests/e2e.test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.65.1"
+  }
+}
