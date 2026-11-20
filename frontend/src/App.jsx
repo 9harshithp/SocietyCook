@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { LandingPage } from './pages/LandingPage';
@@ -22,15 +21,6 @@ const TermsPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ de
 const PrivacyPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ default: m.PrivacyPage })));
 const NotFoundPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ default: m.NotFoundPage })));
 const ForbiddenPage = React.lazy(() => import('./pages/StaticPages').then(m => ({ default: m.ForbiddenPage })));
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 2 // 2 minutes
-    }
-  }
-});
 
 // Protected Route Guard
 function ProtectedRoute({ children, allowedRoles }) {
@@ -75,9 +65,8 @@ export function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
           <AnalyticsListener />
           <div className="min-h-screen flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613] text-[#202A25] dark:text-[#EDE8DF] font-sans transition-colors overflow-x-hidden w-full">
             <Navbar />
@@ -213,7 +202,6 @@ export function App() {
           </div>
         </BrowserRouter>
       </AuthProvider>
-    </QueryClientProvider>
   );
 }
 

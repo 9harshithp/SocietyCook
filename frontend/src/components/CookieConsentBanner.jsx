@@ -41,9 +41,9 @@ export function CookieConsentBanner() {
           <ShieldCheck className="w-4 h-4" />
         </div>
         <div className="flex-1 text-left">
-          <h4 className="text-xs font-bold text-[#153D32] dark:text-white mb-1">
+          <p role="heading" aria-level="2" className="text-xs font-bold text-[#153D32] dark:text-white mb-1">
             Privacy & Analytics Preferences
-          </h4>
+          </p>
           <p className="text-[11px] text-[#42524A] dark:text-slate-300 leading-relaxed font-medium mb-3">
             We use privacy-friendly analytics to measure service performance and tower coordination reliability. We strictly prohibit tracking of personal contact details, passwords, flat numbers, or financial credentials.{' '}
             <Link to="/privacy" className="text-[#153D32] dark:text-[#E9A15B] underline hover:no-underline font-semibold">

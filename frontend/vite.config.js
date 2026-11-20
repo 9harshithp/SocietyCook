@@ -10,9 +10,6 @@ export default defineConfig({
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/scheduler') || id.includes('node_modules/react-router')) {
             return 'vendor-react';
           }
-          if (id.includes('node_modules/@tanstack')) {
-            return 'vendor-query';
-          }
           if (id.includes('node_modules/lucide-react')) {
             return 'vendor-icons';
           }

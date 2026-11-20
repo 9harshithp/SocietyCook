@@ -62,8 +62,8 @@ export function LandingPage() {
   // Schedule Preview Tab
   const [scheduleTab, setScheduleTab] = useState('COMBO'); // COOKING | DISHWASHING | COMBO
 
-  // Professionals state
-  const [professionals, setProfessionals] = useState([]);
+  // Professionals state (defaults to verified static roster for instant, zero-delay FCP/LCP)
+  const [professionals, setProfessionals] = useState(DEFAULT_PROS);
 
   // Accordion FAQ state
   const [openFaq, setOpenFaq] = useState(0);
@@ -74,18 +74,16 @@ export function LandingPage() {
   const [rwaSuccess, setRwaSuccess] = useState(false);
 
   useEffect(() => {
+    // Only fetch dynamic cooks if user is logged in — prevents 401 unauthenticated console errors and network contention on public landing page
+    if (!user) return;
     api.getCooks()
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setProfessionals(data.slice(0, 4));
-        } else {
-          setProfessionals(DEFAULT_PROS);
         }
       })
-      .catch(() => {
-        setProfessionals(DEFAULT_PROS);
-      });
-  }, []);
+      .catch(() => {});
+  }, [user]);
 
   // Dynamic pricing algorithm
   const calculatePricing = () => {
@@ -231,12 +229,12 @@ export function LandingPage() {
                   <source media="(max-width: 640px)" srcSet="/images/hero_kitchen_indian-mobile.webp" type="image/webp" width="480" height="300" />
                   <source srcSet="/images/hero_kitchen_indian.webp" type="image/webp" width="1200" height="669" />
                   <img
-                    src="/images/hero_kitchen_indian.jpg"
+                    src="/images/hero_kitchen_indian-mobile.webp"
                     alt="Modern warm sun-drenched Indian apartment kitchen"
                     fetchPriority="high"
                     decoding="async"
-                    width="1200"
-                    height="669"
+                    width="480"
+                    height="300"
                     className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700"
                   />
                 </picture>
@@ -1241,11 +1239,12 @@ export function LandingPage() {
                   <span className="col-span-3 font-bold text-[#202A25] dark:text-white">{row.flat}</span>
                   <span className="col-span-4 text-[#42524A] dark:text-slate-300">{row.task}</span>
                   <span className="col-span-2 text-right">
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      row.status === 'Completed' ? 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300' :
-                      row.status === 'Active Now' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 animate-pulse' :
-                      'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      row.status === 'Completed' ? 'bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-200' :
+                      row.status === 'Active Now' ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100' :
+                      'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100'
                     }`}>
+                      {row.status === 'Active Now' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />}
                       {row.status}
                     </span>
                   </span>
@@ -1262,11 +1261,12 @@ export function LandingPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-[#153D32] dark:text-[#E9A15B]">{row.time}</span>
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      row.status === 'Completed' ? 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300' :
-                      row.status === 'Active Now' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 animate-pulse' :
-                      'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      row.status === 'Completed' ? 'bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-slate-200' :
+                      row.status === 'Active Now' ? 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100' :
+                      'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100'
                     }`}>
+                      {row.status === 'Active Now' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />}
                       {row.status}
                     </span>
                   </div>
