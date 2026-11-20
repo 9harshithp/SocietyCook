@@ -1,72 +1,69 @@
-# Architecture Documentation
-## SocietyCook – System Design & Component Structure
+# SocietyCook Enterprise Architecture Documentation
+
+**Platform:** SocietyCook Hyperlocal Enterprise Platform  
+**Version:** 4.0.0  
+**Pattern:** Enterprise Modular Monolith with Multi-Tenant Logical Isolation  
 
 ---
 
-## 1. Modular Monolith Design Philosophy
-SocietyCook uses a modular monolith pattern instead of premature microservices:
-- **Low Operational Overhead:** Single Node.js runtime process simplifies deployment on low-cost compute (AWS ECS, Docker, or DigitalOcean droplet).
-- **Strong Relational Guarantees:** MySQL foreign keys and ACID transactions maintain strict integrity across users, memberships, schedules, and billing ledgers.
-- **Independent Domain Modules:** Services, algorithms, and controllers are strictly decoupled by clear interface boundaries.
+## 1. System Architecture & Component Diagram
 
 ```mermaid
 graph TD
-    User([Browser Client]) -->|HTTPS / WSS| WebServer[Express Server]
-    WebServer --> AuthMid[Auth Middleware & RBAC]
-    AuthMid --> Router[REST API Router /api/v1]
-    
-    Router --> GroupMod[Group Module]
-    Router --> ScheduleMod[Schedule & Attendance Module]
-    Router --> BillingMod[Billing & Payment Module]
-    Router --> AnalyticsMod[Analytics & Forecast Module]
-    
-    GroupMod --> Recommender[7-Factor Recommender]
-    GroupMod --> Pricing[Dynamic Pricing Engine]
-    ScheduleMod --> Scheduler[Greedy Route Scheduler]
-    ScheduleMod --> BackupAlloc[Backup Allocator]
-    AnalyticsMod --> Forecaster[Demand Forecaster]
-    
-    Recommender --> MySQL[(MySQL 8 Database)]
-    Pricing --> MySQL
-    Scheduler --> MySQL
-    BackupAlloc --> MySQL
-    Forecaster --> MySQL
+    Client[Web & Mobile Clients] -->|HTTPS / TLS 1.3| Edge[Vercel CDN / WAF Edge]
+    Edge -->|Strict CORS & Security Headers| Express[Express 4.x Application Engine]
+
+    subgraph SecurityPerimeter[Enterprise Security Perimeter]
+        Express --> Helmet[Helmet CSP & HSTS]
+        Express --> RateLimiter[Sliding Window Rate Limiters]
+        Express --> AuthGuard[JWT Verification & Role RBAC]
+        AuthGuard --> TenantIsolation[Multi-Tenant Society Boundary Filter]
+    end
+
+    subgraph DomainModules[Core Domain Services]
+        TenantIsolation --> GroupService[Group Hiring & Clustering]
+        TenantIsolation --> AttendanceService[Attendance & Daily OTP Engine]
+        TenantIsolation --> PaymentService[Billing, Ledger & Razorpay Webhooks]
+        TenantIsolation --> AnalyticsService[Multi-Role Realtime Analytics]
+    end
+
+    subgraph MathematicalEngines[Deterministic Algorithms]
+        GroupService --> PricingEngine[Dynamic Tier Pricing Engine]
+        GroupService --> Recommender[7-Factor Cook Recommender]
+        AttendanceService --> Scheduler[Elevator-Optimized Route Scheduler]
+        AttendanceService --> BackupAllocator[Standby Staff Allocator]
+        AnalyticsService --> DemandForecaster[Moving Average Demand Forecaster]
+    end
+
+    subgraph DataTier[Data & Persistence Layer]
+        GroupService --> MySQL[(MySQL 8.4 / TiDB Cloud TLS 1.2+)]
+        AttendanceService --> MySQL
+        PaymentService --> MySQL
+        AnalyticsService --> MySQL
+        AuthGuard --> RefreshTokens[("refresh_tokens (SHA-256)")]
+        Express --> AuditLogs[("audit_logs (Immutable Trail)")]
+    end
+
+    subgraph ExternalIntegrations[External Gateways]
+        PaymentService --> Razorpay[Razorpay Payment Gateway API]
+        Razorpay -->|HMAC-SHA256 Webhook| PaymentService
+    end
 ```
 
 ---
 
-## 2. Directory Structure
-```
-SocietyCook/
-├── backend/
-│   ├── migrations.js          # Non-destructive migration runner (31 tables/extensions)
-│   ├── seed.js                # Realistic seed data for societies, cooks, clusters
-│   ├── server.js              # Express app bootstrap, sockets, Swagger mount
-│   ├── src/
-│   │   ├── algorithms/        # Real heuristic algorithms
-│   │   │   ├── backupAllocator.js
-│   │   │   ├── forecasting.js
-│   │   │   ├── pricingEngine.js
-│   │   │   ├── recommender.js
-│   │   │   └── scheduler.js
-│   │   ├── config/            # Env and MySQL connection pool
-│   │   ├── docs/              # Swagger/OpenAPI 3.0 specification
-│   │   ├── jobs/              # Node-cron background jobs
-│   │   ├── middlewares/       # Auth, RBAC, audit logger, error handler
-│   │   ├── routes/            # Express route handlers
-│   │   ├── services/          # Business logic transactions
-│   │   └── sockets/           # WebSocket event emitters
-│   └── tests/                 # Vitest test suite (Unit & Integration)
-├── frontend/
-│   ├── src/
-│   │   ├── components/        # Navbar, Persona Switcher, Badges
-│   │   ├── context/           # AuthContext & Dark Mode Provider
-│   │   ├── pages/             # LandingPage, DashboardHub, GroupHub, etc.
-│   │   ├── services/          # Axios API client
-│   │   ├── App.jsx            # React Router table
-│   │   ├── main.jsx           # Entrypoint
-│   │   └── style.css          # Tailwind CSS styles
-│   └── package.json
-├── docker-compose.yml         # Containerized MySQL 8.0 & multi-service stack
-└── README.md
-```
+## 2. Multi-Tenant Logical Separation Model
+- **Tenant Boundary:** Every residential apartment society (`societies.id`) acts as an isolated tenant boundary.
+- **Tenant Enforcement:**
+  - Authenticated user records embed `society_id` within signed JWT claims.
+  - Route handlers enforce `requireSameSocietyOrAdmin` middleware or parameterized SQL clauses `WHERE society_id = ?`.
+  - Residents and cooks are strictly denied cross-tenant reads or writes.
+- **Data Protection:** Financial ledgers, household rosters, apartment flat numbers, and phone numbers are never returned in public or cross-society queries.
+
+---
+
+## 3. Technology Stack Specification
+- **Frontend:** React 19, Vite 6, Tailwind CSS 4, React Router 7, TanStack Query 5, Lucide Icons, Recharts.
+- **Backend:** Node.js 20 LTS, Express 4, Socket.IO 4, Zod 4 (patched against ReDoS), Bcrypt.js, Helmet 8, Express Rate Limit 7.
+- **Database:** MySQL 8.4 / TiDB Cloud Serverless, connection pooling with keep-alive, parameterized prepared statements (`execute`), ACID transaction isolation.
+- **Containerization:** Multi-stage Dockerfile based on Alpine Linux executing under unprivileged user `societycook` (`UID 1001`).

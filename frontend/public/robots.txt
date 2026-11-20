@@ -1,0 +1,19 @@
+# SocietyCook Robots.txt - Enterprise Crawl Management
+User-agent: *
+Allow: /
+Allow: /terms
+Allow: /privacy
+Allow: /images/
+
+# Prevent search indexing of private dashboards and sensitive resident data
+Disallow: /app/
+Disallow: /app/*
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://societycook.vercel.app/sitemap.xml

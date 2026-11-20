@@ -32,7 +32,7 @@ apiRouter.post('/auth/register', handle(async (req, res) => {
     name: z.string().min(2).max(100),
     email: z.string().email(),
     password: z.string().min(8).max(72),
-    role: z.enum(['RESIDENT', 'COOK', 'SOCIETY_MANAGER']),
+    role: z.enum(['RESIDENT', 'COOK']), // Privileged SOCIETY_MANAGER and ADMIN roles require platform administrator approval
     societyId: z.coerce.number().int().positive().optional(),
     society_id: z.coerce.number().int().positive().optional(),
     flat: z.string().max(50).optional(),
@@ -290,14 +290,40 @@ apiRouter.get('/groups/:id/recommendations', authenticate, handle(async (req, re
 }));
 
 apiRouter.post('/groups/:id/propose-cook', authenticate, handle(async (req, res) => {
+  const groupId = Number(req.params.id);
+  const [group] = await query('SELECT created_by_resident_id, society_id FROM cook_groups WHERE id = ?', [groupId]);
+  if (!group) return res.status(404).json({ success: false, message: 'Group not found.' });
+
+  const isAuthorized =
+    req.user.role === 'ADMIN' ||
+    group.created_by_resident_id === req.user.id ||
+    (req.user.role === 'SOCIETY_MANAGER' && req.user.society_id === group.society_id);
+
+  if (!isAuthorized) {
+    return res.status(403).json({ success: false, message: 'Only the group creator, society manager or platform admin can propose cook assignments.' });
+  }
+
   const { cookId } = req.body;
   if (!cookId) return res.status(400).json({ success: false, message: 'cookId is required' });
-  const result = await GroupService.proposeCookAssignment(Number(req.params.id), Number(cookId), req.user.id);
+  const result = await GroupService.proposeCookAssignment(groupId, Number(cookId), req.user.id);
   res.json(result);
 }));
 
 apiRouter.post('/groups/:id/activate', authenticate, handle(async (req, res) => {
-  const result = await GroupService.activateGroupAndGenerateSchedules(Number(req.params.id), req.user.id);
+  const groupId = Number(req.params.id);
+  const [group] = await query('SELECT created_by_resident_id, society_id FROM cook_groups WHERE id = ?', [groupId]);
+  if (!group) return res.status(404).json({ success: false, message: 'Group not found.' });
+
+  const isAuthorized =
+    req.user.role === 'ADMIN' ||
+    group.created_by_resident_id === req.user.id ||
+    (req.user.role === 'SOCIETY_MANAGER' && req.user.society_id === group.society_id);
+
+  if (!isAuthorized) {
+    return res.status(403).json({ success: false, message: 'Only the group creator, society manager or platform admin can activate this hiring group.' });
+  }
+
+  const result = await GroupService.activateGroupAndGenerateSchedules(groupId, req.user.id);
   res.json(result);
 }));
 
@@ -397,6 +423,39 @@ apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) =
   const result = await PaymentService.confirmDemoPayment({
     bookingId: Number(req.params.id),
     userId: req.user.id
+  });
+  res.json(result);
+}));
+
+apiRouter.post('/bookings/:id/payment-order', authenticate, handle(async (req, res) => {
+  const result = await PaymentService.createOrder({
+    bookingId: Number(req.params.id),
+    userId: req.user.id
+  });
+  res.json(result);
+}));
+
+apiRouter.post('/bookings/:id/verify-payment', authenticate, handle(async (req, res) => {
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+  const result = await PaymentService.verifyRazorpayPayment({
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+    bookingId: Number(req.params.id),
+    userId: req.user.id
+  });
+  res.json(result);
+}));
+
+apiRouter.post('/payments/webhook', handle(async (req, res) => {
+  const signature = req.headers['x-razorpay-signature'];
+  if (!signature) {
+    return res.status(400).json({ success: false, message: 'Missing Razorpay signature header.' });
+  }
+  const result = await PaymentService.handleRazorpayWebhook({
+    rawBody: req.rawBody,
+    signature,
+    event: req.body
   });
   res.json(result);
 }));
@@ -511,6 +570,8 @@ apiRouter.post('/leaves/:id/approve', authenticate, requireRoles(['ADMIN']), han
 }));
 
 apiRouter.get('/replacements', authenticate, handle(async (req, res) => {
+  const where = req.user.role === 'ADMIN' ? '' : 'WHERE ru.society_id = ?';
+  const params = req.user.role === 'ADMIN' ? [] : [req.user.society_id];
   const rows = await query(`
     SELECT r.*, 
            s.service_date, s.scheduled_start_time as start_time, s.scheduled_end_time as end_time,
@@ -525,8 +586,9 @@ apiRouter.get('/replacements', authenticate, handle(async (req, res) => {
     JOIN users orig_u ON orig_u.id=orig_c.user_id
     LEFT JOIN cooks bk_c ON bk_c.id=s.cook_id
     LEFT JOIN users bk_u ON bk_u.id=bk_c.user_id
+    ${where}
     ORDER BY r.id DESC
-  `);
+  `, params);
   res.json(rows);
 }));
 
@@ -544,11 +606,20 @@ apiRouter.post('/reviews', authenticate, handle(async (req, res) => {
     return res.status(400).json({ success: false, message: 'bookingId is required' });
   }
 
+  // BOLA / IDOR Verification: Ensure booking exists and belongs to the authenticated resident
+  const [booking] = await query('SELECT resident_id, cook_id FROM bookings WHERE id = ?', [targetBookingId]);
+  if (!booking) {
+    return res.status(404).json({ success: false, message: 'Booking not found.' });
+  }
+  if (booking.resident_id !== req.user.id && req.user.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, message: 'You can only review bookings associated with your household.' });
+  }
+
   await query(
-    `INSERT INTO reviews (booking_id, rating, comment)
-     VALUES (?, ?, ?)
+    `INSERT INTO reviews (booking_id, cook_id, resident_id, rating, comment)
+     VALUES (?, ?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE rating = VALUES(rating), comment = VALUES(comment)`,
-    [targetBookingId, b.rating, b.comment || '']
+    [targetBookingId, booking.cook_id, req.user.id, b.rating, b.comment || '']
   );
 
   res.json({ success: true });
@@ -579,7 +650,11 @@ apiRouter.get('/analytics/cook', authenticate, handle(async (req, res) => {
 }));
 
 apiRouter.get('/analytics/society/:id', authenticate, handle(async (req, res) => {
-  const data = await AnalyticsService.getSocietyDashboard(Number(req.params.id));
+  const targetSocietyId = Number(req.params.id);
+  if (req.user.role !== 'ADMIN' && req.user.society_id !== targetSocietyId) {
+    return res.status(403).json({ success: false, message: 'Access restricted to your registered society.' });
+  }
+  const data = await AnalyticsService.getSocietyDashboard(targetSocietyId);
   res.json(data);
 }));
 

@@ -17,40 +17,102 @@ import { swaggerSpec } from './src/docs/swagger.js';
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.IO with CORS (supports localhost, Vercel deployments & previews)
+// Strict CORS Allowlist Validation (No Wildcard Reflection)
 const corsOptions = {
   origin: (origin, callback) => {
-    callback(null, origin || true);
+    // Allow non-browser requests (e.g. server-to-server, curl, tests) with no origin header
+    if (!origin) return callback(null, true);
+
+    const isAllowed = ENV.ALLOWED_ORIGINS.some((allowed) => {
+      if (allowed === origin) return true;
+      // Support Vercel preview branch deployments
+      if (allowed.includes('vercel.app') && origin.endsWith('.vercel.app')) return true;
+      return false;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: Origin '${origin}' is not authorized by platform security policy.`));
+    }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-Token', 'X-Razorpay-Signature']
 };
 
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => callback(null, origin || true),
+    origin: ENV.ALLOWED_ORIGINS,
     credentials: true,
     methods: ['GET', 'POST']
   }
 });
 initSocket(io);
 
-// Security & Middlewares
-app.use(helmet({ contentSecurityPolicy: false }));
+// Security Headers via Helmet (OWASP ASVS V14 Compliance)
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://checkout.razorpay.com'],
+        connectSrc: ["'self'", 'https://api.razorpay.com', 'wss:', 'ws:'],
+        imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        frameSrc: ["'self'", 'https://api.razorpay.com'],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: []
+      }
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    frameguard: { action: 'deny' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    xContentTypeOptions: true
+  })
+);
+
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '500kb' }));
+
+// Body Parser with Raw Body preservation for Webhook Signature Verification
+app.use(
+  express.json({
+    limit: '500kb',
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    }
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: '500kb' }));
 
-// Rate limiter for API
+// Global API Rate Limiter
 app.use(
   '/api',
   rateLimit({
     windowMs: 60 * 1000,
     limit: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
     message: { success: false, message: 'Too many requests. Please slow down.' }
   })
 );
+
+// Strict Rate Limiting on Sensitive Authentication Endpoints (Brute-Force & Credential Stuffing Prevention)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 15, // Max 15 attempts per IP per 15 min window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts. Please wait 15 minutes before trying again.' }
+});
+
+app.use('/api/v1/auth/login', authLimiter);
+app.use('/api/v1/auth/register', authLimiter);
 
 // Swagger / OpenAPI documentation
 app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -98,9 +160,16 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Only listen if executed directly, not when imported during tests
 if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
   server.listen(ENV.PORT, () => {
-    console.log(`🍛 SocietyCook v2 API running on http://localhost:${ENV.PORT}/api/v1`);
-    console.log(`📖 Swagger API Docs available at http://localhost:${ENV.PORT}/api/v1/docs`);
+    console.log(`\n========================================================`);
+    console.log(`🍲 SocietyCook v4 Enterprise API Server`);
+    console.log(`🚀 Mode:       ${ENV.NODE_ENV}`);
+    console.log(`🔗 Port:       ${ENV.PORT}`);
+    console.log(`🔒 Security:   Strict CORS, Helmet HSTS, CSP Enabled`);
+    console.log(`🌐 Base URL:   http://localhost:${ENV.PORT}/api/v1`);
+    console.log(`📖 Swagger:    http://localhost:${ENV.PORT}/api/v1/docs`);
+    console.log(`========================================================\n`);
   });
 }
 
 export default app;
+export { app, server };

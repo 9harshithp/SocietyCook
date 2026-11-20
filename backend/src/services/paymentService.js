@@ -18,7 +18,7 @@ export class PaymentService {
    */
   static async createOrder({ bookingId, userId }) {
     const [booking] = await query(
-      `SELECT b.*, ru.name as resident_name, ru.email, ru.phone, cu.name as cook_name 
+      `SELECT b.*, ru.name as resident_name, ru.email, ru.phone, ru.society_id as resident_society_id, cu.name as cook_name 
        FROM bookings b
        JOIN users ru ON ru.id = b.resident_id
        JOIN cooks c ON c.id = b.cook_id
@@ -70,18 +70,24 @@ export class PaymentService {
   }
 
   /**
-   * Complete payment in Demo mode (local development prototype)
+   * Complete payment in Demo mode (local development prototype only)
    */
   static async confirmDemoPayment({ bookingId, userId }) {
     if (!ENV.DEMO_PAYMENTS) {
-      const err = new Error('Demo payment mode is disabled in this environment.');
+      const err = new Error('Demo payment mode is disabled in production.');
       err.status = 403;
       throw err;
     }
 
     return await transaction(async (q) => {
-      const [b] = await q('SELECT * FROM bookings WHERE id = ? AND resident_id = ? FOR UPDATE', [bookingId, userId]);
-      if (!b) throw new Error('Booking not found');
+      const [b] = await q(
+        `SELECT b.*, ru.society_id as resident_society_id 
+         FROM bookings b 
+         JOIN users ru ON ru.id = b.resident_id 
+         WHERE b.id = ? AND b.resident_id = ? FOR UPDATE`,
+        [bookingId, userId]
+      );
+      if (!b) throw new Error('Booking not found or unauthorized.');
 
       // 1. Mark booking ACTIVE
       await q("UPDATE bookings SET status = 'ACTIVE' WHERE id = ?", [b.id]);
@@ -95,15 +101,15 @@ export class PaymentService {
         [b.id, b.amount, paymentId, b.id, userId]
       );
 
-      // 3. Create or update subscription
+      // 3. Create or update subscription with dynamic tenant society_id
       const today = new Date().toISOString().slice(0, 10);
       const nextMonth = new Date(Date.now() + 29 * 86400000).toISOString().slice(0, 10);
 
       await q(
         `INSERT INTO subscriptions (booking_id, resident_id, society_id, monthly_amount, status, current_period_start, current_period_end)
-         VALUES (?, ?, 1, ?, 'ACTIVE', ?, ?)
+         VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?)
          ON DUPLICATE KEY UPDATE status = 'ACTIVE', current_period_end = VALUES(current_period_end)`,
-        [b.id, userId, b.amount, today, nextMonth]
+        [b.id, userId, b.resident_society_id || 1, b.amount, today, nextMonth]
       );
 
       // 4. Generate daily session for today
@@ -180,8 +186,8 @@ export class PaymentService {
     }
 
     return await transaction(async (q) => {
-      const [b] = await q('SELECT * FROM bookings WHERE id = ? FOR UPDATE', [bookingId]);
-      if (!b) throw new Error('Booking not found');
+      const [b] = await q('SELECT * FROM bookings WHERE id = ? AND resident_id = ? FOR UPDATE', [bookingId, userId]);
+      if (!b) throw new Error('Booking not found or unauthorized');
 
       await q("UPDATE bookings SET status = 'ACTIVE' WHERE id = ?", [b.id]);
 
@@ -194,6 +200,59 @@ export class PaymentService {
 
       return { success: true, bookingId: b.id };
     });
+  }
+
+  /**
+   * Process incoming signed Razorpay Webhooks idempotently
+   */
+  static async handleRazorpayWebhook({ rawBody, signature, event }) {
+    if (!ENV.RAZORPAY_WEBHOOK_SECRET) {
+      const err = new Error('Razorpay webhook secret is not configured.');
+      err.status = 500;
+      throw err;
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', ENV.RAZORPAY_WEBHOOK_SECRET)
+      .update(rawBody)
+      .digest('hex');
+
+    if (expectedSignature !== signature) {
+      const err = new Error('Invalid webhook signature.');
+      err.status = 400;
+      throw err;
+    }
+
+    if (event?.event === 'payment.captured') {
+      const paymentEntity = event.payload?.payment?.entity;
+      if (!paymentEntity) return { handled: false, reason: 'NO_PAYMENT_ENTITY' };
+
+      const orderId = paymentEntity.order_id;
+      const paymentId = paymentEntity.id;
+
+      return await transaction(async (q) => {
+        const [payment] = await q('SELECT * FROM payments WHERE order_id = ? FOR UPDATE', [orderId]);
+        if (!payment) {
+          console.warn(`Webhook received for unknown order: ${orderId}`);
+          return { handled: false, reason: 'ORDER_NOT_FOUND' };
+        }
+
+        if (payment.status === 'SUCCESS') {
+          return { handled: true, status: 'ALREADY_PROCESSED' };
+        }
+
+        await q(
+          `UPDATE payments SET status = 'SUCCESS', payment_id = ?, signature = ? WHERE id = ?`,
+          [paymentId, signature, payment.id]
+        );
+
+        await q("UPDATE bookings SET status = 'ACTIVE' WHERE id = ?", [payment.booking_id]);
+
+        return { handled: true, status: 'SUCCESS', paymentId };
+      });
+    }
+
+    return { handled: true, event: event?.event || 'IGNORED' };
   }
 
   /**

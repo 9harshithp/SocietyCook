@@ -1,58 +1,41 @@
-# Security Architecture & Compliance
-## SocietyCook v2 Security Model
+# SocietyCook Enterprise Security Policy & Vulnerability Disclosure
 
-SocietyCook processes real-world residential addresses, personal identity documents, and domestic workforce credentials. The platform enforces multi-layered defense-in-depth controls.
-
----
-
-## 1. Authentication & Token Lifecycle
-- **Access Tokens:** Signed with HMAC-SHA256 (`JWT_SECRET`) with a short 15-minute time-to-live (TTL).
-- **Refresh Tokens:** Cryptographically random 64-character tokens stored in the database with 7-day expiration and automatic rotation on reuse detection.
-- **Password Protection:** bcrypt password hashing using a work factor of 10 salt rounds. Plaintext passwords are never logged or stored.
+**Version:** 4.0.0  
+**Effective Date:** November 2026  
+**Security Contact:** `security@societycook.in`  
 
 ---
 
-## 2. Role-Based Access Control (RBAC)
+## 1. Security Architecture & Controls
 
-| Resource | Resident | Cook | Society Manager | Admin |
-| :--- | :---: | :---: | :---: | :---: |
-| **Own Household Bookings** | Read / Write | Read (Assigned) | - | Read / Write |
-| **View Daily Session OTP** | Read (Own) | - | - | Read |
-| **Check In / Check Out via OTP** | - | Write | - | Write (Override) |
-| **Gate Clearance Approvals** | - | - | Read / Write | Read / Write |
-| **Cook Earnings Ledger** | - | Read (Self) | - | Read / Write |
-| **Platform Analytics & GMV** | - | - | Read (Society) | Read (Global) |
-| **Audit Logs Inspection** | - | - | - | Read |
+SocietyCook enforces multi-layered defense-in-depth across all system boundaries:
+
+1. **Authentication & Session Security:**
+   - Password hashing utilizing bcrypt with salt cost 12.
+   - Cryptographically random 40-byte refresh tokens with SHA-256 hashed database storage and automatic token rotation upon each exchange.
+   - Public registration restricted to `RESIDENT` and `COOK`; privileged `SOCIETY_MANAGER` and `ADMIN` accounts require verified administrative approval.
+   - Dedicated authentication rate limiting (15 attempts per 15 minutes per IP) to neutralize credential stuffing and automated dictionary attacks.
+
+2. **Multi-Tenant Logical Isolation:**
+   - Deny-by-default role authorization on every API route via `requireRoles()`.
+   - Every residential society acts as an isolated tenant boundary enforced server-side.
+   - Object-level authorization prevents Broken Object Level Authorization (BOLA/IDOR) on reviews, appointments, and society financial analytics.
+
+3. **Transport & Perimeter Defense:**
+   - Strict CORS origin allowlist matching authorized domains without wildcard reflection.
+   - Comprehensive HTTP security headers via Helmet: Strict Content Security Policy (CSP), HTTP Strict Transport Security (HSTS) with 1-year preload, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`.
+   - MySQL connections mandate TLS 1.2+ encryption in transit.
+
+4. **Financial & Payment Integrity:**
+   - All booking amounts and cluster discounts are computed strictly server-side.
+   - Razorpay Webhooks verified cryptographically using HMAC-SHA256 signatures over raw request body buffers.
+   - Demonstration payment mode is strictly disabled in production environments (`NODE_ENV === 'production'`).
 
 ---
 
-## 3. Daily Session Verification (Anti-Fraud)
-- **Eliminating Phantom Attendance:** Cooks cannot mark attendance independently. They must physically arrive at the flat and input the resident's dynamic 4-digit session OTP.
-- **Dispute Escalation:** If a session is marked disputed or missed, billing is placed on temporary escrow hold until resolved.
+## 2. Vulnerability Reporting (Coordinated Disclosure)
 
----
-
-## 4. Society Gate Security Clearance
-- Every approved cook is assigned a unique alphanumeric Gate Pass (e.g. `#SC-PASS-103`).
-- Security guards at society entrance gates can verify the pass code or QR scan to confirm active daily route clearance and background check status.
-- Prevents unauthorized persons from entering apartment towers under the pretext of domestic service.
-
----
-
-## 5. Non-Repudiation & Audit Trails
-The `audit_logs` table logs all administrative actions:
-```json
-{
-  "actor_id": 5,
-  "action": "LEAVE_BACKUP_DISPATCHED",
-  "entity_type": "LEAVE",
-  "entity_id": 4,
-  "diff_payload": {
-    "original_cook": 2,
-    "assigned_backup_cook": 1,
-    "affected_sessions": [101, 102, 103]
-  },
-  "ip_address": "127.0.0.1",
-  "created_at": "2026-11-20T08:15:00.000Z"
-}
-```
+If you discover a security vulnerability in SocietyCook:
+1. Email `security@societycook.in` with detailed technical steps to reproduce.
+2. Allow up to 48 hours for initial triage and acknowledgment.
+3. We request that you adhere to coordinated vulnerability disclosure and refrain from accessing or modifying real user data or executing denial-of-service payloads against live services.

@@ -5,9 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SocietyCook — More living. Less chores. Premium Community Household Services</title>
   <meta name="description" content="Community-first household services for modern residential societies. Verified professional home cooks, sparkling dishwashing, and coordinated kitchen care plans.">
-  <meta property="og:title" content="SocietyCook — More living. Less chores.">
-  <meta property="og:description" content="Hire verified home cooks, dishwashers, and complete kitchen care together with your apartment neighbours.">
+  <link rel="canonical" href="https://societycook.vercel.app/">
+
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://societycook.vercel.app/">
+  <meta property="og:title" content="SocietyCook — More living. Less chores.">
+  <meta property="og:description" content="Hire verified home cooks, dishwashers, and complete kitchen care together with your apartment neighbours at up to 35% community savings.">
+  <meta property="og:image" content="https://societycook.vercel.app/images/hero_kitchen_indian.webp">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://societycook.vercel.app/">
+  <meta name="twitter:title" content="SocietyCook — More living. Less chores.">
+  <meta name="twitter:description" content="Hire verified home cooks, dishwashers, and complete kitchen care together with your apartment neighbours at up to 35% community savings.">
+  <meta name="twitter:image" content="https://societycook.vercel.app/images/hero_kitchen_indian.webp">
+
   <meta name="theme-color" content="#153D32">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
 
@@ -25,6 +38,65 @@
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   </noscript>
+
+  <!-- Schema.org Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://societycook.vercel.app/#organization",
+        "name": "SocietyCook",
+        "url": "https://societycook.vercel.app/",
+        "logo": "https://societycook.vercel.app/images/hero_kitchen_indian.webp",
+        "description": "Hyperlocal community household services platform coordinating verified home cooks, dishwashing, and full kitchen care for residential apartment societies in Bengaluru."
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://societycook.vercel.app/#website",
+        "url": "https://societycook.vercel.app/",
+        "name": "SocietyCook",
+        "publisher": {
+          "@id": "https://societycook.vercel.app/#organization"
+        }
+      },
+      {
+        "@type": "LocalBusiness",
+        "name": "SocietyCook Household Services",
+        "image": "https://societycook.vercel.app/images/hero_kitchen_indian.webp",
+        "priceRange": "₹2,200 - ₹6,800 / month",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Bengaluru",
+          "addressRegion": "Karnataka",
+          "postalCode": "560066",
+          "addressCountry": "IN"
+        },
+        "areaServed": "Bengaluru",
+        "telephone": "+91-80-4567-8900"
+      },
+      {
+        "@type": "Service",
+        "name": "Professional Home Cooking",
+        "serviceType": "Domestic Meal Preparation",
+        "provider": {
+          "@id": "https://societycook.vercel.app/#organization"
+        },
+        "description": "Daily verified home chef cooking breakfast, lunch, or dinner customized to your dietary, spice, and cuisine preferences."
+      },
+      {
+        "@type": "Service",
+        "name": "Utensil Care & Dishwashing",
+        "serviceType": "Daily Kitchen Sanitization",
+        "provider": {
+          "@id": "https://societycook.vercel.app/#organization"
+        },
+        "description": "Daily utensil cleaning, cookware scrubbing, and countertop sanitization on an elevator-optimized recurring schedule."
+      }
+    ]
+  }
+  </script>
 
   <script>
     (function() {
