@@ -21,9 +21,8 @@
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!google.*\\.html|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
   ]
 }
-
