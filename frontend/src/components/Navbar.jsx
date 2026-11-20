@@ -332,7 +332,6 @@ export function Navbar() {
                     await switchPersona(p.email);
                     navigate('/app');
                   }}
-                  aria-label={`Switch demo persona to ${p.label}`}
                   className={`h-7 px-1 sm:px-2.5 text-[11px] sm:text-xs font-semibold rounded-lg sm:rounded-xl truncate flex items-center justify-center transition-all border shrink-0 cursor-pointer text-center ${
                     isActive
                       ? 'bg-[#153D32] dark:bg-[#E9A15B] text-white dark:text-[#153D32] border-[#153D32] dark:border-[#E9A15B] shadow-xs font-bold'

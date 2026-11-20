@@ -254,9 +254,9 @@ export function LandingPage() {
                       Coordinated In-Home Care
                     </span>
                   </div>
-                  <h3 className="font-serif text-lg font-bold leading-snug">
+                  <p className="font-serif text-lg font-bold leading-snug">
                     Fresh homestyle cooking followed by sparkling dish sanitization.
-                  </h3>
+                  </p>
                   <div className="flex items-center justify-between text-xs text-white/80 mt-2 pt-2 border-t border-white/15">
                     <span>Greenwood Residency (Bellandur)</span>
                     <span className="font-bold text-[#E9A15B]">32% Saved</span>
@@ -277,11 +277,13 @@ export function LandingPage() {
             <form onSubmit={handleFinderSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
               {/* Field 1: Society Selection */}
               <div>
-                <label className="block text-xs font-bold text-[#202A25] dark:text-slate-200 mb-1.5">
+                <label htmlFor="finder-society" className="block text-xs font-bold text-[#202A25] dark:text-slate-200 mb-1.5">
                   Apartment Complex
                 </label>
                 <div className="relative">
                   <select
+                    id="finder-society"
+                    aria-label="Apartment Complex"
                     value={finderSociety}
                     onChange={(e) => setFinderSociety(e.target.value)}
                     className="w-full h-12 pl-3.5 pr-8 rounded-xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 text-xs font-bold text-[#202A25] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#153D32] cursor-pointer"
@@ -297,10 +299,12 @@ export function LandingPage() {
 
               {/* Field 2: Service Category */}
               <div>
-                <label className="block text-xs font-bold text-[#202A25] dark:text-slate-200 mb-1.5">
+                <label htmlFor="finder-service" className="block text-xs font-bold text-[#202A25] dark:text-slate-200 mb-1.5">
                   Desired Household Service
                 </label>
                 <select
+                  id="finder-service"
+                  aria-label="Desired Household Service"
                   value={finderService}
                   onChange={(e) => setFinderService(e.target.value)}
                   className="w-full h-12 px-3.5 rounded-xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 text-xs font-bold text-[#202A25] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#153D32] cursor-pointer"
@@ -313,10 +317,12 @@ export function LandingPage() {
 
               {/* Field 3: Schedule Window */}
               <div>
-                <label className="block text-xs font-bold text-[#202A25] dark:text-slate-200 mb-1.5">
+                <label htmlFor="finder-slot" className="block text-xs font-bold text-[#202A25] dark:text-slate-200 mb-1.5">
                   Daily Time Window
                 </label>
                 <select
+                  id="finder-slot"
+                  aria-label="Daily Time Window"
                   value={finderSlot}
                   onChange={(e) => setFinderSlot(e.target.value)}
                   className="w-full h-12 px-3.5 rounded-xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10 text-xs font-bold text-[#202A25] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#153D32] cursor-pointer"
@@ -355,7 +361,7 @@ export function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-[#153D32]/10 dark:bg-white/10 text-[#153D32] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
                 <Building2 className="w-5 h-5" />
               </div>
-              <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Society Clusters</h4>
+              <p className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Society Clusters</p>
               <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Same tower flats share route</p>
             </div>
 
@@ -363,7 +369,7 @@ export function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-[#964208]/15 text-[#964208] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
                 <Percent className="w-5 h-5" />
               </div>
-              <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Up to 35% Savings</h4>
+              <p className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Up to 35% Savings</p>
               <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Demand lowers household rate</p>
             </div>
 
@@ -371,7 +377,7 @@ export function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-[#153D32]/10 dark:bg-white/10 text-[#153D32] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">100% Verified Staff</h4>
+              <p className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">100% Verified Staff</p>
               <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Police clearance & trials</p>
             </div>
 
@@ -379,7 +385,7 @@ export function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-[#964208]/15 text-[#964208] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
                 <Clock className="w-5 h-5" />
               </div>
-              <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Zero Commute Gaps</h4>
+              <p className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Zero Commute Gaps</p>
               <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Staff walks in minutes</p>
             </div>
 
@@ -387,7 +393,7 @@ export function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-[#153D32]/10 dark:bg-white/10 text-[#153D32] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
                 <RefreshCw className="w-5 h-5" />
               </div>
-              <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Guaranteed Backup</h4>
+              <p className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Guaranteed Backup</p>
               <p className="text-[11px] text-[#42524A] dark:text-slate-400 leading-tight">Pre-cleared standby coverage</p>
             </div>
 
@@ -652,7 +658,7 @@ export function LandingPage() {
                     01
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Fresh, warm food right on time</h4>
+                    <h3 className="font-bold text-sm text-[#202A25] dark:text-white">Fresh, warm food right on time</h3>
                     <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed">
                       No greasy restaurant takeaways or cold delivery boxes. Nutritious home-cooked food tailored for your family.
                     </p>
@@ -664,7 +670,7 @@ export function LandingPage() {
                     02
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Gleaming countertops and clean sink</h4>
+                    <h3 className="font-bold text-sm text-[#202A25] dark:text-white">Gleaming countertops and clean sink</h3>
                     <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed">
                       Wake up to an empty, sanitized dish rack and spotless surfaces every morning. Clean peace of mind before your day begins.
                     </p>
@@ -926,7 +932,7 @@ export function LandingPage() {
                 {/* Household Slider */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-[#202A25] dark:text-white">
+                    <label htmlFor="calc-households" className="text-xs font-bold text-[#202A25] dark:text-white">
                       Participating Households in Tower
                     </label>
                     <span className="text-sm font-black text-[#153D32] dark:text-[#E9A15B] px-2.5 py-0.5 rounded-lg bg-white dark:bg-white/10 border border-[#E6DFD3] dark:border-white/10">
@@ -934,6 +940,8 @@ export function LandingPage() {
                     </span>
                   </div>
                   <input
+                    id="calc-households"
+                    aria-label="Participating Households in Tower"
                     type="range"
                     min="1"
                     max="8"
@@ -1036,7 +1044,7 @@ export function LandingPage() {
                     <span>Individual market rate:</span>
                     <span className="line-through font-bold">₹{pricingResult.individualPrice.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+                  <div className="flex justify-between text-emerald-800 dark:text-emerald-300 font-bold">
                     <span>Your monthly community savings:</span>
                     <span>-₹{pricingResult.savingsAmount.toLocaleString('en-IN')}</span>
                   </div>
@@ -1370,7 +1378,7 @@ export function LandingPage() {
                 <div className="w-9 h-9 rounded-xl bg-[#153D32] text-[#E9A15B] flex items-center justify-center font-bold text-xs mb-3">
                   <Coins className="w-4 h-4" />
                 </div>
-                <h4 className="font-bold text-sm text-[#202A25] dark:text-white">2.5x Higher Earnings</h4>
+                <h3 className="font-bold text-sm text-[#202A25] dark:text-white">2.5x Higher Earnings</h3>
                 <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Earn ₹20,000 to ₹35,000/mo by serving 4-6 clustered flats without unpaid travel downtime.
                 </p>
@@ -1380,7 +1388,7 @@ export function LandingPage() {
                 <div className="w-9 h-9 rounded-xl bg-[#964208] text-white flex items-center justify-center font-bold text-xs mb-3">
                   <Navigation className="w-4 h-4" />
                 </div>
-                <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Zero Commute Expenses</h4>
+                <h3 className="font-bold text-sm text-[#202A25] dark:text-white">Zero Commute Expenses</h3>
                 <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Work in one gated society. Save up to ₹3,500/mo on bus and auto fares.
                 </p>
@@ -1390,7 +1398,7 @@ export function LandingPage() {
                 <div className="w-9 h-9 rounded-xl bg-[#153D32] text-[#E9A15B] flex items-center justify-center font-bold text-xs mb-3">
                   <Clock className="w-4 h-4" />
                 </div>
-                <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Predictable Fixed Hours</h4>
+                <h3 className="font-bold text-sm text-[#202A25] dark:text-white">Predictable Fixed Hours</h3>
                 <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Firm 45-minute cooking and 30-minute washing windows with punctuality bonuses.
                 </p>
@@ -1400,7 +1408,7 @@ export function LandingPage() {
                 <div className="w-9 h-9 rounded-xl bg-[#964208] text-white flex items-center justify-center font-bold text-xs mb-3">
                   <HeartPulse className="w-4 h-4" />
                 </div>
-                <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Paid Leave & Medical Fund</h4>
+                <h3 className="font-bold text-sm text-[#202A25] dark:text-white">Paid Leave & Medical Fund</h3>
                 <p className="text-xs text-[#42524A] dark:text-slate-400 mt-1 leading-relaxed font-medium">
                   Guaranteed backup covers your leaves without resident complaints or salary cuts.
                 </p>
