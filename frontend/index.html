@@ -59,6 +59,10 @@
     .font-serif {
       font-family: "Playfair Display", Georgia, serif;
     }
+    .hero-img-box {
+      aspect-ratio: 16 / 10;
+      contain: layout paint;
+    }
   </style>
 
   <!-- Schema.org Structured Data (JSON-LD) -->
@@ -199,7 +203,7 @@
             </div>
           </div>
           <div class="lg:col-span-5 relative">
-            <div class="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[16/10] sm:aspect-[4/5] max-w-md mx-auto group">
+            <div class="hero-img-box relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[16/10] sm:aspect-[4/5] max-w-md mx-auto group">
               <picture>
                 <source media="(max-width: 640px)" srcset="/images/hero_kitchen_indian-mobile.webp" type="image/webp" width="480" height="300" />
                 <source srcset="/images/hero_kitchen_indian.webp" type="image/webp" width="1200" height="669" />

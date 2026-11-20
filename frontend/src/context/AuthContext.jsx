@@ -80,12 +80,19 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    loadSocieties();
     const token = sessionStorage.getItem('sc_access_token') || sessionStorage.getItem('sc_token');
     if (token) {
       fetchMe();
+      loadSocieties();
     } else {
       setLoading(false);
+      // Defer remote societies fetch to non-blocking idle cycle for anonymous visitors
+      // Default verified societies are immediately available from memory
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        window.requestIdleCallback(() => loadSocieties(), { timeout: 3500 });
+      } else {
+        setTimeout(loadSocieties, 2500);
+      }
     }
   }, []);
 

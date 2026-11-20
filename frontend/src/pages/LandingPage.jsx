@@ -224,7 +224,7 @@ export function LandingPage() {
 
             {/* Right Visual Image Frame */}
             <div className="lg:col-span-5 relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[16/10] sm:aspect-[4/5] max-w-md mx-auto group">
+              <div className="hero-img-box relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[16/10] sm:aspect-[4/5] max-w-md mx-auto group">
                 <picture>
                   <source media="(max-width: 640px)" srcSet="/images/hero_kitchen_indian-mobile.webp" type="image/webp" width="480" height="300" />
                   <source srcSet="/images/hero_kitchen_indian.webp" type="image/webp" width="1200" height="669" />
@@ -435,7 +435,7 @@ export function LandingPage() {
                 <source media="(max-width: 640px)" srcSet="/images/service_home_cooking-mobile.webp" type="image/webp" />
                 <source srcSet="/images/service_home_cooking.webp" type="image/webp" />
                 <img
-                  src="/images/service_home_cooking.jpg"
+                  src="/images/service_home_cooking-mobile.webp"
                   alt="Homestyle Indian culinary preparation"
                   loading="lazy"
                   decoding="async"
@@ -502,7 +502,7 @@ export function LandingPage() {
                 <source media="(max-width: 640px)" srcSet="/images/service_dishwashing-mobile.webp" type="image/webp" />
                 <source srcSet="/images/service_dishwashing.webp" type="image/webp" />
                 <img
-                  src="/images/service_dishwashing.jpg"
+                  src="/images/service_dishwashing-mobile.webp"
                   alt="Stainless steel cookware scrubbing and sink area care"
                   loading="lazy"
                   decoding="async"
@@ -573,7 +573,7 @@ export function LandingPage() {
                 <source media="(max-width: 640px)" srcSet="/images/service_combo_care-mobile.webp" type="image/webp" />
                 <source srcSet="/images/service_combo_care.webp" type="image/webp" />
                 <img
-                  src="/images/service_combo_care.jpg"
+                  src="/images/service_combo_care-mobile.webp"
                   alt="Synchronized meal prep and immaculate countertop"
                   loading="lazy"
                   decoding="async"
@@ -693,7 +693,7 @@ export function LandingPage() {
                   <source media="(max-width: 640px)" srcSet="/images/lifestyle_family_meal-mobile.webp" type="image/webp" />
                   <source srcSet="/images/lifestyle_family_meal.webp" type="image/webp" />
                   <img
-                    src="/images/lifestyle_family_meal.jpg"
+                    src="/images/lifestyle_family_meal-mobile.webp"
                     alt="Indian family dining happily at home"
                     loading="lazy"
                     decoding="async"
@@ -1533,7 +1533,7 @@ export function LandingPage() {
             <source media="(max-width: 640px)" srcSet="/images/conversion_banner_home-mobile.webp" type="image/webp" />
             <source srcSet="/images/conversion_banner_home.webp" type="image/webp" />
             <img
-              src="/images/conversion_banner_home.jpg"
+              src="/images/conversion_banner_home-mobile.webp"
               alt="Warm modern residential living room"
               loading="lazy"
               decoding="async"
