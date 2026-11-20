@@ -218,11 +218,19 @@ export function LandingPage() {
             {/* Right Visual Image Frame */}
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[4/5] max-w-md mx-auto group">
-                <img
-                  src="/images/hero_kitchen_indian.jpg"
-                  alt="Modern warm sun-drenched Indian apartment kitchen"
-                  className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700"
-                />
+                <picture>
+                  <source media="(max-width: 640px)" srcSet="/images/hero_kitchen_indian-mobile.webp" type="image/webp" />
+                  <source srcSet="/images/hero_kitchen_indian.webp" type="image/webp" />
+                  <img
+                    src="/images/hero_kitchen_indian.jpg"
+                    alt="Modern warm sun-drenched Indian apartment kitchen"
+                    fetchPriority="high"
+                    decoding="async"
+                    width="800"
+                    height="1000"
+                    className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700"
+                  />
+                </picture>
                 
                 {/* Gradient shading */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0E2922]/95 via-[#0E2922]/30 to-transparent" />
@@ -410,11 +418,18 @@ export function LandingPage() {
           {/* Service Card 1: Home Cooking */}
           <div className="bg-white dark:bg-[#14231D] rounded-3xl overflow-hidden border border-[#E6DFD3] dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col group">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <img
-                src="/images/service_home_cooking.jpg"
-                alt="Homestyle Indian culinary preparation"
-                className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
-              />
+              <picture>
+                <source srcSet="/images/service_home_cooking.webp" type="image/webp" />
+                <img
+                  src="/images/service_home_cooking.jpg"
+                  alt="Homestyle Indian culinary preparation"
+                  loading="lazy"
+                  decoding="async"
+                  width="600"
+                  height="375"
+                  className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
+                />
+              </picture>
               <div className="absolute top-3.5 left-3.5 bg-[#153D32] text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs">
                 Cuisine Craft
               </div>
@@ -469,11 +484,18 @@ export function LandingPage() {
           {/* Service Card 2: Dishwashing */}
           <div className="bg-white dark:bg-[#14231D] rounded-3xl overflow-hidden border border-[#E6DFD3] dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col group">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <img
-                src="/images/service_dishwashing.jpg"
-                alt="Stainless steel cookware scrubbing and sink area care"
-                className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
-              />
+              <picture>
+                <source srcSet="/images/service_dishwashing.webp" type="image/webp" />
+                <img
+                  src="/images/service_dishwashing.jpg"
+                  alt="Stainless steel cookware scrubbing and sink area care"
+                  loading="lazy"
+                  decoding="async"
+                  width="600"
+                  height="375"
+                  className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
+                />
+              </picture>
               <div className="absolute top-3.5 left-3.5 bg-[#C87D38] text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs">
                 Hygiene Specialist
               </div>
@@ -532,11 +554,18 @@ export function LandingPage() {
             </div>
 
             <div className="relative aspect-[16/10] overflow-hidden">
-              <img
-                src="/images/service_combo_care.jpg"
-                alt="Synchronized meal prep and immaculate countertop"
-                className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
-              />
+              <picture>
+                <source srcSet="/images/service_combo_care.webp" type="image/webp" />
+                <img
+                  src="/images/service_combo_care.jpg"
+                  alt="Synchronized meal prep and immaculate countertop"
+                  loading="lazy"
+                  decoding="async"
+                  width="600"
+                  height="375"
+                  className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
+                />
+              </picture>
               <div className="absolute top-3.5 left-3.5 bg-[#153D32] text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs">
                 All-in-One Solution
               </div>
@@ -644,11 +673,18 @@ export function LandingPage() {
             {/* Right Image */}
             <div className="lg:col-span-6">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[4/3]">
-                <img
-                  src="/images/lifestyle_family_meal.jpg"
-                  alt="Indian family dining happily at home"
-                  className="w-full h-full object-cover"
-                />
+                <picture>
+                  <source srcSet="/images/lifestyle_family_meal.webp" type="image/webp" />
+                  <img
+                    src="/images/lifestyle_family_meal.jpg"
+                    alt="Indian family dining happily at home"
+                    loading="lazy"
+                    decoding="async"
+                    width="600"
+                    height="450"
+                    className="w-full h-full object-cover"
+                  />
+                </picture>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6 text-white">
                   <p className="font-serif italic text-base sm:text-lg leading-snug">
@@ -1438,13 +1474,15 @@ export function LandingPage() {
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : index)}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-answer-${index}`}
                     className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-xs sm:text-sm text-[#202A25] dark:text-white cursor-pointer"
                   >
                     <span>{faq.q}</span>
                     <ChevronDown className={`w-4 h-4 text-[#153D32] dark:text-[#E9A15B] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isOpen && (
-                    <div className="px-5 pb-5 pt-1 text-xs text-[#64746B] dark:text-slate-300 leading-relaxed border-t border-[#E6DFD3]/50 dark:border-white/5 font-medium animate-in fade-in">
+                    <div id={`faq-answer-${index}`} role="region" className="px-5 pb-5 pt-1 text-xs text-[#64746B] dark:text-slate-300 leading-relaxed border-t border-[#E6DFD3]/50 dark:border-white/5 font-medium animate-in fade-in">
                       {faq.a}
                     </div>
                   )}
@@ -1461,11 +1499,18 @@ export function LandingPage() {
           ========================================================================= */}
       <section className="relative py-24 sm:py-32 overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src="/images/conversion_banner_home.jpg"
-            alt="Warm modern residential living room"
-            className="w-full h-full object-cover"
-          />
+          <picture>
+            <source srcSet="/images/conversion_banner_home.webp" type="image/webp" />
+            <img
+              src="/images/conversion_banner_home.jpg"
+              alt="Warm modern residential living room"
+              loading="lazy"
+              decoding="async"
+              width="1200"
+              height="800"
+              className="w-full h-full object-cover"
+            />
+          </picture>
           <div className="absolute inset-0 bg-gradient-to-r from-[#0E2922]/95 via-[#153D32]/90 to-[#1E5244]/85" />
         </div>
 

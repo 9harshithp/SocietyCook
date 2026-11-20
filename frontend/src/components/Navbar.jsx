@@ -92,6 +92,8 @@ export function Navbar() {
                 type="button"
                 onClick={() => setServicesOpen(!servicesOpen)}
                 onMouseEnter={() => setServicesOpen(true)}
+                aria-expanded={servicesOpen}
+                aria-label="Toggle services menu"
                 className="flex items-center gap-1 hover:text-[#153D32] dark:hover:text-[#E9A15B] transition-colors py-1 cursor-pointer"
               >
                 <span>Services</span>
@@ -209,6 +211,7 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setShowNotifications(!showNotifications)}
+                  aria-label="View notifications"
                   className="w-9 h-9 rounded-xl bg-white dark:bg-white/5 border border-[#DDE9D8] dark:border-white/10 text-[#202A25] dark:text-slate-200 hover:bg-[#DDE9D8]/30 dark:hover:bg-white/10 transition-colors flex items-center justify-center relative cursor-pointer shadow-xs"
                   title="Notifications"
                 >
@@ -329,6 +332,7 @@ export function Navbar() {
                     await switchPersona(p.email);
                     navigate('/app');
                   }}
+                  aria-label={`Switch demo persona to ${p.label}`}
                   className={`h-7 px-1 sm:px-2.5 text-[11px] sm:text-xs font-semibold rounded-lg sm:rounded-xl truncate flex items-center justify-center transition-all border shrink-0 cursor-pointer text-center ${
                     isActive
                       ? 'bg-[#153D32] dark:bg-[#E9A15B] text-white dark:text-[#153D32] border-[#153D32] dark:border-[#E9A15B] shadow-xs font-bold'
