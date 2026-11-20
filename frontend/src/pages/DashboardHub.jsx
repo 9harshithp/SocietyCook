@@ -242,7 +242,7 @@ export function DashboardHub() {
                       <span className="font-bold text-slate-700 dark:text-slate-300">{todaySession.meal_type || 'Breakfast'}</span>
                     </div>
                     {todaySession.service_type === 'COMBO' && (
-                      <p className="text-[11px] text-[#C47B35] dark:text-[#E9A15B] font-semibold mt-1">
+                      <p className="text-[11px] text-[#964208] dark:text-[#E9A15B] font-semibold mt-1">
                         🫧 Utensil Care Slot: 08:15 AM – 08:45 AM (Immediately following cooking)
                       </p>
                     )}

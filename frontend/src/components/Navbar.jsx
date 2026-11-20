@@ -54,7 +54,7 @@ export function Navbar() {
                 <span className="font-serif font-black text-lg tracking-tight text-[#153D32] dark:text-[#FBF7EF]">
                   SocietyCook
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-[#E9A15B]/15 text-[#C47B35] dark:text-[#E9A15B] border border-[#E9A15B]/30">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-[#E9A15B]/15 text-[#964208] dark:text-[#E9A15B] border border-[#E9A15B]/30">
                   v3.0
                 </span>
               </div>
@@ -122,7 +122,7 @@ export function Navbar() {
                       onClick={() => setServicesOpen(false)}
                       className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-[#FBF7EF] dark:hover:bg-white/5 transition-colors group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#E9A15B]/15 dark:bg-amber-950 flex items-center justify-center text-[#C47B35] dark:text-[#E9A15B] shrink-0 group-hover:bg-[#E9A15B] group-hover:text-white transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-[#E9A15B]/15 dark:bg-amber-950 flex items-center justify-center text-[#964208] dark:text-[#E9A15B] shrink-0 group-hover:bg-[#E9A15B] group-hover:text-white transition-colors">
                         <Droplets className="w-4 h-4" />
                       </div>
                       <div>

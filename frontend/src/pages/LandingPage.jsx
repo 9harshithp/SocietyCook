@@ -173,7 +173,7 @@ export function LandingPage() {
               {/* Editorial Display Heading */}
               <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-bold text-[#153D32] dark:text-white leading-[1.08] tracking-tight">
                 More living. <br />
-                <span className="text-[#C87D38] dark:text-[#E9A15B] italic font-serif font-normal">Less chores.</span>
+                <span className="text-[#964208] dark:text-[#E9A15B] italic font-serif font-normal">Less chores.</span>
               </h1>
 
               {/* Sub-headline prose */}
@@ -238,7 +238,7 @@ export function LandingPage() {
                 {/* Top Badge: Anchored safely inside */}
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 dark:bg-[#153D32]/90 backdrop-blur-md text-[11px] font-extrabold text-[#153D32] dark:text-white shadow-sm border border-white/40">
-                    <Building2 className="w-3.5 h-3.5 text-[#C87D38] dark:text-[#E9A15B]" />
+                    <Building2 className="w-3.5 h-3.5 text-[#964208] dark:text-[#E9A15B]" />
                     Tower A Morning Schedule
                   </span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E9A15B] text-[#153D32] text-[10px] font-black uppercase tracking-wider shadow-sm">
@@ -360,7 +360,7 @@ export function LandingPage() {
             </div>
 
             <div className="space-y-2 p-3 rounded-2xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3]/80 dark:border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-[#C87D38]/15 text-[#C87D38] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
+              <div className="w-10 h-10 rounded-xl bg-[#964208]/15 text-[#964208] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
                 <Percent className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Up to 35% Savings</h4>
@@ -376,7 +376,7 @@ export function LandingPage() {
             </div>
 
             <div className="space-y-2 p-3 rounded-2xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3]/80 dark:border-white/5">
-              <div className="w-10 h-10 rounded-xl bg-[#C87D38]/15 text-[#C87D38] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
+              <div className="w-10 h-10 rounded-xl bg-[#964208]/15 text-[#964208] dark:text-[#E9A15B] flex items-center justify-center mx-auto">
                 <Clock className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-xs sm:text-sm text-[#202A25] dark:text-white">Zero Commute Gaps</h4>
@@ -442,7 +442,7 @@ export function LandingPage() {
                   <h3 className="font-serif text-xl font-bold text-[#153D32] dark:text-white">
                     Professional Home Cooking
                   </h3>
-                  <span className="text-xs font-black text-[#C87D38] dark:text-[#E9A15B]">
+                  <span className="text-xs font-black text-[#964208] dark:text-[#E9A15B]">
                     From ₹2,800/mo
                   </span>
                 </div>
@@ -498,7 +498,7 @@ export function LandingPage() {
                   className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
                 />
               </picture>
-              <div className="absolute top-3.5 left-3.5 bg-[#C87D38] text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs">
+              <div className="absolute top-3.5 left-3.5 bg-[#964208] text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs">
                 Hygiene Specialist
               </div>
             </div>
@@ -509,7 +509,7 @@ export function LandingPage() {
                   <h3 className="font-serif text-xl font-bold text-[#153D32] dark:text-white">
                     Utensil Care & Dishwashing
                   </h3>
-                  <span className="text-xs font-black text-[#C87D38] dark:text-[#E9A15B]">
+                  <span className="text-xs font-black text-[#964208] dark:text-[#E9A15B]">
                     From ₹1,500/mo
                   </span>
                 </div>
@@ -580,7 +580,7 @@ export function LandingPage() {
                   <h3 className="font-serif text-xl font-bold text-[#153D32] dark:text-white">
                     Complete Kitchen Care
                   </h3>
-                  <span className="text-xs font-black text-[#C87D38] dark:text-[#E9A15B]">
+                  <span className="text-xs font-black text-[#964208] dark:text-[#E9A15B]">
                     From ₹4,600/mo
                   </span>
                 </div>
@@ -633,7 +633,7 @@ export function LandingPage() {
             
             {/* Left Narrative */}
             <div className="lg:col-span-6 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C87D38]/15 text-[#C87D38] dark:text-[#E9A15B] text-xs font-bold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#964208]/15 text-[#964208] dark:text-[#E9A15B] text-xs font-bold">
                 <HeartHandshake className="w-3.5 h-3.5" />
                 EVERYDAY COMFORT & TIME SAVINGS
               </div>
@@ -660,7 +660,7 @@ export function LandingPage() {
                 </div>
 
                 <div className="flex items-start gap-4 p-4 rounded-2xl bg-[#FBF7EF] dark:bg-white/5 border border-[#E6DFD3] dark:border-white/10">
-                  <div className="w-8 h-8 rounded-xl bg-[#C87D38] text-white flex items-center justify-center font-serif font-bold text-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#964208] text-white flex items-center justify-center font-serif font-bold text-xs shrink-0">
                     02
                   </div>
                   <div>
@@ -755,7 +755,7 @@ export function LandingPage() {
                   <span className="px-2.5 py-1 rounded-lg bg-[#153D32]/10 dark:bg-emerald-950 text-[#153D32] dark:text-emerald-300 font-bold whitespace-nowrap">
                     Cook: 07:30 – 08:15 AM
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-[#C87D38]/15 dark:bg-amber-950 text-[#C87D38] dark:text-[#E9A15B] font-bold whitespace-nowrap">
+                  <span className="px-2.5 py-1 rounded-lg bg-[#964208]/15 dark:bg-amber-950 text-[#964208] dark:text-[#E9A15B] font-bold whitespace-nowrap">
                     Wash: 08:15 – 08:45 AM
                   </span>
                 </div>
@@ -783,7 +783,7 @@ export function LandingPage() {
                   <span className="px-2.5 py-1 rounded-lg bg-[#153D32]/10 dark:bg-emerald-950 text-[#153D32] dark:text-emerald-300 font-bold whitespace-nowrap">
                     Cook: 08:15 – 09:00 AM
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-[#C87D38]/15 dark:bg-amber-950 text-[#C87D38] dark:text-[#E9A15B] font-bold whitespace-nowrap">
+                  <span className="px-2.5 py-1 rounded-lg bg-[#964208]/15 dark:bg-amber-950 text-[#964208] dark:text-[#E9A15B] font-bold whitespace-nowrap">
                     Wash: 09:00 – 09:30 AM
                   </span>
                 </div>
@@ -811,7 +811,7 @@ export function LandingPage() {
                   <span className="px-2.5 py-1 rounded-lg bg-[#153D32]/10 dark:bg-emerald-950 text-[#153D32] dark:text-emerald-300 font-bold whitespace-nowrap">
                     Cook: 09:00 – 09:45 AM
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-[#C87D38]/15 dark:bg-amber-950 text-[#C87D38] dark:text-[#E9A15B] font-bold whitespace-nowrap">
+                  <span className="px-2.5 py-1 rounded-lg bg-[#964208]/15 dark:bg-amber-950 text-[#964208] dark:text-[#E9A15B] font-bold whitespace-nowrap">
                     Wash: 09:45 – 10:15 AM
                   </span>
                 </div>
@@ -1044,7 +1044,7 @@ export function LandingPage() {
                     <span>Total Group Billing ({calcHouseholds} flats):</span>
                     <span>₹{pricingResult.totalGroupBilling.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between text-[#C87D38] dark:text-[#E9A15B] font-bold">
+                  <div className="flex justify-between text-[#964208] dark:text-[#E9A15B] font-bold">
                     <span>Guaranteed Staff Payout:</span>
                     <span>₹{pricingResult.proPayout.toLocaleString('en-IN')}</span>
                   </div>
@@ -1087,7 +1087,7 @@ export function LandingPage() {
           
           {/* Step 1 */}
           <div className="bg-white dark:bg-[#14231D] p-6 rounded-3xl border border-[#E6DFD3] dark:border-white/10 shadow-md group hover:-translate-y-1 transition-transform">
-            <div className="font-serif text-3xl font-black text-[#C87D38] dark:text-[#E9A15B] mb-3">
+            <div className="font-serif text-3xl font-black text-[#964208] dark:text-[#E9A15B] mb-3">
               01
             </div>
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
@@ -1100,7 +1100,7 @@ export function LandingPage() {
 
           {/* Step 2 */}
           <div className="bg-white dark:bg-[#14231D] p-6 rounded-3xl border border-[#E6DFD3] dark:border-white/10 shadow-md group hover:-translate-y-1 transition-transform">
-            <div className="font-serif text-3xl font-black text-[#C87D38] dark:text-[#E9A15B] mb-3">
+            <div className="font-serif text-3xl font-black text-[#964208] dark:text-[#E9A15B] mb-3">
               02
             </div>
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
@@ -1113,7 +1113,7 @@ export function LandingPage() {
 
           {/* Step 3 */}
           <div className="bg-white dark:bg-[#14231D] p-6 rounded-3xl border border-[#E6DFD3] dark:border-white/10 shadow-md group hover:-translate-y-1 transition-transform">
-            <div className="font-serif text-3xl font-black text-[#C87D38] dark:text-[#E9A15B] mb-3">
+            <div className="font-serif text-3xl font-black text-[#964208] dark:text-[#E9A15B] mb-3">
               03
             </div>
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
@@ -1126,7 +1126,7 @@ export function LandingPage() {
 
           {/* Step 4 */}
           <div className="bg-white dark:bg-[#14231D] p-6 rounded-3xl border border-[#E6DFD3] dark:border-white/10 shadow-md group hover:-translate-y-1 transition-transform">
-            <div className="font-serif text-3xl font-black text-[#C87D38] dark:text-[#E9A15B] mb-3">
+            <div className="font-serif text-3xl font-black text-[#964208] dark:text-[#E9A15B] mb-3">
               04
             </div>
             <h3 className="font-serif font-bold text-lg text-[#153D32] dark:text-white mb-2">
@@ -1292,7 +1292,7 @@ export function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#153D32] to-[#1E5244] text-[#E9A15B] font-bold text-lg flex items-center justify-center border border-[#E9A15B]/30">
                     {pro.name?.[0] || 'P'}
                   </div>
-                  <div className="flex items-center gap-1 bg-[#FBF7EF] dark:bg-white/5 px-2 py-1 rounded-lg text-xs font-bold text-[#C87D38] dark:text-[#E9A15B]">
+                  <div className="flex items-center gap-1 bg-[#FBF7EF] dark:bg-white/5 px-2 py-1 rounded-lg text-xs font-bold text-[#964208] dark:text-[#E9A15B]">
                     <Star className="w-3.5 h-3.5 fill-current" />
                     <span>{pro.rating || 4.9}</span>
                   </div>
@@ -1305,7 +1305,7 @@ export function LandingPage() {
                     </h3>
                     <BadgeCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#C87D38] dark:text-[#E9A15B] block mt-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#964208] dark:text-[#E9A15B] block mt-0.5">
                     {pro.professional_type === 'MULTI_SKILLED' ? 'Multi-Skilled Cook & Utensil Care' :
                      pro.professional_type === 'DISHWASHER' ? 'Utensil Care Specialist' : 'Master Home Cook'}
                   </span>
@@ -1377,7 +1377,7 @@ export function LandingPage() {
               </div>
 
               <div className="p-5 rounded-2xl bg-[#FBF7EF] dark:bg-[#14231D] border border-[#E6DFD3] dark:border-white/10">
-                <div className="w-9 h-9 rounded-xl bg-[#C87D38] text-white flex items-center justify-center font-bold text-xs mb-3">
+                <div className="w-9 h-9 rounded-xl bg-[#964208] text-white flex items-center justify-center font-bold text-xs mb-3">
                   <Navigation className="w-4 h-4" />
                 </div>
                 <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Zero Commute Expenses</h4>
@@ -1397,7 +1397,7 @@ export function LandingPage() {
               </div>
 
               <div className="p-5 rounded-2xl bg-[#FBF7EF] dark:bg-[#14231D] border border-[#E6DFD3] dark:border-white/10">
-                <div className="w-9 h-9 rounded-xl bg-[#C87D38] text-white flex items-center justify-center font-bold text-xs mb-3">
+                <div className="w-9 h-9 rounded-xl bg-[#964208] text-white flex items-center justify-center font-bold text-xs mb-3">
                   <HeartPulse className="w-4 h-4" />
                 </div>
                 <h4 className="font-bold text-sm text-[#202A25] dark:text-white">Paid Leave & Medical Fund</h4>

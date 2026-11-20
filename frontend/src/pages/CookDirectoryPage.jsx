@@ -213,7 +213,7 @@ export function CookDirectoryPage() {
                     {(isDishwasher || isMulti) && (
                       <div className="flex justify-between text-[#64746B] dark:text-slate-400">
                         <span>Utensil Tier</span>
-                        <span className="font-bold text-[#C47B35] dark:text-[#E9A15B]">
+                        <span className="font-bold text-[#964208] dark:text-[#E9A15B]">
                           {pro.utensil_capacity_tier || 'HEAVY'} Load
                         </span>
                       </div>
