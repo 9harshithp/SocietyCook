@@ -11,11 +11,17 @@ export const DEMO_PERSONAS = [
   { label: 'Platform Admin', email: 'admin@example.com', role: 'ADMIN', desc: 'Ops & Backup' }
 ];
 
+const DEFAULT_SOCIETIES = [
+  { id: 1, name: 'Prestige Falcon City', city: 'Bengaluru' },
+  { id: 2, name: 'Sobha Dream Acres', city: 'Bengaluru' },
+  { id: 3, name: 'Brigade Gateway', city: 'Bengaluru' }
+];
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeSocietyId, setActiveSocietyId] = useState(1);
-  const [societies, setSocieties] = useState([]);
+  const [societies, setSocieties] = useState(DEFAULT_SOCIETIES);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem('sc_theme');
@@ -65,9 +71,11 @@ export function AuthProvider({ children }) {
   const loadSocieties = async () => {
     try {
       const data = await api.getSocieties();
-      setSocieties(data);
-    } catch (err) {
-      console.error('Failed to load societies:', err);
+      if (Array.isArray(data) && data.length > 0) {
+        setSocieties(data);
+      }
+    } catch {
+      // Graceful fallback to default societies when backend is cold or offline
     }
   };
 
