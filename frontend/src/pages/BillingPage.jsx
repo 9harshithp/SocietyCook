@@ -215,31 +215,41 @@ SocietyCook Technologies Private Limited
       {/* Demo UPI Payment Modal */}
       {showPayModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 text-center">
+          <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 text-center">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">Complete Monthly Payment</h3>
-              <button type="button" onClick={() => setShowPayModal(false)}>
-                <X className="w-5 h-5 text-slate-400" />
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">Simulate Payment (Demo Sandbox)</h3>
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block text-left">Test Mode Active</span>
+              </div>
+              <button type="button" aria-label="Close payment modal" onClick={() => setShowPayModal(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-              <div className="w-36 h-36 mx-auto bg-white p-3 rounded-xl border border-slate-300 shadow-xs flex flex-col items-center justify-center">
-                <QrCode className="w-28 h-28 text-slate-900" />
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-[11px] text-amber-800 dark:text-amber-300 text-left flex items-start gap-2">
+              <span className="text-sm">⚠️</span>
+              <p>
+                <strong>DEMO TRANSACTION:</strong> This is a sandbox demonstration interface. No real funds are transferred or debited. Production payments are handled via Razorpay Gateway.
+              </p>
+            </div>
+
+            <div className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="w-32 h-32 mx-auto bg-white p-2.5 rounded-xl border border-slate-300 shadow-xs flex flex-col items-center justify-center">
+                <QrCode className="w-24 h-24 text-slate-900" />
               </div>
               <div>
-                <span className="text-xs text-slate-500 font-semibold block">Scan with any UPI App</span>
+                <span className="text-xs text-slate-500 font-semibold block">Simulated Demo QR Code</span>
                 <span className="text-2xl font-black text-slate-900 dark:text-white">₹4,200.00</span>
               </div>
-              <p className="text-[11px] text-slate-400 font-mono">societycook.payments@icici</p>
+              <p className="text-[10px] text-slate-400 font-mono">sandbox.demo.simulation@societycook</p>
             </div>
 
             <button
               type="button"
               onClick={() => handlePayDemo(payingBookingId)}
-              className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30"
+              className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 cursor-pointer"
             >
-              Simulate Instant UPI Payment (Demo)
+              Simulate Instant UPI Payment (Demo Sandbox)
             </button>
           </div>
         </div>

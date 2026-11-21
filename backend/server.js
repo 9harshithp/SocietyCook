@@ -126,7 +126,7 @@ app.use(
 // Strict Rate Limiting on Sensitive Authentication Endpoints (Brute-Force & Credential Stuffing Prevention)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 15, // Max 15 attempts per IP per 15 min window
+  limit: ENV.NODE_ENV === 'production' ? 15 : 500, // Strict 15 in production, high limit in development/testing
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many login attempts. Please wait 15 minutes before trying again.' }

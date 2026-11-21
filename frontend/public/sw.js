@@ -69,9 +69,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Sensitive API endpoints: STRICT NETWORK-ONLY
-  // Never cache auth tokens, resident profiles, bookings, or payments
-  if (url.pathname.startsWith('/api/')) {
+  // 2. Sensitive API endpoints & User Data: STRICT NETWORK-ONLY (Zero Cache Policy)
+  // Never cache auth tokens, resident profiles, bookings, sessions, invoices, or payments
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.hostname.includes('onrender.com') ||
+    url.pathname.includes('/auth/') ||
+    url.pathname.includes('/bookings') ||
+    url.pathname.includes('/payments') ||
+    url.pathname.includes('/sessions') ||
+    url.pathname.includes('/invoices') ||
+    url.pathname.includes('/users')
+  ) {
     event.respondWith(
       fetch(request).catch(() => {
         return new Response(

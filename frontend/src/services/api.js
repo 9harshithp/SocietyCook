@@ -67,6 +67,7 @@ export const api = {
   getBookings: () => apiClient.get('/bookings'),
   getInvoices: () => apiClient.get('/invoices'),
   createBooking: (data) => apiClient.post('/bookings', data),
+  cancelBooking: (bookingId) => apiClient.patch(`/bookings/${bookingId}/cancel`),
   payDemo: (bookingId) => apiClient.post(`/bookings/${bookingId}/pay-demo`),
 
   // Sessions & Attendance

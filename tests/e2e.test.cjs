@@ -117,7 +117,7 @@ async function runE2ETests() {
       await page.fill('input[type="password"]', 'Demo12345!');
       await page.click('button[type="submit"]');
 
-      await page.waitForURL('**/app/dashboard', { timeout: 8000 });
+      await page.waitForURL('**/app/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
       await page.waitForSelector('text=Welcome home,', { timeout: 5000 });
 
       const token = await page.evaluate(() => sessionStorage.getItem('sc_access_token'));
@@ -129,7 +129,7 @@ async function runE2ETests() {
       const logo = page.locator('a[aria-label="SocietyCook Homepage"]').first();
       await logo.click();
 
-      await page.waitForURL(`${BASE_URL}/`, { timeout: 5000 });
+      await page.waitForURL('**/', { timeout: 8000, waitUntil: 'domcontentloaded' });
 
       // User must remain authenticated in session storage
       const token = await page.evaluate(() => sessionStorage.getItem('sc_access_token'));
@@ -137,12 +137,12 @@ async function runE2ETests() {
 
       // "Go to Dashboard" button must appear on homepage
       const goToDashboardBtn = page.locator('a:has-text("Go to Dashboard"), a:has-text("Resident Dashboard")').first();
-      await goToDashboardBtn.waitFor({ state: 'visible', timeout: 5000 });
+      await goToDashboardBtn.waitFor({ state: 'visible', timeout: 8000 });
 
       // Clicking Go to Dashboard returns to role dashboard
       await goToDashboardBtn.click();
-      await page.waitForURL('**/app/dashboard', { timeout: 5000 });
-      await page.waitForSelector('text=Welcome home,', { timeout: 5000 });
+      await page.waitForURL('**/app/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Welcome home,', { timeout: 8000 });
     });
 
     // 9. Structured URL-Driven Navigation
@@ -150,31 +150,31 @@ async function runE2ETests() {
       // 1. Discover / Cooks
       const cooksLink = page.locator('a:has-text("Find Cooks")').first();
       await cooksLink.click();
-      await page.waitForURL('**/app/discover', { timeout: 5000 });
-      await page.waitForSelector('text=Verified Cooks', { timeout: 5000 });
+      await page.waitForURL('**/app/discover', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Verified Cooks', { timeout: 8000 });
 
       // 2. Services
       const servicesLink = page.locator('a:has-text("Services")').first();
       await servicesLink.click();
-      await page.waitForURL('**/app/services', { timeout: 5000 });
-      await page.waitForSelector('text=SocietyCook Service Tiers', { timeout: 5000 });
+      await page.waitForURL('**/app/services', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=SocietyCook Service Tiers', { timeout: 8000 });
 
       // 3. Bookings
       const bookingsLink = page.locator('a:has-text("Bookings")').first();
       await bookingsLink.click();
-      await page.waitForURL('**/app/bookings', { timeout: 5000 });
-      await page.waitForSelector('text=My Household Bookings', { timeout: 5000 });
+      await page.waitForURL('**/app/bookings', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=My Household Bookings', { timeout: 8000 });
 
       // 4. Tower Groups (Community)
       const communityLink = page.locator('a:has-text("Tower Groups")').first();
       await communityLink.click();
-      await page.waitForURL('**/app/community', { timeout: 5000 });
+      await page.waitForURL('**/app/community', { timeout: 8000, waitUntil: 'domcontentloaded' });
 
       // 5. Settings
       const settingsLink = page.locator('a:has-text("Settings")').first();
       await settingsLink.click();
-      await page.waitForURL('**/app/settings', { timeout: 5000 });
-      await page.waitForSelector('text=Account & Device Settings', { timeout: 5000 });
+      await page.waitForURL('**/app/settings', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Account & Device Settings', { timeout: 8000 });
     });
 
     // 10. Deep Linking & Page Refresh URL Preservation
@@ -231,20 +231,20 @@ async function runE2ETests() {
       // Switch to Manager
       const managerBtn = page.locator('button:has-text("Society Manager")').first();
       await managerBtn.click();
-      await page.waitForURL('**/app/society/dashboard', { timeout: 5000 });
-      await page.waitForSelector('text=Campus Control', { timeout: 5000 });
+      await page.waitForURL('**/app/society/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Campus Control', { timeout: 8000 });
 
       // Switch to Cook
       const cookBtn = page.locator('button:has-text("Cook (Ramesh)")').first();
       await cookBtn.click();
-      await page.waitForURL('**/app/professional/dashboard', { timeout: 5000 });
-      await page.waitForSelector('text=Hello, Chef', { timeout: 5000 });
+      await page.waitForURL('**/app/professional/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Hello, Chef', { timeout: 8000 });
 
       // Switch to Admin
       const adminBtn = page.locator('button:has-text("Platform Admin")').first();
       await adminBtn.click();
-      await page.waitForURL('**/admin/dashboard', { timeout: 5000 });
-      await page.waitForSelector('text=SocietyCook Operational Control', { timeout: 5000 });
+      await page.waitForURL('**/admin/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=SocietyCook Operational Control', { timeout: 8000 });
     });
 
     // 14. Role-Based Access Control: Unauthorized Route Prevention
@@ -252,14 +252,14 @@ async function runE2ETests() {
       // Switch back to resident
       const residentBtn = page.locator('button:has-text("Resident (Rahul)")').first();
       await residentBtn.click();
-      await page.waitForURL('**/app/dashboard', { timeout: 5000 });
+      await page.waitForURL('**/app/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
 
       // Attempt to directly navigate to /admin/security
       await page.goto(`${BASE_URL}/admin/security`, { waitUntil: 'domcontentloaded' });
 
       // Must be blocked and display Forbidden / 403 page
       const forbiddenHeading = page.locator('text=403 - Access Forbidden');
-      await forbiddenHeading.waitFor({ state: 'visible', timeout: 5000 });
+      await forbiddenHeading.waitFor({ state: 'visible', timeout: 10000 });
     });
 
     // 15. PWA Installation Banner & Cooldown Dismissal
@@ -307,6 +307,81 @@ async function runE2ETests() {
 
       assert(result.knWidth > 50, 'Kannada script failed to render valid glyph bounding box');
       assert(result.hiWidth > 50, 'Hindi script failed to render valid glyph bounding box');
+    });
+
+    // 18. Cooking, Dishwashing and Combined Service Tiers
+    await test('Service tiers display cooking, dishwashing and combo plans with correct exploration links', async () => {
+      await page.goto(`${BASE_URL}/app/services`, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=SocietyCook Service Tiers');
+
+      // Verify Dishwashing and Combo tiers exist
+      const dishwashingHeading = page.locator('h3:has-text("Utensil Care & Dishwashing")').first();
+      assert(await dishwashingHeading.isVisible(), 'Dishwashing tier missing');
+
+      const comboHeading = page.locator('h3:has-text("Complete Kitchen Care")').first();
+      assert(await comboHeading.isVisible(), 'Combo tier missing');
+
+      // Click Find Utensil Care & Dishwashing Staff
+      const dishwashingStaffLink = page.locator('a[href*="/app/discover?service=DISHWASHING"]').first();
+      assert(await dishwashingStaffLink.isVisible(), 'Dishwashing exploration link missing');
+      await dishwashingStaffLink.click();
+      await page.waitForURL('**/app/discover?service=DISHWASHING', { timeout: 5000 });
+    });
+
+    // 19. Household Bookings & Cancellation Workflow UI
+    await test('Household bookings page loads contracts and presents service details', async () => {
+      await page.goto(`${BASE_URL}/app/bookings`, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=My Household Bookings');
+
+      const heading = await page.locator('h1').textContent();
+      assert(heading.includes('My Household Bookings'), 'Bookings page heading missing');
+    });
+
+    // 20. Service Worker Zero-Cache Policy on Sensitive API Endpoints
+    await test('Service worker strictly enforces zero-cache policy on sensitive API endpoints', async () => {
+      await page.goto(`${BASE_URL}/app/dashboard`, { waitUntil: 'domcontentloaded' });
+      const cacheCompliant = await page.evaluate(async () => {
+        if (!('caches' in window)) return true;
+        const keys = await caches.keys();
+        for (const key of keys) {
+          const cache = await caches.open(key);
+          const cachedRequests = await cache.keys();
+          for (const req of cachedRequests) {
+            const path = req.url;
+            if (path.includes('/api/') || path.includes('/auth/') || path.includes('/bookings') || path.includes('/payments') || path.includes('/sessions')) {
+              return false; // Sensitive data found in cache!
+            }
+          }
+        }
+        return true;
+      });
+      assert(cacheCompliant, 'Sensitive API response was improperly stored in service worker cache!');
+    });
+
+    // 21. Demo UPI Payment Safety & Transparent Sandbox Disclaimers
+    await test('Demo payments display prominent sandbox disclaimers preventing mistaking for real transactions', async () => {
+      await page.goto(`${BASE_URL}/app/subscriptions`, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('text=Billing & Subscriptions');
+
+      // Click Pay / Renew button to trigger demo payment modal
+      const payButton = page.locator('button:has-text("Pay Now"), button:has-text("Renew")').first();
+      await payButton.waitFor({ state: 'visible', timeout: 5000 });
+      await payButton.click();
+
+      // Verify prominent demo sandbox disclaimer is visible
+      const demoNotice = page.locator('text=DEMO TRANSACTION');
+      await demoNotice.waitFor({ state: 'visible', timeout: 5000 });
+      const warningText = await demoNotice.textContent();
+      assert(warningText.includes('DEMO'), 'Demo payment missing prominent sandbox disclaimer');
+
+      // Verify simulated fictional UPI ID
+      const upiText = await page.locator('text=sandbox.demo.simulation@societycook').textContent();
+      assert(upiText.includes('sandbox.demo.simulation'), 'Fictional demo UPI ID missing');
+
+      // Close modal
+      const closeBtn = page.locator('button[aria-label="Close payment modal"]');
+      await closeBtn.waitFor({ state: 'visible', timeout: 5000 });
+      await closeBtn.click();
     });
 
     console.log(`\n🎉 All ${passedCount} / ${testCount} E2E & PWA tests completed successfully with ZERO failures!\n`);

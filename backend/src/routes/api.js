@@ -403,6 +403,25 @@ apiRouter.post('/bookings', authenticate, requireRoles(['RESIDENT']), handle(asy
   const [cook] = await query('SELECT c.*, u.society_id, u.name FROM cooks c JOIN users u ON u.id=c.user_id WHERE c.id=?', [b.cookId]);
   if (!cook || !cook.verified) return res.status(404).json({ success: false, message: 'Service professional not available' });
 
+  // Conflict Prevention: Ensure cook does not have an overlapping active or pending booking
+  const existingConflict = await query(`
+    SELECT id, start_time, end_time, slot_label FROM bookings
+    WHERE cook_id = ?
+      AND status IN ('PENDING', 'ACTIVE')
+      AND (expires_at > NOW() OR status = 'ACTIVE')
+      AND start_date <= ? AND end_date >= ?
+      AND start_time < ? AND end_time > ?
+    LIMIT 1
+  `, [cook.id, end, b.startDate, stop + ':00', b.startTime + ':00']);
+
+  if (existingConflict.length > 0) {
+    const conflictSlot = existingConflict[0].slot_label || `${existingConflict[0].start_time.slice(0, 5)} - ${existingConflict[0].end_time.slice(0, 5)}`;
+    return res.status(409).json({
+      success: false,
+      message: `Scheduling conflict: Professional is already scheduled for ${conflictSlot}. Please select another time slot.`
+    });
+  }
+
   let totalAmount = sType === 'DISHWASHING' ? (cook.dishwashing_price || 2200) : cook.price;
   if (sType === 'COMBO') {
     totalAmount = Math.round((cook.price + (cook.dishwashing_price || 2200)) * 0.9); // 10% combo discount
@@ -417,6 +436,31 @@ apiRouter.post('/bookings', authenticate, requireRoles(['RESIDENT']), handle(asy
   );
 
   res.status(201).json({ id: result.insertId, amount: totalAmount, slotLabel: label, serviceType: sType });
+}));
+
+// Booking Cancellation Workflow
+apiRouter.patch('/bookings/:id/cancel', authenticate, handle(async (req, res) => {
+  const bookingId = Number(req.params.id);
+  const [b] = await query('SELECT * FROM bookings WHERE id = ?', [bookingId]);
+  if (!b) return res.status(404).json({ success: false, message: 'Booking not found.' });
+
+  // Authorization: must be the resident who created the booking or an ADMIN
+  if (req.user.role !== 'ADMIN' && b.resident_id !== req.user.id) {
+    return res.status(403).json({ success: false, message: 'Unauthorized: You can only cancel your own bookings.' });
+  }
+
+  if (b.status === 'CANCELLED') {
+    return res.status(400).json({ success: false, message: 'Booking is already cancelled.' });
+  }
+
+  await query('UPDATE bookings SET status = "CANCELLED" WHERE id = ?', [bookingId]);
+  await query('UPDATE sessions SET status = "MISSED" WHERE booking_id = ? AND status = "SCHEDULED"', [bookingId]);
+
+  res.json({
+    success: true,
+    message: 'Booking cancelled successfully. Scheduled household visits have been released.',
+    bookingId
+  });
 }));
 
 apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) => {

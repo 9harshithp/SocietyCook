@@ -366,16 +366,42 @@ export function ResidentServicesPage() {
 }
 
 export function ResidentBookingsPage() {
-  const { activeSocietyId } = useAuth();
+  const { activeSocietyId, showToast } = useAuth();
   const [sessions, setSessions] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
+
+  const loadData = () => {
+    setLoading(true);
+    Promise.all([
+      api.getBookings().catch(() => []),
+      api.getSessions({ societyId: activeSocietyId }).catch(() => [])
+    ]).then(([bData, sData]) => {
+      setBookings(Array.isArray(bData) ? bData : []);
+      setSessions(Array.isArray(sData) ? sData : []);
+    }).finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    api.getSessions({ societyId: activeSocietyId })
-      .then(setSessions)
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false));
+    loadData();
   }, [activeSocietyId]);
+
+  const handleCancel = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to cancel this booking? Scheduled household visits will be released.')) {
+      return;
+    }
+    setCancellingId(bookingId);
+    try {
+      await api.cancelBooking(bookingId);
+      showToast('Booking cancelled successfully.', 'success');
+      loadData();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -385,7 +411,7 @@ export function ResidentBookingsPage() {
             My Household Bookings
           </h1>
           <p className="text-xs sm:text-sm text-[#64746B] dark:text-slate-400 mt-1">
-            Active and upcoming daily kitchen care appointments
+            Active and upcoming daily kitchen care appointments & subscription contracts
           </p>
         </div>
         <Link
@@ -396,7 +422,58 @@ export function ResidentBookingsPage() {
         </Link>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#DDE9D8] dark:border-white/10 shadow-sm">
+      {/* Active Contracts & Subscriptions */}
+      {bookings.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#DDE9D8] dark:border-white/10 shadow-sm space-y-4">
+          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200">Household Contracts & Services</h2>
+          <div className="divide-y divide-[#DDE9D8]/50 dark:divide-white/10">
+            {bookings.map((b) => (
+              <div key={b.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold shrink-0">
+                    <ChefHat className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-extrabold text-sm text-[#202A25] dark:text-white">
+                      {b.cook_name || 'Assigned Cook'} · {b.service_type || 'COOKING'} ({b.meal_type || 'Dinner'})
+                    </div>
+                    <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                      <span>Slot: {b.slot_label || `${b.start_time?.slice(0, 5)} - ${b.end_time?.slice(0, 5)}`}</span>
+                      <span>•</span>
+                      <span>₹{(b.amount || 4000).toLocaleString('en-IN')}/mo</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                    b.status === 'ACTIVE'
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                      : b.status === 'CANCELLED'
+                      ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                      : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                  }`}>
+                    {b.status}
+                  </span>
+                  {b.status !== 'CANCELLED' && (
+                    <button
+                      type="button"
+                      disabled={cancellingId === b.id}
+                      onClick={() => handleCancel(b.id)}
+                      className="px-3 py-1 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {cancellingId === b.id ? 'Cancelling...' : 'Cancel'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Daily Sessions & Attendance */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#DDE9D8] dark:border-white/10 shadow-sm space-y-4">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200">Upcoming Daily Appointments</h2>
         {loading ? (
           <div className="text-center py-10 text-xs text-slate-400">Loading appointments...</div>
         ) : sessions.length === 0 ? (
