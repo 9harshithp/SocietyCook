@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { trackLatency, captureException } from './monitoring';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
@@ -10,19 +11,65 @@ export const apiClient = axios.create({
   }
 });
 
-// Request interceptor: attach bearer token
+// Request interceptor: attach bearer token and start timestamp for latency tracking
 apiClient.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('sc_access_token') || sessionStorage.getItem('sc_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  config.metadata = { startTime: Date.now() };
   return config;
 });
 
-// Response interceptor: extract response body
+// Helper to determine operation name from URL and method
+function getOperationName(url, method) {
+  const u = String(url || '');
+  const m = String(method || '').toUpperCase();
+  if (u.includes('/auth/login')) return 'Auth:Login';
+  if (u.includes('/bookings') && m === 'POST') return 'Booking:Create';
+  if (u.includes('/bookings') && u.includes('/cancel')) return 'Booking:Cancel';
+  return null;
+}
+
+// Response interceptor: extract response body and track operation latencies
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    const duration = response.config?.metadata?.startTime
+      ? Date.now() - response.config.metadata.startTime
+      : null;
+
+    const operation = getOperationName(response.config?.url, response.config?.method);
+    if (operation && duration !== null) {
+      trackLatency(operation, duration, {
+        status: response.status,
+        method: response.config?.method
+      });
+    }
+
+    return response.data;
+  },
   (error) => {
+    const duration = error.config?.metadata?.startTime
+      ? Date.now() - error.config.metadata.startTime
+      : null;
+
+    const operation = getOperationName(error.config?.url, error.config?.method);
+    if (operation && duration !== null) {
+      trackLatency(operation, duration, {
+        status: error.response?.status || 'NETWORK_ERROR',
+        method: error.config?.method,
+        hasError: true
+      });
+    }
+
+    // Capture elevated 5xx errors to monitoring
+    if (error.response?.status >= 500) {
+      captureException(error, {
+        url: error.config?.url,
+        status: error.response?.status
+      });
+    }
+
     const message = error.response?.data?.message || error.message || 'Request failed';
     return Promise.reject(new Error(message));
   }

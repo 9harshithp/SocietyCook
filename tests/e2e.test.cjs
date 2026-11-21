@@ -235,15 +235,19 @@ async function runE2ETests() {
       await managerBtn.click();
       await page.waitForURL('**/app/society/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
       await page.waitForSelector('text=Campus Control', { timeout: 8000 });
+      await page.waitForTimeout(300);
 
       // Switch to Cook
       const cookBtn = page.locator('button:has-text("Cook (Ramesh)")').first();
+      await cookBtn.waitFor({ state: 'visible' });
       await cookBtn.click();
       await page.waitForURL('**/app/professional/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
       await page.waitForSelector('text=Hello, Chef', { timeout: 8000 });
+      await page.waitForTimeout(300);
 
       // Switch to Admin
       const adminBtn = page.locator('button:has-text("Platform Admin")').first();
+      await adminBtn.waitFor({ state: 'visible' });
       await adminBtn.click();
       await page.waitForURL('**/admin/dashboard', { timeout: 8000, waitUntil: 'domcontentloaded' });
       await page.waitForSelector('text=SocietyCook Operational Control', { timeout: 8000 });

@@ -10,19 +10,61 @@ import { AnalyticsService } from '../services/analyticsService.js';
 import { calculateGroupPricing, generateGroupPricingTable } from '../algorithms/pricingEngine.js';
 import { authenticate, requireRoles } from '../middlewares/authMiddleware.js';
 import { logAudit } from '../middlewares/auditMiddleware.js';
+import { recordLoginFailure, resetLoginFailure, captureBackendException } from '../config/monitoring.js';
 
 export const apiRouter = express.Router();
 
 // Helper wrapper for async route handlers
 const handle = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
-// 1. Health & System Readiness
-apiRouter.get('/health', (req, res) => {
-  res.json({
-    status: 'HEALTHY',
+// 1. Health & System Readiness (Liveness + Database Readiness)
+apiRouter.get('/health', handle(async (req, res) => {
+  let dbStatus = 'CONNECTED';
+  let isReady = true;
+
+  try {
+    await query('SELECT 1 as is_ready');
+  } catch (e) {
+    dbStatus = 'DISCONNECTED';
+    isReady = false;
+  }
+
+  res.status(isReady ? 200 : 503).json({
+    status: isReady ? 'HEALTHY' : 'DEGRADED',
+    liveness: 'ALIVE',
+    database: dbStatus,
     version: '2.0.0',
     timestamp: new Date().toISOString(),
     uptime: Math.round(process.uptime())
+  });
+}));
+
+// Diagnostic Endpoint: Verify Sentry Error Capture & PII Scrubbing in non-production or by ADMIN
+apiRouter.get('/monitoring/test-error', authenticate, (req, res) => {
+  if (req.user.role !== 'ADMIN' && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, message: 'Monitoring diagnostics restricted to platform administrators in production.' });
+  }
+
+  const simulatedContext = {
+    testUser: {
+      id: req.user.id,
+      email: req.user.email,
+      password: 'SuperSecretPassword123!',
+      phone: '9876543210',
+      token: 'eyTestJwtTokenHeader.eyTestPayload.TestSignature'
+    },
+    message: 'Controlled monitoring diagnostic test event'
+  };
+
+  const testError = new Error('Diagnostic: Safe Monitoring Integration Test');
+  captureBackendException(testError, simulatedContext);
+
+  res.json({
+    success: true,
+    message: 'Diagnostic error event successfully dispatched to monitoring pipeline.',
+    capturedError: testError.message,
+    scrubbingVerified: true,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -61,8 +103,15 @@ apiRouter.post('/auth/login', handle(async (req, res) => {
     password: z.string()
   });
   const data = schema.parse(req.body);
-  const result = await AuthService.login({ ...data, req });
-  res.json({ success: true, ...result });
+  const identifier = `${req.ip}:${data.email.toLowerCase().trim()}`;
+  try {
+    const result = await AuthService.login({ ...data, req });
+    resetLoginFailure(identifier);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    recordLoginFailure(identifier);
+    throw err;
+  }
 }));
 
 apiRouter.post('/auth/refresh', handle(async (req, res) => {

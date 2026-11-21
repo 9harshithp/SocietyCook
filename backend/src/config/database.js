@@ -5,6 +5,7 @@ try {
 
 import mysql from 'mysql2/promise';
 import { ENV } from './env.js';
+import { captureDatabaseError } from './monitoring.js';
 
 const isSsl =
   ENV.DATABASE_URL.includes('aivencloud') ||
@@ -42,8 +43,13 @@ if (ENV.DATABASE_URL.startsWith('mysql://')) {
 export const db = mysql.createPool(poolConfig);
 
 export const query = async (sql, args = []) => {
-  const [rows] = await db.execute(sql, args);
-  return rows;
+  try {
+    const [rows] = await db.execute(sql, args);
+    return rows;
+  } catch (error) {
+    captureDatabaseError(error, sql);
+    throw error;
+  }
 };
 
 export async function transaction(fn) {
@@ -51,8 +57,13 @@ export async function transaction(fn) {
   try {
     await connection.beginTransaction();
     const transQuery = async (sql, args = []) => {
-      const [rows] = await connection.execute(sql, args);
-      return rows;
+      try {
+        const [rows] = await connection.execute(sql, args);
+        return rows;
+      } catch (error) {
+        captureDatabaseError(error, sql);
+        throw error;
+      }
     };
     const result = await fn(transQuery, connection);
     await connection.commit();

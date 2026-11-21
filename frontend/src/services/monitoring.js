@@ -1,0 +1,208 @@
+import * as Sentry from '@sentry/react';
+
+// Sentry DSN from environment variable - never committed to source
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
+const APP_COMMIT = import.meta.env.VITE_APP_COMMIT || '53c4d09';
+const APP_ENV = import.meta.env.MODE || 'production';
+
+// Sensitive keys to redact from events and breadcrumbs
+const SENSITIVE_KEYS = [
+  'password',
+  'token',
+  'jwt',
+  'authorization',
+  'cookie',
+  'secret',
+  'hash',
+  'phone',
+  'flat',
+  'address',
+  'cvv',
+  'card',
+  'upi',
+  'pin',
+  'otp'
+];
+
+/**
+ * Deep redaction of sensitive PII and authentication tokens
+ */
+export function redactSensitiveData(obj, depth = 0) {
+  if (!obj || depth > 6) return obj;
+
+  if (typeof obj === 'string') {
+    // Redact JWT pattern
+    let cleaned = obj.replace(/ey[A-Za-z0-9_-]{10,}\.ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, '[REDACTED_JWT]');
+    // Redact 10-digit Indian phone numbers
+    cleaned = cleaned.replace(/\b(?:\+91|0)?[6-9]\d{9}\b/g, '[REDACTED_PHONE]');
+    // Redact Bearer tokens
+    cleaned = cleaned.replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED_TOKEN]');
+    return cleaned;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => redactSensitiveData(item, depth + 1));
+  }
+
+  if (typeof obj === 'object') {
+    const redacted = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const isSensitiveKey = SENSITIVE_KEYS.some((sensitive) =>
+        key.toLowerCase().includes(sensitive)
+      );
+
+      if (isSensitiveKey) {
+        redacted[key] = '[REDACTED]';
+      } else {
+        redacted[key] = redactSensitiveData(value, depth + 1);
+      }
+    }
+    return redacted;
+  }
+
+  return obj;
+}
+
+/**
+ * Scrub sensitive query parameters from URLs
+ */
+function sanitizeUrl(urlString) {
+  try {
+    const url = new URL(urlString, window.location.origin);
+    const sensitiveParams = ['token', 'auth', 'jwt', 'otp', 'code', 'secret', 'password'];
+    let modified = false;
+
+    for (const param of sensitiveParams) {
+      if (url.searchParams.has(param)) {
+        url.searchParams.set(param, '[REDACTED]');
+        modified = true;
+      }
+    }
+
+    return modified ? url.toString() : urlString;
+  } catch (e) {
+    return urlString;
+  }
+}
+
+/**
+ * Initialize Frontend Production Monitoring
+ */
+export function initMonitoring() {
+  if (!SENTRY_DSN) {
+    console.info('[Monitoring] Sentry DSN not configured. Error monitoring running in passive local mode.');
+    return;
+  }
+
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    release: `societycook-frontend@${APP_COMMIT}`,
+    environment: APP_ENV,
+    
+    // Performance monitoring sample rate
+    tracesSampleRate: import.meta.env.PROD ? 0.2 : 1.0,
+
+    // Enterprise Privacy: Session Replay is STRICTLY DISABLED per review requirements
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 0,
+
+    // Attach release tags and service identity
+    initialScope: {
+      tags: {
+        service: 'societycook-frontend',
+        commit: APP_COMMIT,
+        framework: 'react-vite'
+      }
+    },
+
+    // Sanitize event payload before transmission
+    beforeSend(event, hint) {
+      // Redact exception values and messages
+      if (event.exception?.values) {
+        event.exception.values.forEach((v) => {
+          if (v.value) v.value = redactSensitiveData(v.value);
+        });
+      }
+
+      // Redact request URL and headers
+      if (event.request) {
+        if (event.request.url) event.request.url = sanitizeUrl(event.request.url);
+        if (event.request.headers) event.request.headers = redactSensitiveData(event.request.headers);
+        if (event.request.data) event.request.data = redactSensitiveData(event.request.data);
+      }
+
+      // Redact extra context and user identity
+      if (event.extra) event.extra = redactSensitiveData(event.extra);
+      if (event.user) {
+        // Redact email, phone, IP, keeping only non-PII role identifier
+        event.user = {
+          id: event.user.id || 'anonymous',
+          role: event.user.role || 'GUEST'
+        };
+      }
+
+      return event;
+    },
+
+    // Sanitize breadcrumbs (fetch, navigation, console)
+    beforeBreadcrumb(breadcrumb) {
+      if (breadcrumb.data?.url) {
+        breadcrumb.data.url = sanitizeUrl(breadcrumb.data.url);
+      }
+
+      if (breadcrumb.category === 'fetch' || breadcrumb.category === 'xhr') {
+        if (breadcrumb.data) {
+          breadcrumb.data = redactSensitiveData(breadcrumb.data);
+        }
+      }
+
+      if (breadcrumb.message) {
+        breadcrumb.message = redactSensitiveData(breadcrumb.message);
+      }
+
+      return breadcrumb;
+    }
+  });
+
+  console.info(`[Monitoring] Sentry initialized (Release: ${APP_COMMIT}, Env: ${APP_ENV})`);
+}
+
+/**
+ * Capture frontend exception with sanitization
+ */
+export function captureException(error, context = {}) {
+  const sanitizedContext = redactSensitiveData(context);
+  if (SENTRY_DSN) {
+    Sentry.captureException(error, { extra: sanitizedContext });
+  } else if (import.meta.env.DEV) {
+    console.error('[Monitoring Dev]', error, sanitizedContext);
+  }
+}
+
+/**
+ * Track Business Operation Latency (Login, Booking, Cancellation)
+ */
+export function trackLatency(operation, durationMs, metadata = {}) {
+  const sanitized = redactSensitiveData(metadata);
+  const isElevated = durationMs > 2000;
+
+  if (SENTRY_DSN) {
+    Sentry.addBreadcrumb({
+      category: 'performance',
+      message: `${operation} completed in ${durationMs}ms`,
+      level: isElevated ? 'warning' : 'info',
+      data: {
+        operation,
+        durationMs,
+        ...sanitized
+      }
+    });
+
+    if (isElevated) {
+      Sentry.captureMessage(`Elevated Latency: ${operation} took ${durationMs}ms`, 'warning');
+    }
+  }
+}
+
+export { Sentry };
+

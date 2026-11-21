@@ -13,6 +13,10 @@ import { notFoundHandler, errorHandler } from './src/middlewares/errorMiddleware
 import { initSocket } from './src/sockets/socketHandler.js';
 import { startCronJobs } from './src/jobs/cronJobs.js';
 import { swaggerSpec } from './src/docs/swagger.js';
+import { initBackendMonitoring, latencyAndErrorTrackerMiddleware, Sentry } from './src/config/monitoring.js';
+
+// Initialize Sentry error monitoring & performance telemetry
+initBackendMonitoring();
 
 const app = express();
 const server = http.createServer(app);
@@ -77,7 +81,9 @@ app.use(
           'ws:',
           'https://*.google-analytics.com',
           'https://*.analytics.google.com',
-          'https://*.googletagmanager.com'
+          'https://*.googletagmanager.com',
+          'https://*.ingest.sentry.io',
+          'https://*.ingest.us.sentry.io'
         ],
         imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://*.google-analytics.com', 'https://*.googletagmanager.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
@@ -136,14 +142,62 @@ const authLimiter = rateLimit({
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/register', authLimiter);
 
+// Sentry & Enterprise Latency / Error Tracking Middleware
+app.use(latencyAndErrorTrackerMiddleware);
+
 // Swagger / OpenAPI documentation
 app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api/v1/docs.json', (req, res) => res.json(swaggerSpec));
 
-// Health check (at root and /api/v1/health)
-app.get('/health', (req, res) => {
+// 1. Process Liveness Check (Fast, zero external dependency, checks node event loop)
+app.get(['/health/liveness', '/health/live'], (req, res) => {
   res.json({
-    status: 'HEALTHY',
+    status: 'UP',
+    liveness: 'ALIVE',
+    uptime: Math.round(process.uptime()),
+    memoryRssMb: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 2. Database Readiness Check (Validates connection pool responsiveness)
+app.get(['/health/readiness', '/health/ready'], async (req, res) => {
+  try {
+    await db.execute('SELECT 1 as is_ready');
+    res.json({
+      status: 'UP',
+      readiness: 'READY',
+      database: 'CONNECTED',
+      timestamp: new Date().toISOString(),
+      uptime: Math.round(process.uptime())
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: 'DOWN',
+      readiness: 'NOT_READY',
+      database: 'DISCONNECTED',
+      error: 'Database connection check failed',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// 3. Consolidated Health Check (Backward-compatible with UptimeRobot & orchestrators)
+app.get('/health', async (req, res) => {
+  let dbStatus = 'CONNECTED';
+  let isReady = true;
+
+  try {
+    await db.execute('SELECT 1 as is_ready');
+  } catch (e) {
+    dbStatus = 'DISCONNECTED';
+    isReady = false;
+  }
+
+  res.status(isReady ? 200 : 503).json({
+    status: isReady ? 'HEALTHY' : 'DEGRADED',
+    liveness: 'ALIVE',
+    database: dbStatus,
     version: '2.0.0',
     timestamp: new Date().toISOString(),
     uptime: Math.round(process.uptime())
@@ -155,6 +209,7 @@ app.use('/api/v1', apiRouter);
 
 // 404 & Centralized Error Handlers
 app.use(notFoundHandler);
+Sentry.setupExpressErrorHandler(app);
 app.use(errorHandler);
 
 // Background cron scheduler

@@ -4,6 +4,7 @@ import tailwind from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [tailwind()],
   build: {
+    sourcemap: 'hidden', // Generate sourcemaps for Sentry upload without exposing sourceMappingURL in public bundles
     rollupOptions: {
       output: {
         manualChunks(id) {
