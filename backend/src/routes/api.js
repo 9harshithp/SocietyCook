@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { query } from '../config/database.js';
+import { query, transaction } from '../config/database.js';
 import { AuthService } from '../services/authService.js';
 import { GroupService } from '../services/groupService.js';
 import { AttendanceService } from '../services/attendanceService.js';
@@ -399,68 +399,134 @@ apiRouter.post('/bookings', authenticate, requireRoles(['RESIDENT']), handle(asy
   const durationMinutes = sType === 'DISHWASHING' ? 30 : sType === 'COMBO' ? 75 : 45;
   const minutes = h * 60 + m + durationMinutes;
   const stop = `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
-
-  const [cook] = await query('SELECT c.*, u.society_id, u.name FROM cooks c JOIN users u ON u.id=c.user_id WHERE c.id=?', [b.cookId]);
-  if (!cook || !cook.verified) return res.status(404).json({ success: false, message: 'Service professional not available' });
-
-  // Conflict Prevention: Ensure cook does not have an overlapping active or pending booking
-  const existingConflict = await query(`
-    SELECT id, start_time, end_time, slot_label FROM bookings
-    WHERE cook_id = ?
-      AND status IN ('PENDING', 'ACTIVE')
-      AND (expires_at > NOW() OR status = 'ACTIVE')
-      AND start_date <= ? AND end_date >= ?
-      AND start_time < ? AND end_time > ?
-    LIMIT 1
-  `, [cook.id, end, b.startDate, stop + ':00', b.startTime + ':00']);
-
-  if (existingConflict.length > 0) {
-    const conflictSlot = existingConflict[0].slot_label || `${existingConflict[0].start_time.slice(0, 5)} - ${existingConflict[0].end_time.slice(0, 5)}`;
-    return res.status(409).json({
-      success: false,
-      message: `Scheduling conflict: Professional is already scheduled for ${conflictSlot}. Please select another time slot.`
-    });
-  }
-
-  let totalAmount = sType === 'DISHWASHING' ? (cook.dishwashing_price || 2200) : cook.price;
-  if (sType === 'COMBO') {
-    totalAmount = Math.round((cook.price + (cook.dishwashing_price || 2200)) * 0.9); // 10% combo discount
-  }
-
   const label = b.slotLabel || `${(h % 12 || 12).toString().padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
 
-  const result = await query(
-    `INSERT INTO bookings (resident_id, cook_id, start_date, end_date, start_time, end_time, amount, expires_at, slot_label, meal_type, service_type, utensil_load, dishwasher_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE), ?, ?, ?, ?, ?)`,
-    [req.user.id, cook.id, b.startDate, end, b.startTime + ':00', stop + ':00', totalAmount, label, b.mealType, sType, uLoad, b.dishwasherId || null]
-  );
+  // Concurrency-Safe Booking Creation using MySQL Transaction with Row-Level Locking
+  const result = await transaction(async (transQuery) => {
+    // 1. Lock professional record(s) with FOR UPDATE to prevent simultaneous race conditions
+    const [cook] = await transQuery(
+      'SELECT c.*, u.society_id, u.name FROM cooks c JOIN users u ON u.id=c.user_id WHERE c.id=? FOR UPDATE',
+      [b.cookId]
+    );
+    if (!cook || !cook.verified) {
+      const err = new Error('Service professional not available');
+      err.status = 404;
+      throw err;
+    }
 
-  res.status(201).json({ id: result.insertId, amount: totalAmount, slotLabel: label, serviceType: sType });
+    if (b.dishwasherId) {
+      const [dw] = await transQuery(
+        'SELECT c.*, u.society_id, u.name FROM cooks c JOIN users u ON u.id=c.user_id WHERE c.id=? FOR UPDATE',
+        [b.dishwasherId]
+      );
+      if (!dw || !dw.verified) {
+        const err = new Error('Assigned dishwasher professional not available');
+        err.status = 404;
+        throw err;
+      }
+    }
+
+    // 2. Conflict Prevention: Check for overlapping active or unexpired pending bookings for cook OR dishwasher
+    const primaryCookId = cook.id;
+    const secondaryDishwasherId = b.dishwasherId || -1;
+
+    const existingConflict = await transQuery(`
+      SELECT id, start_time, end_time, slot_label, service_type FROM bookings
+      WHERE (cook_id = ? OR dishwasher_id = ? OR (dishwasher_id IS NOT NULL AND dishwasher_id = ?) OR (? != -1 AND cook_id = ?))
+        AND status IN ('PENDING', 'ACTIVE')
+        AND (expires_at > NOW() OR status = 'ACTIVE')
+        AND start_date <= ? AND end_date >= ?
+        AND start_time < ? AND end_time > ?
+      LIMIT 1
+      FOR UPDATE
+    `, [primaryCookId, primaryCookId, secondaryDishwasherId, secondaryDishwasherId, secondaryDishwasherId, end, b.startDate, stop + ':00', b.startTime + ':00']);
+
+    if (existingConflict.length > 0) {
+      const conflictSlot = existingConflict[0].slot_label || `${existingConflict[0].start_time.slice(0, 5)} - ${existingConflict[0].end_time.slice(0, 5)}`;
+      const err = new Error(`Scheduling conflict: Professional is already scheduled for ${conflictSlot} (${existingConflict[0].service_type || 'Service'}). Please select another time slot.`);
+      err.status = 409;
+      throw err;
+    }
+
+    // 3. Overlap check against recurring sessions table for any scheduled daily session
+    const sessionConflict = await transQuery(`
+      SELECT s.id, s.service_date, s.scheduled_start_time, s.scheduled_end_time 
+      FROM sessions s
+      JOIN bookings b ON b.id = s.booking_id
+      WHERE (s.cook_id = ? OR (? != -1 AND s.cook_id = ?))
+        AND s.status IN ('SCHEDULED', 'IN_PROGRESS')
+        AND s.service_date >= ? AND s.service_date <= ?
+        AND s.scheduled_start_time < ? AND s.scheduled_end_time > ?
+      LIMIT 1
+    `, [primaryCookId, secondaryDishwasherId, secondaryDishwasherId, b.startDate, end, stop + ':00', b.startTime + ':00']);
+
+    if (sessionConflict.length > 0) {
+      const conflictDate = sessionConflict[0].service_date instanceof Date ? sessionConflict[0].service_date.toISOString().slice(0, 10) : String(sessionConflict[0].service_date).slice(0, 10);
+      const err = new Error(`Scheduling conflict: Professional has an active scheduled session on ${conflictDate}. Please select another time slot.`);
+      err.status = 409;
+      throw err;
+    }
+
+    let totalAmount = sType === 'DISHWASHING' ? (cook.dishwashing_price || 2200) : cook.price;
+    if (sType === 'COMBO') {
+      totalAmount = Math.round((cook.price + (cook.dishwashing_price || 2200)) * 0.9);
+    }
+
+    const insertResult = await transQuery(
+      `INSERT INTO bookings (resident_id, cook_id, start_date, end_date, start_time, end_time, amount, expires_at, slot_label, meal_type, service_type, utensil_load, dishwasher_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE), ?, ?, ?, ?, ?)`,
+      [req.user.id, cook.id, b.startDate, end, b.startTime + ':00', stop + ':00', totalAmount, label, b.mealType, sType, uLoad, b.dishwasherId || null]
+    );
+
+    return { id: insertResult.insertId, amount: totalAmount, slotLabel: label, serviceType: sType };
+  });
+
+  res.status(201).json(result);
 }));
 
-// Booking Cancellation Workflow
+// Concurrency-Safe Booking Cancellation Workflow
 apiRouter.patch('/bookings/:id/cancel', authenticate, handle(async (req, res) => {
   const bookingId = Number(req.params.id);
-  const [b] = await query('SELECT * FROM bookings WHERE id = ?', [bookingId]);
-  if (!b) return res.status(404).json({ success: false, message: 'Booking not found.' });
 
-  // Authorization: must be the resident who created the booking or an ADMIN
-  if (req.user.role !== 'ADMIN' && b.resident_id !== req.user.id) {
-    return res.status(403).json({ success: false, message: 'Unauthorized: You can only cancel your own bookings.' });
-  }
+  const result = await transaction(async (transQuery) => {
+    const [b] = await transQuery('SELECT * FROM bookings WHERE id = ? FOR UPDATE', [bookingId]);
+    if (!b) {
+      const err = new Error('Booking not found.');
+      err.status = 404;
+      throw err;
+    }
 
-  if (b.status === 'CANCELLED') {
-    return res.status(400).json({ success: false, message: 'Booking is already cancelled.' });
-  }
+    // Authorization: must be the resident who created the booking or an ADMIN
+    if (req.user.role !== 'ADMIN' && b.resident_id !== req.user.id) {
+      const err = new Error('Unauthorized: You can only cancel your own bookings.');
+      err.status = 403;
+      throw err;
+    }
 
-  await query('UPDATE bookings SET status = "CANCELLED" WHERE id = ?', [bookingId]);
-  await query('UPDATE sessions SET status = "MISSED" WHERE booking_id = ? AND status = "SCHEDULED"', [bookingId]);
+    if (b.status === 'CANCELLED') {
+      const err = new Error('Booking is already cancelled.');
+      err.status = 400;
+      throw err;
+    }
 
-  res.json({
-    success: true,
-    message: 'Booking cancelled successfully. Scheduled household visits have been released.',
-    bookingId
+    // 1. Mark booking CANCELLED
+    await transQuery('UPDATE bookings SET status = "CANCELLED" WHERE id = ?', [bookingId]);
+
+    // 2. Mark ONLY future scheduled sessions as MISSED (do not touch attended or completed sessions)
+    await transQuery('UPDATE sessions SET status = "MISSED" WHERE booking_id = ? AND status = "SCHEDULED"', [bookingId]);
+
+    // 3. Mark active subscriptions CANCELLED
+    await transQuery('UPDATE subscriptions SET status = "CANCELLED" WHERE booking_id = ? AND status = "ACTIVE"', [bookingId]);
+
+    return {
+      success: true,
+      message: 'Booking cancelled successfully. Scheduled household visits have been released.',
+      bookingId,
+      refundPolicy: 'Standard cancellation policy: Completed sessions are preserved. Future scheduled sessions are cancelled.'
+    };
   });
+
+  res.json(result);
 }));
 
 apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) => {

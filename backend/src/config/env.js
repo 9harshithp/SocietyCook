@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
 // Strict validation of JWT Secret in production
 const jwtSecret = process.env.JWT_SECRET || (isProduction ? '' : 'societycook-dev-jwt-secret-min-32-chars-2026');

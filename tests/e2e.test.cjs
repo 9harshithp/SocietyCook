@@ -199,11 +199,13 @@ async function runE2ETests() {
 
       // Go back
       await page.goBack();
+      await page.waitForURL('**/app/dashboard', { timeout: 5000 });
       assert(page.url().includes('/app/dashboard'), 'Back navigation failed');
       await page.waitForSelector('text=Welcome home,');
 
       // Go forward
       await page.goForward();
+      await page.waitForURL('**/app/support', { timeout: 5000 });
       assert(page.url().includes('/app/support'), 'Forward navigation failed');
       await page.waitForSelector('text=Resident Support');
     });
