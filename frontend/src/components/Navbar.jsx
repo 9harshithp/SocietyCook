@@ -44,6 +44,20 @@ export function Navbar() {
     }
   }, [user]);
 
+  // Dynamically measure header height and expose as CSS variable to eliminate sticky overlap
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      const headerEl = document.querySelector('header');
+      if (headerEl) {
+        const h = headerEl.getBoundingClientRect().height;
+        document.documentElement.style.setProperty('--navbar-height', `${Math.round(h)}px`);
+      }
+    };
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => window.removeEventListener('resize', updateHeaderHeight);
+  }, [user, activeSocietyId, mobileMenuOpen]);
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
   const isPublicPage = location.pathname === '/' || location.pathname === '/terms' || location.pathname === '/privacy';
   const isInsideApp = location.pathname.startsWith('/app') || location.pathname.startsWith('/admin');
@@ -334,7 +348,7 @@ export function Navbar() {
           <span className="hidden sm:inline-flex text-[10px] uppercase font-black tracking-wider text-[#42524A] dark:text-slate-400 px-1 whitespace-nowrap shrink-0">
             1-Click Demo:
           </span>
-          <div className="grid grid-cols-5 sm:flex sm:flex-wrap items-center gap-1 sm:gap-1.5 w-full sm:w-auto">
+          <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto py-0.5">
             {DEMO_PERSONAS.map((p) => {
               const isActive = user?.email === p.email;
               const shortName =
@@ -351,7 +365,7 @@ export function Navbar() {
                     await switchPersona(p.email);
                     navigate(getRoleDashboardPath(p.role));
                   }}
-                  className={`h-7 px-1 sm:px-2.5 text-[11px] sm:text-xs font-semibold rounded-lg sm:rounded-xl truncate flex items-center justify-center transition-all border shrink-0 cursor-pointer text-center ${
+                  className={`h-7 px-2 sm:px-2.5 text-[11px] sm:text-xs font-semibold rounded-lg sm:rounded-xl whitespace-nowrap flex items-center justify-center transition-all border shrink-0 cursor-pointer text-center ${
                     isActive
                       ? 'bg-[#153D32] dark:bg-[#E9A15B] text-white dark:text-[#153D32] border-[#153D32] dark:border-[#E9A15B] shadow-xs font-bold'
                       : 'bg-white dark:bg-slate-900 text-[#202A25] dark:text-slate-300 hover:text-[#153D32] dark:hover:text-[#E9A15B] border-[#DDE9D8] dark:border-white/10 hover:border-[#153D32]/40'

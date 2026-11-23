@@ -247,7 +247,7 @@ export function CookDirectoryPage() {
       {/* Detailed Profile Modal */}
       {selectedPro && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-[#DDE9D8] dark:border-white/10 shadow-2xl space-y-6">
+          <div className="max-w-md w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-[#DDE9D8] dark:border-white/10 shadow-2xl space-y-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#153D32] to-[#1E5747] text-[#E9A15B] flex items-center justify-center text-xl font-bold border border-[#E9A15B]/30">

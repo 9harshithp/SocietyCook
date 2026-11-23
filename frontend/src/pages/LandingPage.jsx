@@ -245,7 +245,7 @@ export function LandingPage() {
 
             {/* Right Visual Image Frame */}
             <div className="lg:col-span-5 relative">
-              <div className="hero-img-box relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 aspect-[16/10] sm:aspect-[4/5] max-w-md mx-auto group">
+              <div className="hero-img-box relative rounded-3xl overflow-hidden shadow-2xl border border-[#E6DFD3] dark:border-white/10 min-h-[350px] sm:min-h-[460px] aspect-[4/5] max-w-md mx-auto group">
                 <picture>
                   <source media="(max-width: 640px)" srcSet="/images/hero_kitchen_indian-mobile.webp" type="image/webp" width="480" height="300" />
                   <source srcSet="/images/hero_kitchen_indian.webp" type="image/webp" width="1200" height="669" />
@@ -263,31 +263,31 @@ export function LandingPage() {
                 {/* Gradient shading */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0E2922]/95 via-[#0E2922]/30 to-transparent" />
                 
-                {/* Top Badge: Anchored safely inside */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 dark:bg-[#153D32]/90 backdrop-blur-md text-[11px] font-extrabold text-[#153D32] dark:text-white shadow-sm border border-white/40">
-                    <Building2 className="w-3.5 h-3.5 text-[#964208] dark:text-[#E9A15B]" />
-                    Sample Morning Route (Simulation)
+                {/* Top Badge: Anchored safely inside with responsive spacing */}
+                <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 flex items-center justify-between gap-1.5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-white/90 dark:bg-[#153D32]/90 backdrop-blur-md text-[10px] sm:text-[11px] font-extrabold text-[#153D32] dark:text-white shadow-sm border border-white/40 truncate">
+                    <Building2 className="w-3.5 h-3.5 text-[#964208] dark:text-[#E9A15B] shrink-0" />
+                    <span className="truncate">Morning Route (Simulation)</span>
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E9A15B] text-[#153D32] text-[10px] font-black uppercase tracking-wider shadow-sm">
+                  <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-[#E9A15B] text-[#153D32] text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow-sm shrink-0">
                     Demo Model
                   </span>
                 </div>
 
-                {/* Bottom Plaque: Anchored inside with zero clipping */}
-                <div className="absolute bottom-4 left-4 right-4 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-[#E9A15B] animate-pulse" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-white/90">
+                {/* Bottom Plaque: Anchored inside with zero clipping and comfortable spacing */}
+                <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 p-3 sm:p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="w-2 h-2 rounded-full bg-[#E9A15B] animate-pulse shrink-0" />
+                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-white/90 truncate">
                       Coordinated In-Home Care
                     </span>
                   </div>
-                  <p className="font-serif text-lg font-bold leading-snug">
+                  <p className="font-serif text-base sm:text-lg font-bold leading-snug">
                     Fresh homestyle cooking followed by sparkling dish sanitization.
                   </p>
-                  <div className="flex items-center justify-between text-xs text-white/80 mt-2 pt-2 border-t border-white/15">
-                    <span>Sample Pilot Complex (Bellandur)</span>
-                    <span className="font-bold text-[#E9A15B]">32% Projected Savings</span>
+                  <div className="flex items-center justify-between text-[11px] sm:text-xs text-white/80 mt-2 pt-2 border-t border-white/15">
+                    <span className="truncate mr-2">Sample Pilot Complex (Bellandur)</span>
+                    <span className="font-bold text-[#E9A15B] shrink-0">32% Projected Savings</span>
                   </div>
                 </div>
               </div>
@@ -999,7 +999,7 @@ export function LandingPage() {
                     <label className="block text-xs font-bold text-[#202A25] dark:text-white mb-2">
                       Meal Schedule Window
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       {['BREAKFAST', 'DINNER', 'MULTIPLE'].map((m) => (
                         <button
                           key={m}
@@ -1024,7 +1024,7 @@ export function LandingPage() {
                     <label className="block text-xs font-bold text-[#202A25] dark:text-white mb-2">
                       Vessel & Cookware Volume Tier
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       {[
                         { id: 'LIGHT', label: 'Light (1-2 ppl)' },
                         { id: 'STANDARD', label: 'Standard (3-4 ppl)' },
