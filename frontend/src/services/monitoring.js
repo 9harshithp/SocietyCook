@@ -223,9 +223,15 @@ export function trackLatency(operation, durationMs, metadata = {}) {
 }
 
 /**
- * Expose reliable verification hook for staging, preview, and automated testing
+ * Expose verification hook strictly in development and preview environments (never in public production)
  */
-if (typeof window !== 'undefined') {
+const isPreviewOrDev =
+  import.meta.env.DEV ||
+  (typeof window !== 'undefined' &&
+    window.location.hostname !== 'societycook.vercel.app' &&
+    !window.location.hostname.endsWith('societycook.com'));
+
+if (typeof window !== 'undefined' && isPreviewOrDev) {
   window.__societycook_verify_sentry = (customMessage = 'Verification: Controlled Frontend Error Event') => {
     const testError = new Error(customMessage);
     captureException(testError, {
