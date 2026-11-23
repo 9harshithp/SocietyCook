@@ -390,6 +390,21 @@ async function runE2ETests() {
       await closeBtn.click();
     });
 
+    // 22. Frontend Sentry Monitoring & Diagnostic Hook Verification
+    await test('Frontend Sentry diagnostic verification hook executes without runtime exceptions', async () => {
+      await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(500);
+
+      const verificationResult = await page.evaluate(() => {
+        if (typeof window.__societycook_verify_sentry === 'function') {
+          return window.__societycook_verify_sentry('Playwright E2E Monitoring Verification Event');
+        }
+        return { dispatched: false, reason: 'hook not available' };
+      });
+
+      assert(verificationResult.dispatched === true, 'Sentry verification hook failed to dispatch');
+    });
+
     console.log(`\n🎉 All ${passedCount} / ${testCount} E2E & PWA tests completed successfully with ZERO failures!\n`);
   } finally {
     await browser.close();

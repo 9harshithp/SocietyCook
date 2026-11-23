@@ -39,9 +39,13 @@ apiRouter.get('/health', handle(async (req, res) => {
   });
 }));
 
-// Diagnostic Endpoint: Verify Sentry Error Capture & PII Scrubbing (Strictly disabled in production)
-if (process.env.NODE_ENV !== 'production') {
-  apiRouter.get('/monitoring/test-error', authenticate, (req, res) => {
+// Diagnostic Endpoint: Strictly disabled and 404 in production; local/staging only
+apiRouter.get('/monitoring/test-error', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ success: false, message: 'Endpoint not available in production' });
+  }
+
+  authenticate(req, res, () => {
     const simulatedContext = {
       testUser: {
         id: req.user.id,
@@ -64,7 +68,7 @@ if (process.env.NODE_ENV !== 'production') {
       timestamp: new Date().toISOString()
     });
   });
-}
+});
 
 // 2. Authentication
 apiRouter.post('/auth/register', handle(async (req, res) => {

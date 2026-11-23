@@ -170,5 +170,21 @@ describe('SocietyCook Production Monitoring & Reliability Tests', () => {
     expect(redactedHeaders['x-api-key']).toBe('[REDACTED]');
     expect(redactedHeaders['content-type']).toBe('application/json');
   });
+
+  it('11. Production Route Inaccessibility: Diagnostic endpoint returns 404 in production environment', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    try {
+      process.env.NODE_ENV = 'production';
+      const res = await request(app)
+        .get('/api/v1/monitoring/test-error')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('Endpoint not available in production');
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
+  });
 });
 

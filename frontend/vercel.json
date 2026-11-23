@@ -56,6 +56,10 @@
   ],
   "rewrites": [
     {
+      "source": "/(.*)\\.map",
+      "destination": "/404"
+    },
+    {
       "source": "/((?!sw\\.js|manifest\\.webmanifest|manifest\\.json|offline\\.html|robots\\.txt|sitemap\\.xml|google[a-zA-Z0-9_-]+\\.html|icons/|images/|assets/).*)",
       "destination": "/index.html"
     }

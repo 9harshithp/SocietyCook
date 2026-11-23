@@ -1,7 +1,5 @@
-import { initBackendMonitoring, latencyAndErrorTrackerMiddleware, Sentry } from './src/config/monitoring.js';
-
-// Initialize Sentry error monitoring before application frameworks
-initBackendMonitoring();
+import './src/config/instrument.js';
+import { latencyAndErrorTrackerMiddleware, Sentry } from './src/config/monitoring.js';
 
 import express from 'express';
 import http from 'http';

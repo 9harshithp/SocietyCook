@@ -222,5 +222,20 @@ export function trackLatency(operation, durationMs, metadata = {}) {
   }
 }
 
+/**
+ * Expose reliable verification hook for staging, preview, and automated testing
+ */
+if (typeof window !== 'undefined') {
+  window.__societycook_verify_sentry = (customMessage = 'Verification: Controlled Frontend Error Event') => {
+    const testError = new Error(customMessage);
+    captureException(testError, {
+      diagnostic: true,
+      timestamp: new Date().toISOString(),
+      testToken: 'eySimulatedAuthToken12345'
+    });
+    return { dispatched: true, error: testError.message };
+  };
+}
+
 export { Sentry };
 
