@@ -129,7 +129,8 @@ export function initBackendMonitoring() {
     dsn: SENTRY_DSN,
     release: `societycook-api@${APP_COMMIT}`,
     environment: APP_ENV,
-    tracesSampleRate: APP_ENV === 'production' ? 0.2 : 1.0,
+    // Error monitoring only: tracing, profiling, and session replay disabled
+    tracesSampleRate: 0,
 
     initialScope: {
       tags: {

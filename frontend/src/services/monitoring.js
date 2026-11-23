@@ -99,8 +99,8 @@ export function initMonitoring() {
     release: `societycook-frontend@${APP_COMMIT}`,
     environment: APP_ENV,
     
-    // Performance monitoring sample rate
-    tracesSampleRate: import.meta.env.PROD ? 0.2 : 1.0,
+    // Error monitoring only: tracing, profiling, and session replay disabled
+    tracesSampleRate: 0,
 
     // Enterprise Privacy: Session Replay is STRICTLY DISABLED per review requirements
     replaysSessionSampleRate: 0,
