@@ -4,6 +4,7 @@ import app from '../server.js';
 import {
   redactSensitiveBackendData,
   sanitizeSql,
+  sanitizeUrl,
   recordLoginFailure,
   resetLoginFailure
 } from '../src/config/monitoring.js';
@@ -92,7 +93,7 @@ describe('SocietyCook Production Monitoring & Reliability Tests', () => {
     resetLoginFailure(testIdentifier);
   });
 
-  it('7. Diagnostic Staging Error Route: GET /api/v1/monitoring/test-error executes safely', async () => {
+  it('7. Diagnostic Staging Error Route: GET /api/v1/monitoring/test-error executes safely in non-production', async () => {
     const res = await request(app)
       .get('/api/v1/monitoring/test-error')
       .set('Authorization', `Bearer ${adminToken}`);
@@ -100,6 +101,74 @@ describe('SocietyCook Production Monitoring & Reliability Tests', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.scrubbingVerified).toBe(true);
+  });
+
+  it('8. Deep Nested Objects & Unexpected Event Shapes Audit', () => {
+    // 8a. Deeply nested object beyond depth 5
+    const deepObj = {
+      level1: {
+        level2: {
+          level3: {
+            level4: {
+              secretToken: 'secretValue123',
+              userAddress: 'Flat 501, Tower C, Bangalore'
+            }
+          }
+        }
+      }
+    };
+    const redactedDeep = redactSensitiveBackendData(deepObj);
+    expect(redactedDeep.level1.level2.level3.level4.secretToken).toBe('[REDACTED]');
+    expect(redactedDeep.level1.level2.level3.level4.userAddress).toBe('[REDACTED]');
+
+    // 8b. Circular references: must handle gracefully without stack overflow
+    const circularObj = { name: 'CircularTest', phone: '9876543210' };
+    circularObj.self = circularObj;
+    const redactedCircular = redactSensitiveBackendData(circularObj);
+    expect(redactedCircular.phone).toBe('[REDACTED]');
+    expect(redactedCircular.self).toBe('[CIRCULAR]');
+
+    // 8c. Unexpected primitives, null, undefined, dates, regexes
+    expect(redactSensitiveBackendData(null)).toBe(null);
+    expect(redactSensitiveBackendData(undefined)).toBe(undefined);
+    expect(redactSensitiveBackendData(42)).toBe(42);
+    expect(redactSensitiveBackendData(true)).toBe(true);
+
+    const testDate = new Date();
+    expect(redactSensitiveBackendData(testDate)).toBe(testDate);
+
+    const testRegex = /test-regex/gi;
+    expect(redactSensitiveBackendData(testRegex)).toBe(testRegex);
+  });
+
+  it('9. URL & Query Parameter Sanitization Audit', () => {
+    const rawUrl = 'https://societycook.vercel.app/api/v1/checkout?token=superSecret123&password=pass&phone=9876543210&mode=demo';
+    const sanitized = sanitizeUrl(rawUrl);
+
+    expect(sanitized).not.toContain('superSecret123');
+    expect(sanitized).not.toContain('password=pass');
+    expect(sanitized).toContain('token=%5BREDACTED%5D');
+    expect(sanitized).toContain('mode=demo');
+
+    // Unexpected URL shapes
+    expect(sanitizeUrl('')).toBe('');
+    expect(sanitizeUrl(null)).toBe('');
+    expect(sanitizeUrl('not-a-url')).toBe('not-a-url');
+  });
+
+  it('10. Header and Cookie Redaction Audit', () => {
+    const rawHeaders = {
+      'authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.TestSig',
+      'cookie': 'connect.sid=s%3A12345; token=secretJwt; auth_user=Rahul',
+      'x-api-key': 'topSecretApiKey',
+      'content-type': 'application/json'
+    };
+
+    const redactedHeaders = redactSensitiveBackendData(rawHeaders);
+    expect(redactedHeaders['authorization']).toBe('[REDACTED]');
+    expect(redactedHeaders['cookie']).toBe('[REDACTED]');
+    expect(redactedHeaders['x-api-key']).toBe('[REDACTED]');
+    expect(redactedHeaders['content-type']).toBe('application/json');
   });
 });
 

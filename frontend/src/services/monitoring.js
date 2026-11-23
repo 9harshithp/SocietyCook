@@ -21,14 +21,17 @@ const SENSITIVE_KEYS = [
   'card',
   'upi',
   'pin',
-  'otp'
+  'otp',
+  'key',
+  'api-key',
+  'apikey'
 ];
 
 /**
  * Deep redaction of sensitive PII and authentication tokens
  */
-export function redactSensitiveData(obj, depth = 0) {
-  if (!obj || depth > 6) return obj;
+export function redactSensitiveData(obj, depth = 0, seen = new WeakSet()) {
+  if (obj === null || obj === undefined || depth > 8) return obj;
 
   if (typeof obj === 'string') {
     // Redact JWT pattern
@@ -40,27 +43,38 @@ export function redactSensitiveData(obj, depth = 0) {
     return cleaned;
   }
 
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+
+  // Preserve non-plain objects
+  if (obj instanceof Date || obj instanceof RegExp || typeof obj === 'function') {
+    return obj;
+  }
+
+  // Circular reference protection
+  if (seen.has(obj)) {
+    return '[CIRCULAR]';
+  }
+  seen.add(obj);
+
   if (Array.isArray(obj)) {
-    return obj.map((item) => redactSensitiveData(item, depth + 1));
+    return obj.map((item) => redactSensitiveData(item, depth + 1, seen));
   }
 
-  if (typeof obj === 'object') {
-    const redacted = {};
-    for (const [key, value] of Object.entries(obj)) {
-      const isSensitiveKey = SENSITIVE_KEYS.some((sensitive) =>
-        key.toLowerCase().includes(sensitive)
-      );
+  const redacted = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const isSensitiveKey = SENSITIVE_KEYS.some((sensitive) =>
+      key.toLowerCase().includes(sensitive)
+    );
 
-      if (isSensitiveKey) {
-        redacted[key] = '[REDACTED]';
-      } else {
-        redacted[key] = redactSensitiveData(value, depth + 1);
-      }
+    if (isSensitiveKey) {
+      redacted[key] = '[REDACTED]';
+    } else {
+      redacted[key] = redactSensitiveData(value, depth + 1, seen);
     }
-    return redacted;
   }
-
-  return obj;
+  return redacted;
 }
 
 /**
@@ -171,11 +185,15 @@ export function initMonitoring() {
  * Capture frontend exception with sanitization
  */
 export function captureException(error, context = {}) {
-  const sanitizedContext = redactSensitiveData(context);
-  if (SENTRY_DSN) {
-    Sentry.captureException(error, { extra: sanitizedContext });
-  } else if (import.meta.env.DEV) {
-    console.error('[Monitoring Dev]', error, sanitizedContext);
+  try {
+    const sanitizedContext = redactSensitiveData(context);
+    if (SENTRY_DSN) {
+      Sentry.captureException(error, { extra: sanitizedContext });
+    } else if (import.meta.env.DEV) {
+      console.error('[Monitoring Dev]', error, sanitizedContext);
+    }
+  } catch (err) {
+    // Fail-safe: monitoring exception capture must never throw or disrupt rendering
   }
 }
 

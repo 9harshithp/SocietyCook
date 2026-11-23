@@ -1,3 +1,8 @@
+import { initBackendMonitoring, latencyAndErrorTrackerMiddleware, Sentry } from './src/config/monitoring.js';
+
+// Initialize Sentry error monitoring before application frameworks
+initBackendMonitoring();
+
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -13,10 +18,6 @@ import { notFoundHandler, errorHandler } from './src/middlewares/errorMiddleware
 import { initSocket } from './src/sockets/socketHandler.js';
 import { startCronJobs } from './src/jobs/cronJobs.js';
 import { swaggerSpec } from './src/docs/swagger.js';
-import { initBackendMonitoring, latencyAndErrorTrackerMiddleware, Sentry } from './src/config/monitoring.js';
-
-// Initialize Sentry error monitoring & performance telemetry
-initBackendMonitoring();
 
 const app = express();
 const server = http.createServer(app);

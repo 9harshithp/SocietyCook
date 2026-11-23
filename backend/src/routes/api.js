@@ -39,34 +39,32 @@ apiRouter.get('/health', handle(async (req, res) => {
   });
 }));
 
-// Diagnostic Endpoint: Verify Sentry Error Capture & PII Scrubbing in non-production or by ADMIN
-apiRouter.get('/monitoring/test-error', authenticate, (req, res) => {
-  if (req.user.role !== 'ADMIN' && process.env.NODE_ENV === 'production') {
-    return res.status(403).json({ success: false, message: 'Monitoring diagnostics restricted to platform administrators in production.' });
-  }
+// Diagnostic Endpoint: Verify Sentry Error Capture & PII Scrubbing (Strictly disabled in production)
+if (process.env.NODE_ENV !== 'production') {
+  apiRouter.get('/monitoring/test-error', authenticate, (req, res) => {
+    const simulatedContext = {
+      testUser: {
+        id: req.user.id,
+        email: req.user.email,
+        password: 'SuperSecretPassword123!',
+        phone: '9876543210',
+        token: 'eyTestJwtTokenHeader.eyTestPayload.TestSignature'
+      },
+      message: 'Controlled monitoring diagnostic test event'
+    };
 
-  const simulatedContext = {
-    testUser: {
-      id: req.user.id,
-      email: req.user.email,
-      password: 'SuperSecretPassword123!',
-      phone: '9876543210',
-      token: 'eyTestJwtTokenHeader.eyTestPayload.TestSignature'
-    },
-    message: 'Controlled monitoring diagnostic test event'
-  };
+    const testError = new Error('Diagnostic: Safe Monitoring Integration Test');
+    captureBackendException(testError, simulatedContext);
 
-  const testError = new Error('Diagnostic: Safe Monitoring Integration Test');
-  captureBackendException(testError, simulatedContext);
-
-  res.json({
-    success: true,
-    message: 'Diagnostic error event successfully dispatched to monitoring pipeline.',
-    capturedError: testError.message,
-    scrubbingVerified: true,
-    timestamp: new Date().toISOString()
+    res.json({
+      success: true,
+      message: 'Diagnostic error event successfully dispatched to monitoring pipeline.',
+      capturedError: testError.message,
+      scrubbingVerified: true,
+      timestamp: new Date().toISOString()
+    });
   });
-});
+}
 
 // 2. Authentication
 apiRouter.post('/auth/register', handle(async (req, res) => {

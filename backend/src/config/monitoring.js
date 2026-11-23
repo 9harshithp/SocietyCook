@@ -21,47 +21,84 @@ const SENSITIVE_KEYS = [
   'upi',
   'pin',
   'otp',
+  'key',
+  'api-key',
+  'apikey',
   'razorpay_key_secret',
   'razorpay_signature'
 ];
 
 /**
+ * Scrub sensitive query parameters from URLs
+ */
+export function sanitizeUrl(urlString) {
+  if (!urlString || typeof urlString !== 'string') return '';
+  try {
+    const parsed = new URL(urlString, 'http://localhost');
+    const sensitiveParams = ['token', 'auth', 'jwt', 'otp', 'code', 'secret', 'password', 'key', 'signature'];
+    let modified = false;
+
+    for (const param of sensitiveParams) {
+      if (parsed.searchParams.has(param)) {
+        parsed.searchParams.set(param, '[REDACTED]');
+        modified = true;
+      }
+    }
+
+    return modified ? (urlString.startsWith('http') ? parsed.toString() : `${parsed.pathname}${parsed.search}`) : urlString;
+  } catch (e) {
+    return urlString;
+  }
+}
+
+/**
  * Deep redaction of sensitive PII, passwords, tokens and financial data
  */
-export function redactSensitiveBackendData(obj, depth = 0) {
-  if (!obj || depth > 6) return obj;
+export function redactSensitiveBackendData(obj, depth = 0, seen = new WeakSet()) {
+  if (obj === null || obj === undefined || depth > 8) return obj;
 
   if (typeof obj === 'string') {
     // Redact JWT tokens
     let cleaned = obj.replace(/ey[A-Za-z0-9_-]{10,}\.ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, '[REDACTED_JWT]');
-    // Redact 10-digit Indian mobile numbers
+    // Redact 10-digit Indian mobile numbers (with optional country code +91 or leading 0)
     cleaned = cleaned.replace(/\b(?:\+91|0)?[6-9]\d{9}\b/g, '[REDACTED_PHONE]');
     // Redact Bearer headers
     cleaned = cleaned.replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED_TOKEN]');
     return cleaned;
   }
 
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+
+  // Preserve standard non-plain objects
+  if (obj instanceof Date || obj instanceof RegExp || typeof obj === 'function') {
+    return obj;
+  }
+
+  // Prevent infinite loops on circular object references
+  if (seen.has(obj)) {
+    return '[CIRCULAR]';
+  }
+  seen.add(obj);
+
   if (Array.isArray(obj)) {
-    return obj.map((item) => redactSensitiveBackendData(item, depth + 1));
+    return obj.map((item) => redactSensitiveBackendData(item, depth + 1, seen));
   }
 
-  if (typeof obj === 'object') {
-    const redacted = {};
-    for (const [key, value] of Object.entries(obj)) {
-      const isSensitive = SENSITIVE_KEYS.some((sensitive) =>
-        key.toLowerCase().includes(sensitive)
-      );
+  const redacted = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const isSensitive = SENSITIVE_KEYS.some((sensitive) =>
+      key.toLowerCase().includes(sensitive)
+    );
 
-      if (isSensitive) {
-        redacted[key] = '[REDACTED]';
-      } else {
-        redacted[key] = redactSensitiveBackendData(value, depth + 1);
-      }
+    if (isSensitive) {
+      redacted[key] = '[REDACTED]';
+    } else {
+      redacted[key] = redactSensitiveBackendData(value, depth + 1, seen);
     }
-    return redacted;
   }
-
-  return obj;
+  return redacted;
 }
 
 /**
@@ -177,11 +214,15 @@ export function initBackendMonitoring() {
  * Capture backend exception
  */
 export function captureBackendException(error, context = {}) {
-  const sanitized = redactSensitiveBackendData(context);
-  if (SENTRY_DSN) {
-    Sentry.captureException(error, { extra: sanitized });
-  } else if (process.env.NODE_ENV !== 'test') {
-    console.error('❌ [Backend Error]', error.message, sanitized);
+  try {
+    const sanitized = redactSensitiveBackendData(context);
+    if (SENTRY_DSN) {
+      Sentry.captureException(error, { extra: sanitized });
+    } else if (process.env.NODE_ENV !== 'test') {
+      console.error('❌ [Backend Error]', error.message, sanitized);
+    }
+  } catch (err) {
+    // Fail-safe: Sentry error capture failure must never affect core execution
   }
 }
 
@@ -189,19 +230,23 @@ export function captureBackendException(error, context = {}) {
  * Capture Database Error with Sanitized Query
  */
 export function captureDatabaseError(error, sql) {
-  const sanitizedQuery = sanitizeSql(sql);
-  if (SENTRY_DSN) {
-    Sentry.captureException(error, {
-      tags: {
-        error_type: 'database_error',
-        sql_state: error.sqlState || 'UNKNOWN',
-        sql_code: error.code || 'UNKNOWN'
-      },
-      extra: {
-        sanitizedQuery,
-        errno: error.errno
-      }
-    });
+  try {
+    const sanitizedQuery = sanitizeSql(sql);
+    if (SENTRY_DSN) {
+      Sentry.captureException(error, {
+        tags: {
+          error_type: 'database_error',
+          sql_state: error.sqlState || 'UNKNOWN',
+          sql_code: error.code || 'UNKNOWN'
+        },
+        extra: {
+          sanitizedQuery,
+          errno: error.errno
+        }
+      });
+    }
+  } catch (err) {
+    // Fail-safe: Database telemetry failure must never block or crash queries
   }
 }
 
@@ -212,47 +257,51 @@ export function latencyAndErrorTrackerMiddleware(req, res, next) {
   const startTime = Date.now();
 
   res.on('finish', () => {
-    const duration = Date.now() - startTime;
-    const url = req.originalUrl || req.url;
-    const method = req.method;
-    const status = res.statusCode;
+    try {
+      const duration = Date.now() - startTime;
+      const url = req.originalUrl || req.url;
+      const method = req.method;
+      const status = res.statusCode;
 
-    // Monitor critical business workflows
-    const isLogin = url.includes('/auth/login') && method === 'POST';
-    const isBookingCreate = url.includes('/bookings') && method === 'POST';
-    const isBookingCancel = url.includes('/bookings') && url.includes('/cancel') && method === 'PATCH';
+      // Monitor critical business workflows
+      const isLogin = url.includes('/auth/login') && method === 'POST';
+      const isBookingCreate = url.includes('/bookings') && method === 'POST';
+      const isBookingCancel = url.includes('/bookings') && url.includes('/cancel') && method === 'PATCH';
 
-    if (isLogin || isBookingCreate || isBookingCancel) {
-      const op = isLogin ? 'Auth:Login' : isBookingCreate ? 'Booking:Create' : 'Booking:Cancel';
+      if (isLogin || isBookingCreate || isBookingCancel) {
+        const op = isLogin ? 'Auth:Login' : isBookingCreate ? 'Booking:Create' : 'Booking:Cancel';
 
-      if (SENTRY_DSN) {
-        Sentry.addBreadcrumb({
-          category: 'latency',
-          message: `${op} [${method} ${url}] completed in ${duration}ms (status ${status})`,
-          level: duration > 1500 ? 'warning' : 'info',
-          data: { durationMs: duration, status, operation: op }
-        });
-
-        // Trigger alert if operation latency exceeds 2.5s SLA
-        if (duration > 2500) {
-          Sentry.captureMessage(`Elevated Latency: ${op} took ${duration}ms (SLA: 2500ms)`, {
-            level: 'warning',
-            tags: { operation: op, alert_type: 'latency_sla_breach' }
+        if (SENTRY_DSN) {
+          Sentry.addBreadcrumb({
+            category: 'latency',
+            message: `${op} [${method} ${url}] completed in ${duration}ms (status ${status})`,
+            level: duration > 1500 ? 'warning' : 'info',
+            data: { durationMs: duration, status, operation: op }
           });
+
+          // Trigger alert if operation latency exceeds 2.5s SLA
+          if (duration > 2500) {
+            Sentry.captureMessage(`Elevated Latency: ${op} took ${duration}ms (SLA: 2500ms)`, {
+              level: 'warning',
+              tags: { operation: op, alert_type: 'latency_sla_breach' }
+            });
+          }
         }
       }
-    }
 
-    // Trigger alert on 5xx server errors
-    if (status >= 500 && SENTRY_DSN) {
-      Sentry.captureMessage(`Elevated 5xx Error: ${method} ${url} responded with ${status}`, {
-        level: 'error',
-        tags: {
-          endpoint: url.split('?')[0],
-          status_code: String(status),
-          alert_type: 'api_5xx_rate'
-        }
-      });
+      // Trigger alert on 5xx server errors
+      if (status >= 500 && SENTRY_DSN) {
+        Sentry.captureMessage(`Elevated 5xx Error: ${method} ${url} responded with ${status}`, {
+          level: 'error',
+          tags: {
+            endpoint: url.split('?')[0],
+            status_code: String(status),
+            alert_type: 'api_5xx_rate'
+          }
+        });
+      }
+    } catch (e) {
+      // Fail-safe: finish hook errors must never propagate to Express
     }
   });
 
