@@ -1,6 +1,7 @@
 import React from 'react';
 import { Download, X, Share, PlusSquare, ChefHat } from 'lucide-react';
 import { usePWA } from '../context/PWAContext';
+import { getConsentStatus } from '../services/analytics';
 
 export function InstallAppBanner() {
   const {
@@ -12,7 +13,10 @@ export function InstallAppBanner() {
     setShowIOSInstructions
   } = usePWA();
 
-  if (!showInstallBanner && !showIOSInstructions) {
+  // If cookie consent banner is pending decision on mobile, defer install banner to avoid collisions
+  const isConsentPending = getConsentStatus() === 'pending';
+
+  if ((!showInstallBanner && !showIOSInstructions) || isConsentPending) {
     return null;
   }
 

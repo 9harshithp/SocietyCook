@@ -123,7 +123,7 @@ export function DashboardLayout() {
   return (
     <div className="min-h-[calc(100vh-64px)] flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613]">
       {/* Role Navigation Bar with Left-to-Right Animated Underline */}
-      <div className="bg-white/90 dark:bg-[#121E19]/90 backdrop-blur-md border-b border-[#DDE9D8] dark:border-white/10 sticky top-[61px] z-30 transition-colors shadow-xs">
+      <div className="bg-white/90 dark:bg-[#121E19]/90 backdrop-blur-md border-b border-[#DDE9D8] dark:border-white/10 sticky top-[var(--navbar-height,106px)] sm:top-[var(--navbar-height,111px)] z-30 transition-colors shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 py-1.5">
             {/* Scrollable Navigation Strip */}
