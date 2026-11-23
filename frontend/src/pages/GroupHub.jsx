@@ -464,7 +464,7 @@ export function GroupHub() {
       {/* Join Group Modal */}
       {showJoinModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#DDE9D8] dark:border-white/10 shadow-2xl">
+          <div className="max-w-md w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl p-6 border border-[#DDE9D8] dark:border-white/10 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-serif text-base font-bold text-[#153D32] dark:text-white">Join Service Cluster</h3>
               <button type="button" onClick={() => setShowJoinModal(null)} className="cursor-pointer">

@@ -192,7 +192,7 @@ export function RegisterPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-700 dark:text-slate-300 mb-1">Email</label>
               <input
@@ -233,7 +233,7 @@ export function RegisterPage() {
           </div>
 
           {role === 'RESIDENT' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 dark:text-slate-300 mb-1">Tower / Block</label>
                 <input

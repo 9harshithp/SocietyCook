@@ -102,9 +102,9 @@ export function App() {
       <PWAProvider>
         <BrowserRouter>
           <AnalyticsListener />
-          <div className="min-h-screen flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613] text-[#202A25] dark:text-[#EDE8DF] font-sans transition-colors overflow-x-hidden w-full">
+          <div className="min-h-screen flex flex-col bg-[#FBF7EF] dark:bg-[#0D1613] text-[#202A25] dark:text-[#EDE8DF] font-sans transition-colors overflow-x-clip w-full">
             <Navbar />
-            <main className="flex-1 w-full overflow-x-hidden">
+            <main className="flex-1 w-full overflow-x-clip">
               <React.Suspense
                 fallback={
                   <div className="min-h-[50vh] flex items-center justify-center p-8">
