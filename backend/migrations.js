@@ -8,7 +8,11 @@ export async function runMigrations() {
       await query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
       console.log(`  + Added column ${column} to ${table}`);
     } catch (e) {
-      if (!e.message.includes('Duplicate column')) {
+      const isDuplicate =
+        e.errno === 1060 ||
+        e.code === 'ER_DUP_FIELDNAME' ||
+        (e.message && e.message.toLowerCase().includes('duplicate column'));
+      if (!isDuplicate) {
         console.warn(`  ! Column warning on ${table}.${column}:`, e.message);
       }
     }

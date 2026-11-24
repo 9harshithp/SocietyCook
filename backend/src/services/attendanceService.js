@@ -155,12 +155,17 @@ export class AttendanceService {
       throw err;
     }
 
-    // 5. Validate Resident Service PIN Match
+    // 5. Validate Resident Service PIN Match (Atomic increment & serialization)
     if (bypassOtp === false) {
       if (!sess.otp_code || sess.otp_code.trim() !== cleanOtp) {
-        const newAttempts = currentAttempts + 1;
-        await query('UPDATE sessions SET otp_attempts = ? WHERE id = ?', [newAttempts, sessionId]);
-        const remaining = maxAttempts - newAttempts;
+        // Atomic increment in storage engine to prevent race condition under high concurrency
+        await query(
+          'UPDATE sessions SET otp_attempts = LEAST(otp_attempts + 1, 5) WHERE id = ?',
+          [sessionId]
+        );
+        const [updatedSess] = await query('SELECT otp_attempts FROM sessions WHERE id = ?', [sessionId]);
+        const currentCount = updatedSess ? Number(updatedSess.otp_attempts) : maxAttempts;
+        const remaining = Math.max(0, maxAttempts - currentCount);
         const msg = remaining > 0
           ? `Invalid service PIN provided. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
           : 'Too many invalid PIN attempts. Session attendance locked for security. Please contact administrator.';
@@ -184,10 +189,15 @@ export class AttendanceService {
 
     // 6. Valid PIN Verified: Execute transactional state transition
     return await transaction(async (q) => {
-      const [lockedSess] = await q('SELECT status FROM sessions WHERE id = ? FOR UPDATE', [sessionId]);
+      const [lockedSess] = await q('SELECT status, otp_attempts FROM sessions WHERE id = ? FOR UPDATE', [sessionId]);
       if (lockedSess.status !== 'SCHEDULED') {
         const err = new Error(`Session has already transitioned to ${lockedSess.status}`);
         err.status = 400;
+        throw err;
+      }
+      if (lockedSess.otp_attempts >= maxAttempts && bypassOtp === false) {
+        const err = new Error('Too many invalid PIN attempts. Session attendance locked for security. Please contact administrator.');
+        err.status = 429;
         throw err;
       }
 
@@ -301,5 +311,74 @@ export class AttendanceService {
 
       return { success: true, sessionId, status: 'DISPUTED' };
     });
+  }
+
+  /**
+   * Securely unlock a locked attendance session and regenerate resident service PIN
+   */
+  static async unlockSession({ sessionId, authorizedUserId, userRole, userSocietyId }) {
+    const [sess] = await query(
+      `SELECT s.*, b.resident_id, ru.society_id as resident_society_id, ru.name as resident_name, cu.name as cook_name
+       FROM sessions s
+       JOIN bookings b ON b.id = s.booking_id
+       JOIN cooks c ON c.id = s.cook_id
+       JOIN users cu ON cu.id = c.user_id
+       JOIN users ru ON ru.id = b.resident_id
+       WHERE s.id = ?`,
+      [sessionId]
+    );
+
+    if (!sess) {
+      const err = new Error('Session not found.');
+      err.status = 404;
+      throw err;
+    }
+
+    if (userRole === 'SOCIETY_MANAGER' && sess.resident_society_id !== userSocietyId) {
+      const err = new Error('Access denied: You can only unlock attendance sessions within your registered society.');
+      err.status = 403;
+      throw err;
+    }
+
+    if (sess.status === 'COMPLETED' || sess.status === 'CANCELLED') {
+      const err = new Error(`Cannot unlock session in ${sess.status} state.`);
+      err.status = 400;
+      throw err;
+    }
+
+    // Generate secure fresh 4-digit PIN
+    const newOtp = String(Math.floor(1000 + Math.random() * 9000));
+
+    await transaction(async (q) => {
+      await q(
+        'UPDATE sessions SET otp_attempts = 0, otp_code = ? WHERE id = ?',
+        [newOtp, sessionId]
+      );
+
+      await q(
+        `INSERT INTO notifications (user_id, title, message, type)
+         VALUES (?, 'Attendance Session Unlocked', ?, 'ATTENDANCE')`,
+        [
+          sess.resident_id,
+          `Your scheduled session with ${sess.cook_name} has been unlocked by administrator. Your new attendance PIN is ${newOtp}.`
+        ]
+      );
+
+      await logAudit({
+        userId: authorizedUserId,
+        action: 'SESSION_ATTENDANCE_UNLOCKED',
+        resourceType: 'SESSION',
+        resourceId: sessionId,
+        diff: { previousAttempts: sess.otp_attempts, unlocked: true }
+      });
+    });
+
+    return {
+      success: true,
+      sessionId,
+      message: 'Session attendance unlocked successfully. New resident PIN has been generated and dispatched.',
+      unlocked: true,
+      newOtp
+    };
   }
 }

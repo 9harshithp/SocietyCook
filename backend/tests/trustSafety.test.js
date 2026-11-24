@@ -445,59 +445,234 @@ describe('SocietyCook Phase 2: Production Trust, Security & Privacy Tests', () =
       );
       const groupId = groupRes.insertId;
 
-      await query(
-        `INSERT INTO group_members (group_id, resident_id, flat_number, household_size, status)
-         VALUES (?, 1, 'A-101', 2, 'CONFIRMED')`,
-        [groupId]
-      );
+      try {
+        await query(
+          `INSERT INTO group_members (group_id, resident_id, flat_number, household_size, status)
+           VALUES (?, 1, 'A-101', 2, 'CONFIRMED')`,
+          [groupId]
+        );
 
-      // Activate group
-      const actRes = await request(app)
-        .post(`/api/v1/groups/${groupId}/activate`)
-        .set('Authorization', `Bearer ${residentToken}`);
+        // Activate group
+        const actRes = await request(app)
+          .post(`/api/v1/groups/${groupId}/activate`)
+          .set('Authorization', `Bearer ${residentToken}`);
 
-      expect(actRes.status).toBe(200);
+        expect(actRes.status).toBe(200);
 
-      // Verify that member booking is PENDING (not ACTIVE)
-      const memberBookings = await query('SELECT * FROM bookings WHERE group_id = ?', [groupId]);
-      expect(memberBookings.length).toBeGreaterThan(0);
-      for (const b of memberBookings) {
-        expect(b.status).toBe('PENDING');
+        // Verify that member booking is PENDING (not ACTIVE)
+        const memberBookings = await query('SELECT * FROM bookings WHERE group_id = ?', [groupId]);
+        expect(memberBookings.length).toBeGreaterThan(0);
+        for (const b of memberBookings) {
+          expect(b.status).toBe('PENDING');
+        }
+
+        // Verify NO fake DEMO_SIMULATED payments were automatically created
+        const fakePayments = await query("SELECT * FROM payments WHERE group_id = ? AND gateway = 'DEMO_SIMULATED'", [groupId]);
+        expect(fakePayments.length).toBe(0);
+
+        // Verify NO daily sessions were prematurely created for unpaid booking
+        const unpaidSessions = await query('SELECT * FROM sessions WHERE booking_id = ?', [memberBookings[0].id]);
+        expect(unpaidSessions.length).toBe(0);
+      } finally {
+        // Clean up test group resources
+        await query('DELETE FROM bookings WHERE group_id = ?', [groupId]);
+        await query('DELETE FROM group_members WHERE group_id = ?', [groupId]);
+        await query('DELETE FROM cook_groups WHERE id = ?', [groupId]);
       }
-
-      // Verify NO fake DEMO_SIMULATED payments were automatically created
-      const fakePayments = await query("SELECT * FROM payments WHERE group_id = ? AND gateway = 'DEMO_SIMULATED'", [groupId]);
-      expect(fakePayments.length).toBe(0);
-
-      // Verify NO daily sessions were prematurely created for unpaid booking
-      const unpaidSessions = await query('SELECT * FROM sessions WHERE booking_id = ?', [memberBookings[0].id]);
-      expect(unpaidSessions.length).toBe(0);
-
-      // Clean up test group resources
-      await query('DELETE FROM bookings WHERE group_id = ?', [groupId]);
-      await query('DELETE FROM group_members WHERE group_id = ?', [groupId]);
-      await query('DELETE FROM cook_groups WHERE id = ?', [groupId]);
     });
 
-    it('confirms Sentry sensitive keys redacts passwords, tokens, pins, and flats', () => {
-      const payload = {
-        password: 'TopSecretPassword!',
-        token: 'Bearer eyJhbGciOi...',
-        otp: '4892',
-        pin: '1234',
-        otp_code: '9876',
-        flat: 'A-101',
-        phone: '+91 98450 12345'
+    it('enforces 48-hour expiration window on unpaid group member reservations', async () => {
+      const groupRes = await query(
+        `INSERT INTO cook_groups (society_id, created_by_resident_id, name, meal_service, min_households, max_households, current_households, status, assigned_cook_id)
+         VALUES (1, 1, 'Phase 2 Expire Test Group', 'DINNER', 1, 5, 1, 'AWAITING_CONFIRMATION', 1)`
+      );
+      const groupId = groupRes.insertId;
+
+      try {
+        await query(
+          `INSERT INTO group_members (group_id, resident_id, flat_number, household_size, status)
+           VALUES (?, 1, 'A-101', 2, 'CONFIRMED')`,
+          [groupId]
+        );
+
+        await request(app)
+          .post(`/api/v1/groups/${groupId}/activate`)
+          .set('Authorization', `Bearer ${residentToken}`);
+
+        const [b] = await query(
+          'SELECT TIMESTAMPDIFF(HOUR, NOW(), expires_at) as diff_hours FROM bookings WHERE group_id = ?',
+          [groupId]
+        );
+        expect(b).toBeDefined();
+        expect(Number(b.diff_hours)).toBe(48);
+      } finally {
+        // Clean up
+        await query('DELETE FROM bookings WHERE group_id = ?', [groupId]);
+        await query('DELETE FROM group_members WHERE group_id = ?', [groupId]);
+        await query('DELETE FROM cook_groups WHERE id = ?', [groupId]);
+      }
+    });
+  });
+
+  describe('6. Secure Recovery of Locked Sessions & Administrative Audit', () => {
+    let lockedSessionId = null;
+
+    beforeAll(async () => {
+      const bRes = await query(
+        `INSERT INTO bookings (resident_id, cook_id, status, start_date, end_date, start_time, end_time, amount, expires_at, meal_type, service_type)
+         VALUES (1, 1, 'ACTIVE', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), '14:00:00', '15:00:00', 4000, DATE_ADD(NOW(), INTERVAL 30 DAY), 'Lunch', 'COOKING')`
+      );
+      const bId = bRes.insertId;
+      const sRes = await query(
+        `INSERT INTO sessions (booking_id, cook_id, service_date, status, scheduled_start_time, scheduled_end_time, flat_number, otp_code, otp_attempts)
+         VALUES (?, 1, CURDATE(), 'SCHEDULED', '14:00:00', '14:45:00', 'A-101', '8888', 5)`,
+        [bId]
+      );
+      lockedSessionId = sRes.insertId;
+    });
+
+    afterAll(async () => {
+      if (lockedSessionId) {
+        const [sess] = await query('SELECT booking_id FROM sessions WHERE id = ?', [lockedSessionId]);
+        if (sess) {
+          await query('DELETE FROM sessions WHERE id = ?', [lockedSessionId]);
+          await query('DELETE FROM bookings WHERE id = ?', [sess.booking_id]);
+        }
+      }
+    });
+
+    it('locked session rejects check-in attempts with HTTP 429', async () => {
+      const res = await request(app)
+        .post(`/api/v1/sessions/${lockedSessionId}/attendance`)
+        .set('Authorization', `Bearer ${cookToken}`)
+        .send({ action: 'in', otp: '8888' });
+
+      expect(res.status).toBe(429);
+      expect(res.body.message).toContain('Session attendance locked');
+    });
+
+    it('unauthorized users cannot unlock sessions', async () => {
+      const res = await request(app)
+        .post(`/api/v1/admin/sessions/${lockedSessionId}/unlock`)
+        .set('Authorization', `Bearer ${residentToken}`);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('society manager from another society cannot unlock session', async () => {
+      // Login as manager for society 2 if available or simulate
+      const [mgr2User] = await query("SELECT id, email FROM users WHERE role = 'SOCIETY_MANAGER' AND society_id = 2 LIMIT 1");
+      if (mgr2User) {
+        const mgr2Login = await request(app)
+          .post('/api/v1/auth/login')
+          .send({ email: mgr2User.email, password: 'Demo12345!' });
+
+        if (mgr2Login.body.accessToken) {
+          const res = await request(app)
+            .post(`/api/v1/admin/sessions/${lockedSessionId}/unlock`)
+            .set('Authorization', `Bearer ${mgr2Login.body.accessToken}`);
+
+          expect(res.status).toBe(403);
+          expect(res.body.message).toContain('Access denied');
+        }
+      }
+    });
+
+    it('authorized society manager successfully unlocks session, resets attempts, and issues fresh PIN', async () => {
+      const res = await request(app)
+        .post(`/api/v1/admin/sessions/${lockedSessionId}/unlock`)
+        .set('Authorization', `Bearer ${managerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.unlocked).toBe(true);
+
+      const [updatedSess] = await query('SELECT otp_attempts, otp_code FROM sessions WHERE id = ?', [lockedSessionId]);
+      expect(updatedSess.otp_attempts).toBe(0);
+      expect(updatedSess.otp_code).toMatch(/^\d{4}$/);
+      expect(updatedSess.otp_code).not.toBe('8888');
+
+      // Professional can now check in with the newly issued PIN
+      const checkInRes = await request(app)
+        .post(`/api/v1/sessions/${lockedSessionId}/attendance`)
+        .set('Authorization', `Bearer ${cookToken}`)
+        .send({ action: 'in', otp: updatedSess.otp_code });
+
+      expect(checkInRes.status).toBe(200);
+      expect(checkInRes.body.status).toBe('IN_PROGRESS');
+    });
+
+    it('admin audit endpoint identifies verified vs legacy unvetted professionals', async () => {
+      const res = await request(app)
+        .get('/api/v1/admin/cooks/audit')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
+      for (const cook of res.body) {
+        expect(cook).toHaveProperty('clearance_status');
+        expect(['VERIFIED', 'PENDING_CLEARANCE', 'LEGACY_UNVETTED']).toContain(cook.clearance_status);
+      }
+    });
+  });
+
+  describe('7. Comprehensive Sentry Payload Privacy & Data Sanitization', () => {
+    it('recursively redacts nested objects, headers, tokens, and PII keys', () => {
+      const complexEvent = {
+        request: {
+          headers: {
+            authorization: 'Bearer secret_jwt_token_123',
+            cookie: 'session_id=abcdef123456; auth=xyz',
+            'x-api-key': 'sk_live_very_secret_key'
+          },
+          data: {
+            user: {
+              email: 'resident@example.com',
+              phone: '+919876543210',
+              flat_number: 'Tower B Flat 402',
+              credentials: {
+                password: 'SuperSecret123!',
+                pin: '4321',
+                otp: '8899',
+                otp_code: '1234'
+              },
+              payment: {
+                card_number: '4111222233334444',
+                cvv: '123',
+                upi: 'resident@okaxis'
+              }
+            }
+          }
+        }
       };
 
-      const redacted = redactSensitiveBackendData(payload);
-      expect(redacted.password).toBe('[REDACTED]');
-      expect(redacted.token).toBe('[REDACTED]');
-      expect(redacted.otp).toBe('[REDACTED]');
-      expect(redacted.pin).toBe('[REDACTED]');
-      expect(redacted.otp_code).toBe('[REDACTED]');
-      expect(redacted.flat).toBe('[REDACTED]');
-      expect(redacted.phone).toBe('[REDACTED]');
+      const redacted = redactSensitiveBackendData(complexEvent);
+      expect(redacted.request.headers.authorization).toBe('[REDACTED]');
+      expect(redacted.request.headers.cookie).toBe('[REDACTED]');
+      expect(redacted.request.headers['x-api-key']).toBe('[REDACTED]');
+      expect(redacted.request.data.user.phone).toBe('[REDACTED]');
+      expect(redacted.request.data.user.flat_number).toBe('[REDACTED]');
+      expect(redacted.request.data.user.credentials.password).toBe('[REDACTED]');
+      expect(redacted.request.data.user.credentials.pin).toBe('[REDACTED]');
+      expect(redacted.request.data.user.credentials.otp).toBe('[REDACTED]');
+      expect(redacted.request.data.user.credentials.otp_code).toBe('[REDACTED]');
+      expect(redacted.request.data.user.payment.card_number).toBe('[REDACTED]');
+      expect(redacted.request.data.user.payment.cvv).toBe('[REDACTED]');
+      expect(redacted.request.data.user.payment.upi).toBe('[REDACTED]');
+    });
+
+    it('safely handles circular references and non-plain objects without throwing', () => {
+      const circularObj = { name: 'Test Event' };
+      circularObj.self = circularObj;
+
+      expect(() => {
+        const res = redactSensitiveBackendData(circularObj);
+        expect(res.self).toBe('[CIRCULAR]');
+      }).not.toThrow();
+
+      const objWithDate = { created_at: new Date(), regex: /test/i };
+      const resDate = redactSensitiveBackendData(objWithDate);
+      expect(resDate.created_at instanceof Date).toBe(true);
     });
   });
 });

@@ -471,11 +471,11 @@ export class GroupService {
           ]
         );
 
-        // Booking record in PENDING status (requiring payment before service begins)
+        // Booking record in PENDING status (requiring payment before service begins; 48h hold window)
         const bookingRes = await q(
           `INSERT INTO bookings 
            (resident_id, cook_id, start_date, end_date, start_time, end_time, amount, status, expires_at, slot_label, meal_type, group_id, schedule_id, monthly_price)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL 48 HOUR), ?, ?, ?, ?, ?)`,
           [
             entry.resident_id,
             cook.id,

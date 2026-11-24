@@ -678,6 +678,9 @@ apiRouter.patch('/bookings/:id/cancel', authenticate, handle(async (req, res) =>
 }));
 
 apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) => {
+  if (process.env.NODE_ENV === 'production' || !ENV.DEMO_PAYMENTS) {
+    return res.status(403).json({ success: false, message: 'Demo payment endpoint is strictly disabled in production.' });
+  }
   const result = await PaymentService.confirmDemoPayment({
     bookingId: Number(req.params.id),
     userId: req.user.id
@@ -960,4 +963,33 @@ apiRouter.post('/admin/cooks/:id/verify', authenticate, requireRoles(['ADMIN', '
   });
 
   res.json({ success: true, verified: isVerified });
+}));
+
+// Secure unlock endpoint for locked attendance sessions (Admin or Society Manager)
+apiRouter.post('/admin/sessions/:id/unlock', authenticate, requireRoles(['ADMIN', 'SOCIETY_MANAGER']), handle(async (req, res) => {
+  const sessionId = Number(req.params.id);
+  const result = await AttendanceService.unlockSession({
+    sessionId,
+    authorizedUserId: req.user.id,
+    userRole: req.user.role,
+    userSocietyId: req.user.society_id
+  });
+  res.json(result);
+}));
+
+// Professional audit endpoint to inspect verified vs legacy unvetted professionals
+apiRouter.get('/admin/cooks/audit', authenticate, requireRoles(['ADMIN']), handle(async (req, res) => {
+  const rows = await query(`
+    SELECT c.id, c.user_id, u.name, u.email, u.phone, u.society_id, s.name as society_name,
+           c.verified, csa.status as assignment_status, csa.approved_by, csa.approved_at,
+           CASE WHEN csa.approved_by IS NULL AND c.verified = 1 THEN 'LEGACY_UNVETTED'
+                WHEN c.verified = 1 THEN 'VERIFIED'
+                ELSE 'PENDING_CLEARANCE' END as clearance_status
+    FROM cooks c
+    JOIN users u ON u.id = c.user_id
+    LEFT JOIN societies s ON s.id = u.society_id
+    LEFT JOIN cook_society_assignments csa ON csa.cook_id = c.id AND csa.society_id = u.society_id
+    ORDER BY c.id ASC
+  `);
+  res.json(rows);
 }));
