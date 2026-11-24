@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node';
 
 const SENTRY_DSN = process.env.SENTRY_DSN;
 const APP_COMMIT = process.env.APP_COMMIT || process.env.RENDER_GIT_COMMIT || '53c4d09';
-const APP_ENV = process.env.NODE_ENV || 'production';
+const APP_ENV = process.env.SENTRY_ENVIRONMENT || (process.env.IS_STAGING === 'true' ? 'staging' : (process.env.NODE_ENV || 'production'));
 
 // Sensitive keys to scrub from backend error logs and telemetry
 const SENSITIVE_KEYS = [

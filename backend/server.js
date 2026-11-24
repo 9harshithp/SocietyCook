@@ -105,6 +105,14 @@ app.use(
 
 app.use(cors(corsOptions));
 
+// Staging & Non-Production Search Engine Indexing Protection
+app.use((req, res, next) => {
+  if (ENV.IS_STAGING || ENV.NODE_ENV !== 'production') {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
+  next();
+});
+
 // Body Parser with Raw Body preservation for Webhook Signature Verification
 app.use(
   express.json({

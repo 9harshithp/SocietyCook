@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/react';
 // Sentry DSN from environment variable - never committed to source
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const APP_COMMIT = import.meta.env.VITE_APP_COMMIT || '53c4d09';
-const APP_ENV = import.meta.env.MODE || 'production';
+const APP_ENV = import.meta.env.VITE_SENTRY_ENVIRONMENT || (import.meta.env.VITE_IS_STAGING === 'true' ? 'staging' : (import.meta.env.MODE || 'production'));
 
 // Sensitive keys to redact from events and breadcrumbs
 const SENSITIVE_KEYS = [

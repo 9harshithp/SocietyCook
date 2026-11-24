@@ -733,6 +733,12 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
     });
 
     it('idempotently deduplicates webhook events via webhook_events table', async () => {
+      const bookingId = await createTestBooking({ residentId: 1, amount: 3500 });
+      const orderRes = await request(app)
+        .post(`/api/v1/bookings/${bookingId}/payment-order`)
+        .set('Authorization', `Bearer ${residentToken}`);
+      const orderId = orderRes.body.orderId;
+
       const eventId = `evt_dedup_test_${Date.now()}`;
       const testPayload = JSON.stringify({
         id: eventId,
@@ -741,7 +747,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
           payment: {
             entity: {
               id: `pay_dedup_${Date.now()}`,
-              order_id: 'order_test_dedup',
+              order_id: orderId,
               amount: 350000,
               currency: 'INR',
               status: 'captured'
@@ -749,7 +755,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
           }
         }
       });
-      const sig = generateWebhookSignature(testPayload);
+      const sig = generateWebhookSignature(Buffer.from(testPayload, 'utf8'));
 
       // First delivery: processes event
       const res1 = await request(app)
@@ -759,6 +765,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
         .send(testPayload);
 
       expect(res1.status).toBe(200);
+      expect(res1.body.status).toBe('ACTIVE');
 
       // Second duplicate delivery with the exact same event ID: returns already_processed
       const res2 = await request(app)
@@ -770,6 +777,68 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
       expect(res2.status).toBe(200);
       expect(res2.body.status).toBe('already_processed');
       expect(res2.body.eventId).toBe(eventId);
+    });
+
+    it('allows legitimate webhook retry after an initial processing failure', async () => {
+      const bookingId = await createTestBooking({ residentId: 1, amount: 3500 });
+      const orderRes = await request(app)
+        .post(`/api/v1/bookings/${bookingId}/payment-order`)
+        .set('Authorization', `Bearer ${residentToken}`);
+      const orderId = orderRes.body.orderId;
+
+      const eventId = `evt_retry_test_${Date.now()}`;
+      // First delivery has an amount mismatch causing a processing error
+      const failedPayload = JSON.stringify({
+        id: eventId,
+        event: 'payment.captured',
+        payload: {
+          payment: {
+            entity: {
+              id: `pay_retry_${Date.now()}`,
+              order_id: orderId,
+              amount: 999999, // Mismatched amount!
+              currency: 'INR',
+              status: 'captured'
+            }
+          }
+        }
+      });
+      const sig1 = generateWebhookSignature(Buffer.from(failedPayload, 'utf8'));
+
+      const res1 = await request(app)
+        .post('/api/v1/payments/webhook')
+        .set('x-razorpay-signature', sig1)
+        .set('Content-Type', 'application/json')
+        .send(failedPayload);
+
+      expect(res1.status).toBe(400); // Failed!
+
+      // Legitimate retry from gateway with the same event ID and corrected amount
+      const successPayload = JSON.stringify({
+        id: eventId,
+        event: 'payment.captured',
+        payload: {
+          payment: {
+            entity: {
+              id: `pay_retry_${Date.now()}`,
+              order_id: orderId,
+              amount: 350000, // Correct amount
+              currency: 'INR',
+              status: 'captured'
+            }
+          }
+        }
+      });
+      const sig2 = generateWebhookSignature(Buffer.from(successPayload, 'utf8'));
+
+      const res2 = await request(app)
+        .post('/api/v1/payments/webhook')
+        .set('x-razorpay-signature', sig2)
+        .set('Content-Type', 'application/json')
+        .send(successPayload);
+
+      expect(res2.status).toBe(200);
+      expect(res2.body.status).toBe('ACTIVE');
     });
 
     it('rejects refund initiation with HTTP 403 when REFUNDS_ENABLED is false', async () => {

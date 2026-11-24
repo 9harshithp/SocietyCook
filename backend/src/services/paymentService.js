@@ -385,18 +385,13 @@ export class PaymentService {
     const webhookEventId = event?.payload?.payment?.entity?.id || event?.id || `evt_${Date.now()}`;
     const rawEventId = event?.id || webhookEventId;
 
-    // Idempotent webhook event registration in database
-    try {
-      await query(
-        'INSERT INTO webhook_events (event_id, event_type, resource_id, payload) VALUES (?, ?, ?, ?)',
-        [rawEventId, eventName || 'unknown', webhookEventId, JSON.stringify(event || {})]
-      );
-    } catch (evtErr) {
-      const isDup = evtErr.errno === 1062 || evtErr.code === 'ER_DUP_ENTRY' || (evtErr.message && evtErr.message.includes('Duplicate entry'));
-      if (isDup) {
-        return { handled: true, status: 'already_processed', eventId: rawEventId };
-      }
-      console.warn('Webhook event record notice:', evtErr.message);
+    // 1. Idempotency Check: Verify if this event was already successfully processed
+    const [existingEvt] = await query(
+      'SELECT id, event_id FROM webhook_events WHERE event_id = ?',
+      [rawEventId]
+    );
+    if (existingEvt) {
+      return { handled: true, status: 'already_processed', eventId: rawEventId };
     }
 
     // 2. Handle 'payment.captured'
@@ -433,7 +428,7 @@ export class PaymentService {
           throw err;
         }
 
-        return await PaymentService.provisionBookingService(q, {
+        const provisionResult = await PaymentService.provisionBookingService(q, {
           bookingId: payment.booking_id,
           userId: payment.user_id,
           orderId,
@@ -445,6 +440,14 @@ export class PaymentService {
           tax: paymentEntity.tax || 0,
           paymentRecord: payment
         });
+
+        // Atomically record successful webhook event delivery in same transaction
+        await q(
+          'INSERT INTO webhook_events (event_id, event_type, resource_id, payload) VALUES (?, ?, ?, ?)',
+          [rawEventId, eventName, webhookEventId, JSON.stringify(event || {})]
+        );
+
+        return provisionResult;
       });
     }
 
@@ -457,6 +460,12 @@ export class PaymentService {
           [paymentEntity.order_id]
         );
       }
+      try {
+        await query(
+          'INSERT INTO webhook_events (event_id, event_type, resource_id, payload) VALUES (?, ?, ?, ?)',
+          [rawEventId, eventName, webhookEventId, JSON.stringify(event || {})]
+        );
+      } catch (e) { /* ignore */ }
       return { handled: true, event: 'payment.failed' };
     }
 
@@ -469,6 +478,12 @@ export class PaymentService {
           [refundEntity.id]
         );
       }
+      try {
+        await query(
+          'INSERT INTO webhook_events (event_id, event_type, resource_id, payload) VALUES (?, ?, ?, ?)',
+          [rawEventId, eventName, webhookEventId, JSON.stringify(event || {})]
+        );
+      } catch (e) { /* ignore */ }
       return { handled: true, event: 'refund.processed' };
     }
 
