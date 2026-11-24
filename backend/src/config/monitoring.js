@@ -34,7 +34,10 @@ const SENSITIVE_KEYS = [
   'x-razorpay-signature',
   'razorpaysignature',
   'razorpay_key_secret',
-  'razorpay_signature'
+  'razorpay_signature',
+  'gateway_refund_id',
+  'account_number',
+  'cvv'
 ];
 
 /**

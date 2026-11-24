@@ -21,21 +21,67 @@ export function setRazorpayClientForTest(client) {
 
 export class PaymentService {
   /**
+   * Validate Gateway Key Configuration & Safety Constraints
+   */
+  static validateKeyConfiguration() {
+    const keyId = ENV.RAZORPAY_KEY_ID || '';
+    const keySecret = ENV.RAZORPAY_KEY_SECRET || '';
+    if (!keyId || !keySecret) {
+      const err = new Error('Razorpay credentials not configured.');
+      err.status = 500;
+      throw err;
+    }
+    const isLiveKey = keyId.startsWith('rzp_live_');
+    const isTestKey = keyId.startsWith('rzp_test_');
+
+    if (isLiveKey) {
+      if (!ENV.ALLOW_LIVE_PAYMENTS) {
+        const err = new Error('SECURITY FATAL: Live Razorpay key detected but ALLOW_LIVE_PAYMENTS is not enabled.');
+        err.status = 500;
+        throw err;
+      }
+      if (ENV.NODE_ENV !== 'production') {
+        const err = new Error('SECURITY FATAL: Live Razorpay key is strictly prohibited in non-production environments.');
+        err.status = 500;
+        throw err;
+      }
+    }
+
+    if (isTestKey && ENV.NODE_ENV === 'production' && !ENV.IS_STAGING) {
+      const err = new Error('SECURITY FATAL: Razorpay test-mode keys cannot be used against the live production database. Use an isolated staging environment.');
+      err.status = 500;
+      throw err;
+    }
+
+    return { valid: true, isLiveKey, isTestKey };
+  }
+
+  /**
    * Public Payment Gateway Configuration & Status
    */
   static getPaymentConfig() {
     const keyId = ENV.RAZORPAY_KEY_ID || '';
     const isTestMode = keyId.startsWith('rzp_test_');
     const hasKeys = Boolean(keyId && ENV.RAZORPAY_KEY_SECRET);
-    // In production without live gateway credentials, online payments are disabled
-    const onlinePaymentsAvailable = hasKeys;
+    
+    // Explicit payment activation check: defaults to disabled
+    let onlinePaymentsAvailable = Boolean(ENV.ONLINE_PAYMENTS_ENABLED && hasKeys);
+    if (onlinePaymentsAvailable) {
+      try {
+        PaymentService.validateKeyConfiguration();
+      } catch (err) {
+        console.warn('Payment configuration validation error:', err.message);
+        onlinePaymentsAvailable = false;
+      }
+    }
 
     return {
       onlinePaymentsAvailable,
       keyId: onlinePaymentsAvailable ? keyId : null,
       currency: 'INR',
       isTestMode,
-      demoAllowed: Boolean(ENV.DEMO_PAYMENTS && ENV.NODE_ENV !== 'production')
+      demoAllowed: Boolean(ENV.DEMO_PAYMENTS && ENV.NODE_ENV !== 'production'),
+      refundsEnabled: Boolean(ENV.REFUNDS_ENABLED)
     };
   }
 
@@ -44,6 +90,13 @@ export class PaymentService {
    * Validates resident ownership, society isolation, booking status, expiration, and computes authoritative price.
    */
   static async createOrder({ bookingId, userId, userRole, userSocietyId }) {
+    if (!ENV.ONLINE_PAYMENTS_ENABLED) {
+      const err = new Error('Online payments are currently disabled pending gateway activation.');
+      err.status = 403;
+      throw err;
+    }
+    PaymentService.validateKeyConfiguration();
+
     // 1. Initial check & expired reservation sweep outside transaction to prevent connection deadlocks
     const [bCheck] = await query(
       'SELECT id, status, expires_at, resident_id FROM bookings WHERE id = ?',
@@ -107,18 +160,21 @@ export class PaymentService {
         throw err;
       }
 
-      // 4. Authoritative Price Computation (Server-Side, Never Trust Frontend)
-      let authoritativeAmount = booking.amount;
-      if (booking.group_id) {
-        authoritativeAmount = booking.monthly_price || booking.amount;
-      } else {
-        const sType = (booking.service_type || 'COOKING').toUpperCase();
-        if (sType === 'DISHWASHING') {
-          authoritativeAmount = booking.dishwashing_price || 2200;
-        } else if (sType === 'COMBO') {
-          authoritativeAmount = Math.round((booking.cook_price + (booking.dishwashing_price || 2200)) * 0.9);
+      // 4. Authoritative Price Computation: Strictly preserve agreed booking contract price
+      let authoritativeAmount = Number(booking.amount);
+      if (!authoritativeAmount || authoritativeAmount <= 0) {
+        // Fallback only if booking has no recorded agreed price
+        if (booking.group_id) {
+          authoritativeAmount = booking.monthly_price || 3500;
         } else {
-          authoritativeAmount = booking.cook_price || booking.amount;
+          const sType = (booking.service_type || 'COOKING').toUpperCase();
+          if (sType === 'DISHWASHING') {
+            authoritativeAmount = booking.dishwashing_price || 2200;
+          } else if (sType === 'COMBO') {
+            authoritativeAmount = Math.round((booking.cook_price + (booking.dishwashing_price || 2200)) * 0.9);
+          } else {
+            authoritativeAmount = booking.cook_price || 4000;
+          }
         }
       }
 
@@ -192,6 +248,13 @@ export class PaymentService {
    * Verify Razorpay Payment Signature and Trigger Authoritative Service Provisioning
    */
   static async verifyRazorpayPayment({ razorpayOrderId, razorpayPaymentId, razorpaySignature, bookingId, userId }) {
+    if (!ENV.ONLINE_PAYMENTS_ENABLED) {
+      const err = new Error('Online payments are currently disabled.');
+      err.status = 403;
+      throw err;
+    }
+    PaymentService.validateKeyConfiguration();
+
     if (!ENV.RAZORPAY_KEY_SECRET) {
       const err = new Error('Razorpay credentials not configured on backend.');
       err.status = 500;
@@ -215,25 +278,61 @@ export class PaymentService {
     }
 
     // 2. Fetch and verify payment entity directly from Razorpay API
+    // Confirmation of captured status is mandatory: signature verification alone CANNOT activate services
     const client = getRazorpayClient();
-    if (client) {
-      try {
-        const rzpPayment = await client.payments.fetch(razorpayPaymentId);
-        if (rzpPayment.order_id && rzpPayment.order_id !== razorpayOrderId) {
-          const err = new Error('Razorpay order ID mismatch.');
-          err.status = 400;
-          throw err;
-        }
-        if (rzpPayment.status !== 'captured') {
-          const err = new Error(`Payment not captured. Current status: ${rzpPayment.status}`);
-          err.status = 400;
-          throw err;
-        }
-      } catch (err) {
-        if (err.status) throw err;
-        // In local/test mode with mock keys where network fetch fails, log and proceed if signature passed
-        console.warn('Razorpay payment fetch warning:', err.message);
-      }
+    if (!client) {
+      const err = new Error('Payment gateway client is unavailable. Signature verification alone cannot activate services.');
+      err.status = 502;
+      throw err;
+    }
+
+    // Fetch booking to validate ownership and expected amount
+    const [booking] = await query('SELECT id, amount, status, resident_id FROM bookings WHERE id = ?', [bookingId]);
+    if (!booking) {
+      const err = new Error('Booking not found.');
+      err.status = 404;
+      throw err;
+    }
+
+    if (booking.resident_id !== userId) {
+      const err = new Error('Unauthorized: You can only verify payments for your own bookings.');
+      err.status = 403;
+      throw err;
+    }
+
+    let rzpPayment;
+    try {
+      rzpPayment = await client.payments.fetch(razorpayPaymentId);
+    } catch (err) {
+      const fetchErr = new Error(`Payment verification failed: Gateway could not confirm payment entity (${err.message}). Signature alone cannot activate services.`);
+      fetchErr.status = 502;
+      throw fetchErr;
+    }
+
+    if (rzpPayment.status !== 'captured') {
+      const err = new Error(`Payment verification failed: Gateway reports payment status as '${rzpPayment.status}' instead of 'captured'.`);
+      err.status = 400;
+      throw err;
+    }
+
+    if (rzpPayment.currency !== 'INR') {
+      const err = new Error(`Payment currency mismatch: Expected 'INR', received '${rzpPayment.currency}'.`);
+      err.status = 400;
+      throw err;
+    }
+
+    if (rzpPayment.order_id && rzpPayment.order_id !== razorpayOrderId) {
+      const err = new Error('Payment order mismatch: Payment entity order_id does not match checkout order.');
+      err.status = 400;
+      throw err;
+    }
+
+    // Validate exact expected amount in integer paise
+    const expectedPaise = Math.round(Number(booking.amount) * 100);
+    if (Number(rzpPayment.amount) !== expectedPaise) {
+      const err = new Error(`Payment amount mismatch: Expected ${expectedPaise} paise, gateway captured ${rzpPayment.amount} paise.`);
+      err.status = 400;
+      throw err;
     }
 
     // 3. Centralized Transactional Provisioning
@@ -244,7 +343,9 @@ export class PaymentService {
         orderId: razorpayOrderId,
         gatewayPaymentId: razorpayPaymentId,
         signature: razorpaySignature,
-        gateway: 'RAZORPAY'
+        gateway: 'RAZORPAY',
+        fee: rzpPayment.fee || 0,
+        tax: rzpPayment.tax || 0
       });
     });
   }
@@ -281,7 +382,22 @@ export class PaymentService {
     }
 
     const eventName = event?.event;
-    const webhookEventId = event?.payload?.payment?.entity?.id || `evt_${Date.now()}`;
+    const webhookEventId = event?.payload?.payment?.entity?.id || event?.id || `evt_${Date.now()}`;
+    const rawEventId = event?.id || webhookEventId;
+
+    // Idempotent webhook event registration in database
+    try {
+      await query(
+        'INSERT INTO webhook_events (event_id, event_type, resource_id, payload) VALUES (?, ?, ?, ?)',
+        [rawEventId, eventName || 'unknown', webhookEventId, JSON.stringify(event || {})]
+      );
+    } catch (evtErr) {
+      const isDup = evtErr.errno === 1062 || evtErr.code === 'ER_DUP_ENTRY' || (evtErr.message && evtErr.message.includes('Duplicate entry'));
+      if (isDup) {
+        return { handled: true, status: 'already_processed', eventId: rawEventId };
+      }
+      console.warn('Webhook event record notice:', evtErr.message);
+    }
 
     // 2. Handle 'payment.captured'
     if (eventName === 'payment.captured') {
@@ -526,6 +642,12 @@ export class PaymentService {
    * Enforces RBAC, maximum refundable limits, atomic ledger reconciliation, and cancellation cascades.
    */
   static async processRefund({ paymentId, amount, reason, adminUserId, adminRole, adminSocietyId }) {
+    if (!ENV.REFUNDS_ENABLED) {
+      const err = new Error('Refund processing is currently disabled pending executive business policy and authorization approval.');
+      err.status = 403;
+      throw err;
+    }
+
     if (adminRole !== 'ADMIN' && adminRole !== 'SOCIETY_MANAGER') {
       const err = new Error('Unauthorized: Refund processing requires ADMIN or SOCIETY_MANAGER role.');
       err.status = 403;

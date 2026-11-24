@@ -41,6 +41,7 @@ export function BillingPage() {
     demoAllowed: false
   });
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentBanner, setPaymentBanner] = useState(null);
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [payingBookingId, setPayingBookingId] = useState(null);
 
@@ -126,6 +127,7 @@ export function BillingPage() {
           color: '#059669' // emerald-600
         },
         handler: async function (response) {
+          setPaymentBanner({ type: 'verifying', message: 'Verifying payment with payment gateway...' });
           try {
             // Authoritative server-side verification
             const verifyRes = await api.verifyPayment(bookingId, {
@@ -145,12 +147,15 @@ export function BillingPage() {
                 subscriptionId: bookingId,
                 planTier: 'RESIDENTIAL_MONTHLY'
               });
+              setPaymentBanner(null);
               showToast('Payment verified and confirmed! Your daily service is now active.', 'success');
               await loadBilling();
             } else {
+              setPaymentBanner({ type: 'failed', message: 'Payment verification failed. Please contact support.' });
               showToast('Payment could not be verified by the server. Please contact support.', 'error');
             }
           } catch (err) {
+            setPaymentBanner({ type: 'failed', message: `Verification failed: ${err.message}` });
             showToast(`Verification failed: ${err.message}`, 'error');
           } finally {
             setProcessingPayment(false);
@@ -158,6 +163,7 @@ export function BillingPage() {
         },
         modal: {
           ondismiss: function () {
+            setPaymentBanner({ type: 'cancelled', message: 'Payment window was closed before completion. You can retry payment anytime.' });
             setProcessingPayment(false);
           }
         }
@@ -165,11 +171,16 @@ export function BillingPage() {
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (resp) {
+        setPaymentBanner({
+          type: 'failed',
+          message: resp.error?.description || 'Transaction declined by bank. Please check your card or UPI app and retry.'
+        });
         showToast(`Payment failed: ${resp.error?.description || 'Transaction declined by bank'}`, 'error');
         setProcessingPayment(false);
       });
       rzp.open();
     } catch (err) {
+      setPaymentBanner({ type: 'failed', message: err.message });
       showToast(err.message, 'error');
       setProcessingPayment(false);
     }
@@ -266,9 +277,36 @@ SocietyCook Technologies Private Limited
           <div className="space-y-1">
             <h3 className="font-black text-sm">Online Payments Unavailable</h3>
             <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-              Online payments are temporarily unavailable pending payment gateway activation. Offline payment settlement is coordinated by your society management office.
+              Online payments are temporarily unavailable pending payment gateway activation. Please check back later or contact customer support for assistance.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Payment Interaction State Banner (Verifying / Failed / Cancelled) */}
+      {paymentBanner && (
+        <div className={`p-4 rounded-2xl flex items-center justify-between gap-3 text-xs font-semibold ${
+          paymentBanner.type === 'verifying'
+            ? 'bg-sky-50 dark:bg-sky-950/60 border border-sky-300 dark:border-sky-700 text-sky-900 dark:text-sky-200'
+            : paymentBanner.type === 'cancelled'
+            ? 'bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200'
+            : 'bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-700 text-rose-900 dark:text-rose-200'
+        }`}>
+          <div className="flex items-center gap-2">
+            {paymentBanner.type === 'verifying' ? (
+              <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            )}
+            <span>{paymentBanner.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPaymentBanner(null)}
+            className="text-[11px] underline font-bold cursor-pointer hover:opacity-80 shrink-0"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 

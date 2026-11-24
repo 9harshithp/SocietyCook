@@ -18,6 +18,21 @@ export async function runMigrations() {
     }
   };
 
+  const safeAddUniqueIndex = async (table, indexName, columns) => {
+    try {
+      await query(`ALTER TABLE ${table} ADD UNIQUE INDEX ${indexName} (${columns})`);
+      console.log(`  + Added unique index ${indexName} to ${table}`);
+    } catch (e) {
+      const isDuplicate =
+        e.errno === 1061 ||
+        e.code === 'ER_DUP_KEYNAME' ||
+        (e.message && e.message.toLowerCase().includes('duplicate key name'));
+      if (!isDuplicate) {
+        console.warn(`  ! Index warning on ${table}.${indexName}:`, e.message);
+      }
+    }
+  };
+
   // 1. Core Societies & Blocks
   await query(`
     CREATE TABLE IF NOT EXISTS societies (
@@ -563,6 +578,23 @@ export async function runMigrations() {
   } catch (e) {
     console.warn('  ! Session status enum modification warning:', e.message);
   }
+
+  // Webhook events table for idempotent gateway event tracking
+  await query(`
+    CREATE TABLE IF NOT EXISTS webhook_events (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      event_id VARCHAR(100) NOT NULL,
+      event_type VARCHAR(100) NOT NULL,
+      resource_id VARCHAR(100) NULL,
+      payload JSON NULL,
+      processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uk_webhook_event_id (event_id)
+    )
+  `);
+
+  // Gateway unique indexes for financial idempotency
+  await safeAddUniqueIndex('payments', 'uk_payments_razorpay_payment_id', 'razorpay_payment_id');
+  await safeAddUniqueIndex('refunds', 'uk_refunds_gateway_refund_id', 'gateway_refund_id');
 
   console.log('✅ SocietyCook v3 Household Services database migrations completed successfully!');
   console.log('✅ SocietyCook database migrations finished successfully!');

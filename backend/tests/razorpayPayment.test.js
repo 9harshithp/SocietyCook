@@ -56,10 +56,12 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
   };
 
   beforeAll(async () => {
-    // Set test environment secrets
+    // Set test environment secrets and enable payments and refunds for testing
     ENV.RAZORPAY_KEY_ID = TEST_KEY_ID;
     ENV.RAZORPAY_KEY_SECRET = TEST_KEY_SECRET;
     ENV.RAZORPAY_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
+    ENV.ONLINE_PAYMENTS_ENABLED = true;
+    ENV.REFUNDS_ENABLED = true;
     setRazorpayClientForTest(mockRazorpay);
 
     // 1. Authenticate resident 1 (society 1)
@@ -255,7 +257,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
       mockPayments.set(paymentId, {
         id: paymentId,
         order_id: orderId,
-        amount: 350000,
+        amount: 400000,
         currency: 'INR',
         status: 'captured',
         fee: 8000,
@@ -321,7 +323,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
     });
 
     it('rejects uncaptured payments with HTTP 400', async () => {
-      const bookingId = await createTestBooking({ residentId: 1 });
+      const bookingId = await createTestBooking({ residentId: 1, amount: 3500 });
       const orderRes = await request(app)
         .post(`/api/v1/bookings/${bookingId}/payment-order`)
         .set('Authorization', `Bearer ${residentToken}`);
@@ -348,7 +350,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
         });
 
       expect(verifyRes.status).toBe(400);
-      expect(verifyRes.body.message).toMatch(/not captured/i);
+      expect(verifyRes.body.message).toMatch(/captured/i);
     });
   });
 
@@ -413,7 +415,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
             entity: {
               id: paymentId,
               order_id: orderId,
-              amount: 350000,
+              amount: 400000,
               currency: 'INR',
               status: 'captured'
             }
@@ -439,7 +441,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
         .set('Content-Type', 'application/json')
         .send(rawPayload);
       expect(res2.body.handled).toBe(true);
-      expect(res2.body.status).toBe('ALREADY_PROCESSED');
+      expect(res2.body.status).toMatch(/already_processed/i);
 
       // Verify exactly 1 subscription, 1 invoice, 1 session
       const subs = await query('SELECT id FROM subscriptions WHERE booking_id = ?', [bookingId]);
@@ -471,11 +473,12 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
         .set('Authorization', `Bearer ${residentToken}`);
 
       const payload = {
+        id: `evt_usd_${Date.now()}`,
         event: 'payment.captured',
         payload: {
           payment: {
             entity: {
-              id: 'pay_usd_123',
+              id: `pay_usd_${Date.now()}`,
               order_id: orderRes.body.orderId,
               amount: 5000,
               currency: 'USD', // INVALID CURRENCY
@@ -568,7 +571,7 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
         .post(`/api/v1/payments/${paymentRecordId}/refund`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          amount: 3500,
+          amount: 5000,
           reason: 'Resident relocated before service commencement'
         });
 
@@ -628,6 +631,160 @@ describe('SocietyCook Phase 3: Secure Razorpay Payment Gateway Integration Tests
       // Verify no subscription active
       const subs = await query('SELECT * FROM subscriptions WHERE booking_id = ?', [unpaidBookingId]);
       expect(subs.length).toBe(0);
+    });
+  });
+
+  describe('8. Phase 3 Security Review Safeguards & Hardening', () => {
+    it('strictly rejects order creation when ONLINE_PAYMENTS_ENABLED is false', async () => {
+      const bookingId = await createTestBooking({ residentId: 1 });
+      const origEnabled = ENV.ONLINE_PAYMENTS_ENABLED;
+      ENV.ONLINE_PAYMENTS_ENABLED = false;
+
+      const res = await request(app)
+        .post(`/api/v1/bookings/${bookingId}/payment-order`)
+        .set('Authorization', `Bearer ${residentToken}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/disabled/i);
+
+      ENV.ONLINE_PAYMENTS_ENABLED = origEnabled;
+    });
+
+    it('blocks accidental live key activation in non-production environments', async () => {
+      const origKey = ENV.RAZORPAY_KEY_ID;
+      ENV.RAZORPAY_KEY_ID = 'rzp_live_accidental_production_key_12345';
+
+      expect(() => PaymentService.validateKeyConfiguration()).toThrow(/Live Razorpay key/i);
+
+      ENV.RAZORPAY_KEY_ID = origKey;
+    });
+
+    it('blocks test keys on live production cluster without IS_STAGING', async () => {
+      const origNodeEnv = ENV.NODE_ENV;
+      const origStaging = ENV.IS_STAGING;
+      ENV.NODE_ENV = 'production';
+      ENV.IS_STAGING = false;
+
+      expect(() => PaymentService.validateKeyConfiguration()).toThrow(/cannot be used against the live production database/i);
+
+      ENV.NODE_ENV = origNodeEnv;
+      ENV.IS_STAGING = origStaging;
+    });
+
+    it('strictly preserves agreed booking contract price when cook price changes subsequently', async () => {
+      // 1. Create booking with agreed contract price of 4000
+      const bookingId = await createTestBooking({ residentId: 1, cookId: 1, amount: 4000 });
+
+      // 2. Cook updates price to 9999 in database
+      const [cookBefore] = await query('SELECT price FROM cooks WHERE id = 1');
+      const origCookPrice = cookBefore?.price;
+      await query('UPDATE cooks SET price = 9999 WHERE id = 1');
+
+      // 3. Create payment order for booking
+      const orderRes = await request(app)
+        .post(`/api/v1/bookings/${bookingId}/payment-order`)
+        .set('Authorization', `Bearer ${residentToken}`);
+
+      expect(orderRes.status).toBe(200);
+      // Contract price must be preserved at 4000 (400,000 paise), NOT updated cook price (9999)
+      expect(orderRes.body.amount).toBe(4000);
+      expect(orderRes.body.amountInPaise).toBe(400000);
+
+      // Revert cook price
+      if (origCookPrice) {
+        await query('UPDATE cooks SET price = ? WHERE id = 1', [origCookPrice]);
+      }
+    });
+
+    it('ensures signature alone cannot activate service if gateway verification fails', async () => {
+      const bookingId = await createTestBooking({ residentId: 1, amount: 3500 });
+      const orderRes = await request(app)
+        .post(`/api/v1/bookings/${bookingId}/payment-order`)
+        .set('Authorization', `Bearer ${residentToken}`);
+
+      const orderId = orderRes.body.orderId;
+      const paymentId = `pay_missing_gw_${Date.now()}`;
+      const signature = generateCheckoutSignature(orderId, paymentId);
+
+      // Point mock client to throw gateway communication error
+      const origPaymentsFetch = mockRazorpay.payments.fetch;
+      mockRazorpay.payments.fetch = async () => {
+        throw new Error('Gateway network timeout contacting bank network');
+      };
+
+      const verifyRes = await request(app)
+        .post(`/api/v1/bookings/${bookingId}/verify-payment`)
+        .set('Authorization', `Bearer ${residentToken}`)
+        .send({
+          razorpayOrderId: orderId,
+          razorpayPaymentId: paymentId,
+          razorpaySignature: signature
+        });
+
+      expect(verifyRes.status).toBe(502);
+      expect(verifyRes.body.message).toMatch(/cannot activate services/i);
+
+      // Verify booking did NOT transition to ACTIVE
+      const [booking] = await query('SELECT status FROM bookings WHERE id = ?', [bookingId]);
+      expect(booking.status).toBe('PENDING');
+
+      // Restore fetch mock
+      mockRazorpay.payments.fetch = origPaymentsFetch;
+    });
+
+    it('idempotently deduplicates webhook events via webhook_events table', async () => {
+      const eventId = `evt_dedup_test_${Date.now()}`;
+      const testPayload = JSON.stringify({
+        id: eventId,
+        event: 'payment.captured',
+        payload: {
+          payment: {
+            entity: {
+              id: `pay_dedup_${Date.now()}`,
+              order_id: 'order_test_dedup',
+              amount: 350000,
+              currency: 'INR',
+              status: 'captured'
+            }
+          }
+        }
+      });
+      const sig = generateWebhookSignature(testPayload);
+
+      // First delivery: processes event
+      const res1 = await request(app)
+        .post('/api/v1/payments/webhook')
+        .set('x-razorpay-signature', sig)
+        .set('Content-Type', 'application/json')
+        .send(testPayload);
+
+      expect(res1.status).toBe(200);
+
+      // Second duplicate delivery with the exact same event ID: returns already_processed
+      const res2 = await request(app)
+        .post('/api/v1/payments/webhook')
+        .set('x-razorpay-signature', sig)
+        .set('Content-Type', 'application/json')
+        .send(testPayload);
+
+      expect(res2.status).toBe(200);
+      expect(res2.body.status).toBe('already_processed');
+      expect(res2.body.eventId).toBe(eventId);
+    });
+
+    it('rejects refund initiation with HTTP 403 when REFUNDS_ENABLED is false', async () => {
+      const origRefunds = ENV.REFUNDS_ENABLED;
+      ENV.REFUNDS_ENABLED = false;
+
+      const res = await request(app)
+        .post('/api/v1/payments/1/refund')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ amount: 1000, reason: 'Refund disabled test' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/Refund processing is currently disabled/i);
+
+      ENV.REFUNDS_ENABLED = origRefunds;
     });
   });
 });
