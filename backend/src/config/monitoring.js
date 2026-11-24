@@ -30,6 +30,9 @@ const SENSITIVE_KEYS = [
   'key',
   'api-key',
   'apikey',
+  'signature',
+  'x-razorpay-signature',
+  'razorpaysignature',
   'razorpay_key_secret',
   'razorpay_signature'
 ];

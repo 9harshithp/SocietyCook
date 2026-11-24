@@ -677,6 +677,15 @@ apiRouter.patch('/bookings/:id/cancel', authenticate, handle(async (req, res) =>
   res.json(result);
 }));
 
+apiRouter.get('/payments/config', handle(async (req, res) => {
+  res.json(PaymentService.getPaymentConfig());
+}));
+
+apiRouter.get('/payments/history', authenticate, handle(async (req, res) => {
+  const result = await PaymentService.getPaymentHistory(req.user.id);
+  res.json(result);
+}));
+
 apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) => {
   if (process.env.NODE_ENV === 'production' || !ENV.DEMO_PAYMENTS) {
     return res.status(403).json({ success: false, message: 'Demo payment endpoint is strictly disabled in production.' });
@@ -691,17 +700,22 @@ apiRouter.post('/bookings/:id/pay-demo', authenticate, handle(async (req, res) =
 apiRouter.post('/bookings/:id/payment-order', authenticate, handle(async (req, res) => {
   const result = await PaymentService.createOrder({
     bookingId: Number(req.params.id),
-    userId: req.user.id
+    userId: req.user.id,
+    userRole: req.user.role,
+    userSocietyId: req.user.society_id
   });
   res.json(result);
 }));
 
 apiRouter.post('/bookings/:id/verify-payment', authenticate, handle(async (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+  const schema = z.object({
+    razorpayOrderId: z.string().min(5),
+    razorpayPaymentId: z.string().min(5),
+    razorpaySignature: z.string().min(10)
+  });
+  const data = schema.parse(req.body);
   const result = await PaymentService.verifyRazorpayPayment({
-    razorpayOrderId,
-    razorpayPaymentId,
-    razorpaySignature,
+    ...data,
     bookingId: Number(req.params.id),
     userId: req.user.id
   });
@@ -717,6 +731,23 @@ apiRouter.post('/payments/webhook', handle(async (req, res) => {
     rawBody: req.rawBody,
     signature,
     event: req.body
+  });
+  res.json(result);
+}));
+
+apiRouter.post('/payments/:id/refund', authenticate, requireRoles(['ADMIN', 'SOCIETY_MANAGER']), handle(async (req, res) => {
+  const schema = z.object({
+    amount: z.coerce.number().positive(),
+    reason: z.string().min(5)
+  });
+  const data = schema.parse(req.body);
+  const result = await PaymentService.processRefund({
+    paymentId: Number(req.params.id),
+    amount: data.amount,
+    reason: data.reason,
+    adminUserId: req.user.id,
+    adminRole: req.user.role,
+    adminSocietyId: req.user.society_id
   });
   res.json(result);
 }));

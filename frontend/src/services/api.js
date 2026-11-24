@@ -115,6 +115,9 @@ export const api = {
   getInvoices: () => apiClient.get('/invoices'),
   createBooking: (data) => apiClient.post('/bookings', data),
   cancelBooking: (bookingId) => apiClient.patch(`/bookings/${bookingId}/cancel`),
+  getPaymentConfig: () => apiClient.get('/payments/config'),
+  createPaymentOrder: (bookingId) => apiClient.post(`/bookings/${bookingId}/payment-order`),
+  verifyPayment: (bookingId, data) => apiClient.post(`/bookings/${bookingId}/verify-payment`, data),
   payDemo: (bookingId) => apiClient.post(`/bookings/${bookingId}/pay-demo`),
 
   // Sessions & Attendance

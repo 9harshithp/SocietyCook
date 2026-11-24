@@ -8,29 +8,55 @@ import {
   Clock,
   Sparkles,
   QrCode,
-  X
+  AlertCircle,
+  X,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { trackCheckoutStart, trackPaymentSuccess, trackSubscriptionActivated } from '../services/analytics';
+
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 export function BillingPage() {
   const { user, showToast } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showPayModal, setShowPayModal] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState({
+    onlinePaymentsAvailable: false,
+    keyId: null,
+    currency: 'INR',
+    isTestMode: false,
+    demoAllowed: false
+  });
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
   const [payingBookingId, setPayingBookingId] = useState(null);
 
   const loadBilling = async () => {
     try {
       setLoading(true);
-      const [bookingsData, invoicesData] = await Promise.all([
+      const [bookingsData, invoicesData, configData] = await Promise.all([
         api.getBookings().catch(() => []),
-        api.getInvoices().catch(() => [])
+        api.getInvoices().catch(() => []),
+        api.getPaymentConfig().catch(() => ({ onlinePaymentsAvailable: false, demoAllowed: false }))
       ]);
       setBookings(bookingsData || []);
       setInvoices(invoicesData || []);
+      if (configData) {
+        setPaymentConfig(configData);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -42,7 +68,121 @@ export function BillingPage() {
     loadBilling();
   }, []);
 
+  const handleInitiatePayment = async (bookingId) => {
+    try {
+      setProcessingPayment(true);
+      setPayingBookingId(bookingId);
+
+      // 1. If online payments are disabled, do not proceed
+      if (!paymentConfig.onlinePaymentsAvailable && !paymentConfig.demoAllowed) {
+        showToast('Online payments are temporarily unavailable pending gateway activation.', 'error');
+        setProcessingPayment(false);
+        return;
+      }
+
+      // 2. Create authoritative server-side order
+      const order = await api.createPaymentOrder(bookingId);
+
+      // Track checkout start
+      trackCheckoutStart({
+        serviceType: activeBooking?.service_type || 'COOKING',
+        planId: bookingId,
+        amount: order.amount
+      });
+
+      // 3. In local dev mode with mock/demo order
+      if (order.isDemo && paymentConfig.demoAllowed && !import.meta.env.PROD) {
+        setShowDemoModal(true);
+        setProcessingPayment(false);
+        return;
+      }
+
+      // 4. Load official Razorpay Checkout SDK
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        showToast('Failed to load secure Razorpay Checkout SDK. Please check your internet connection.', 'error');
+        setProcessingPayment(false);
+        return;
+      }
+
+      // 5. Open Razorpay Checkout modal
+      const options = {
+        key: order.keyId,
+        amount: order.amountInPaise,
+        currency: order.currency || 'INR',
+        name: 'SocietyCook',
+        description: `Community Cooking Subscription (Booking #${bookingId})`,
+        order_id: order.orderId,
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: user?.phone || ''
+        },
+        notes: {
+          bookingId: String(bookingId),
+          societyId: String(user?.society_id || 1)
+        },
+        theme: {
+          color: '#059669' // emerald-600
+        },
+        handler: async function (response) {
+          try {
+            // Authoritative server-side verification
+            const verifyRes = await api.verifyPayment(bookingId, {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            });
+
+            if (verifyRes.success || verifyRes.status === 'ACTIVE') {
+              trackPaymentSuccess({
+                transactionId: response.razorpay_payment_id,
+                value: order.amount,
+                currency: 'INR',
+                isDemo: false
+              });
+              trackSubscriptionActivated({
+                subscriptionId: bookingId,
+                planTier: 'RESIDENTIAL_MONTHLY'
+              });
+              showToast('Payment verified and confirmed! Your daily service is now active.', 'success');
+              await loadBilling();
+            } else {
+              showToast('Payment could not be verified by the server. Please contact support.', 'error');
+            }
+          } catch (err) {
+            showToast(`Verification failed: ${err.message}`, 'error');
+          } finally {
+            setProcessingPayment(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setProcessingPayment(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (resp) {
+        showToast(`Payment failed: ${resp.error?.description || 'Transaction declined by bank'}`, 'error');
+        setProcessingPayment(false);
+      });
+      rzp.open();
+    } catch (err) {
+      showToast(err.message, 'error');
+      setProcessingPayment(false);
+    }
+  };
+
   const handlePayDemo = async (id) => {
+    // Strictly prevent demo payment in production
+    if (import.meta.env.PROD || !paymentConfig.demoAllowed) {
+      showToast('Demo payment simulation is not permitted in production.', 'error');
+      setShowDemoModal(false);
+      return;
+    }
+
     try {
       await api.payDemo(id);
       trackPaymentSuccess({
@@ -55,9 +195,9 @@ export function BillingPage() {
         subscriptionId: id,
         planTier: 'RESIDENTIAL_MONTHLY'
       });
-      showToast('Payment successful! Subscription active.');
-      setShowPayModal(false);
-      loadBilling();
+      showToast('Local demo payment confirmed! Subscription active.');
+      setShowDemoModal(false);
+      await loadBilling();
     } catch (err) {
       showToast(err.message, 'error');
     }
@@ -68,7 +208,6 @@ export function BillingPage() {
     const amount = inv.total_amount || inv.amount || 4000;
     const date = inv.issued_date ? new Date(inv.issued_date).toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
     
-    // Generate clean printable receipt
     const content = `========================================================
 SOCIETYCOOK - OFFICIAL TAX INVOICE & PAYMENT RECEIPT
 ========================================================
@@ -84,7 +223,7 @@ GST / Taxes:    INR 0.00 (Exempt under Composite Scheme)
 --------------------------------------------------------
 TOTAL PAID:     INR ${(amount).toLocaleString('en-IN')}.00
 Payment Status: CONFIRMED & RECONCILED
-Payment Mode:   Direct UPI / Escrow Settlement
+Payment Mode:   Razorpay Secure Escrow / Settlement
 ========================================================
 Thank you for hiring together and empowering local cooks!
 SocietyCook Technologies Private Limited
@@ -120,6 +259,30 @@ SocietyCook Technologies Private Limited
         </p>
       </div>
 
+      {/* Offline Payment Banner when Gateway is not active */}
+      {!paymentConfig.onlinePaymentsAvailable && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700/60 flex items-start gap-3.5 text-amber-900 dark:text-amber-200">
+          <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h3 className="font-black text-sm">Online Payments Unavailable</h3>
+            <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+              Online payments are temporarily unavailable pending payment gateway activation. Offline payment settlement is coordinated by your society management office.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Test Mode Indicator Banner */}
+      {paymentConfig.onlinePaymentsAvailable && paymentConfig.isTestMode && (
+        <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/50 border border-sky-300 dark:border-sky-700/60 flex items-center justify-between text-sky-900 dark:text-sky-200 text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+            <span>Razorpay Sandbox (Test Mode Active) — Simulated payment cards and UPI handles supported.</span>
+          </div>
+          <span className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-sky-200/60 dark:bg-sky-800/60 font-bold">TEST MODE</span>
+        </div>
+      )}
+
       {/* Subscription Status Card */}
       <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
@@ -143,22 +306,42 @@ SocietyCook Technologies Private Limited
         </div>
 
         <div>
-          <button
-            type="button"
-            onClick={() => {
-              const bId = activeBooking?.id || 1;
-              setPayingBookingId(bId);
-              setShowPayModal(true);
-              trackCheckoutStart({
-                serviceType: activeBooking?.service_type || 'COOKING',
-                planId: bId,
-                amount: activeBooking?.amount || 4000
-              });
-            }}
-            className="px-6 py-3 rounded-2xl bg-white text-emerald-800 font-bold text-xs hover:bg-slate-100 shadow-md transition-transform active:scale-95"
-          >
-            {activeBooking?.payment_status === 'SUCCESS' ? 'Renew / Pay Advance' : 'Pay Now (UPI / Card)'}
-          </button>
+          {paymentConfig.onlinePaymentsAvailable ? (
+            <button
+              type="button"
+              disabled={processingPayment}
+              onClick={() => {
+                const bId = activeBooking?.id || 1;
+                handleInitiatePayment(bId);
+              }}
+              className="px-6 py-3 rounded-2xl bg-white text-emerald-800 font-bold text-xs hover:bg-slate-100 shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+            >
+              {processingPayment && <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />}
+              {activeBooking?.payment_status === 'SUCCESS' ? 'Renew / Pay Advance' : 'Pay Now (Razorpay UPI / Card)'}
+            </button>
+          ) : (!import.meta.env.PROD && paymentConfig.demoAllowed) ? (
+            <button
+              type="button"
+              disabled={processingPayment}
+              onClick={() => {
+                const bId = activeBooking?.id || 1;
+                setPayingBookingId(bId);
+                setShowDemoModal(true);
+              }}
+              className="px-6 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs shadow-md transition-transform active:scale-95 flex items-center gap-2 cursor-pointer"
+            >
+              Pay Now (Dev Demo Simulation)
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              title="Online payments are currently offline"
+              className="px-6 py-3 rounded-2xl bg-white/30 text-white font-bold text-xs cursor-not-allowed opacity-75 shadow-none"
+            >
+              Online Payments Unavailable
+            </button>
+          )}
         </div>
       </div>
 
@@ -212,16 +395,21 @@ SocietyCook Technologies Private Limited
         </div>
       </div>
 
-      {/* Demo UPI Payment Modal */}
-      {showPayModal && (
+      {/* Local Dev Sandbox Modal (Strictly Restricted to Non-Production) */}
+      {showDemoModal && !import.meta.env.PROD && paymentConfig.demoAllowed && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="max-w-md w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 text-center">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white">Simulate Payment (Demo Sandbox)</h3>
-                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block text-left">Test Mode Active</span>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">Simulate Payment (Dev Sandbox)</h3>
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block text-left">Local Development Only</span>
               </div>
-              <button type="button" aria-label="Close payment modal" onClick={() => setShowPayModal(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer">
+              <button
+                type="button"
+                aria-label="Close payment modal"
+                onClick={() => setShowDemoModal(false)}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -229,7 +417,7 @@ SocietyCook Technologies Private Limited
             <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-[11px] text-amber-800 dark:text-amber-300 text-left flex items-start gap-2">
               <span className="text-sm">⚠️</span>
               <p>
-                <strong>DEMO TRANSACTION:</strong> This is a sandbox demonstration interface. No real funds are transferred or debited. Production payments are handled via Razorpay Gateway.
+                <strong>DEMO TRANSACTION (DEV SANDBOX):</strong> This simulation modal is strictly restricted to local development environments. In production, payments are handled exclusively via Razorpay Checkout.
               </p>
             </div>
 
@@ -249,7 +437,7 @@ SocietyCook Technologies Private Limited
               onClick={() => handlePayDemo(payingBookingId)}
               className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 cursor-pointer"
             >
-              Simulate Instant UPI Payment (Demo Sandbox)
+              Simulate Instant UPI Payment (Dev Sandbox)
             </button>
           </div>
         </div>
