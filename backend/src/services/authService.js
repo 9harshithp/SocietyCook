@@ -64,7 +64,7 @@ export class AuthService {
       if (referrer) referredById = referrer.id;
     }
 
-    return await transaction(async (q) => {
+    const registeredUser = await transaction(async (q) => {
       const userRes = await q(
         `INSERT INTO users (name, email, password_hash, role, society_id, flat, phone, referral_code, referred_by_id)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -81,17 +81,17 @@ export class AuthService {
         );
       }
 
-      // If cook, create initial cook profile
+      // If cook, create initial cook profile in pending-verification state
       if (role === 'COOK') {
         await q(
           `INSERT INTO cooks (user_id, cuisine, bio, price, experience, verified, available_from, available_to, dietary_tags)
-           VALUES (?, 'Homestyle Indian Cooking', 'Dedicated residential cook committed to hygiene and punctuality.', 4000, 2, 1, '06:30:00', '21:30:00', 'Pure Veg, Custom Spice')`,
+           VALUES (?, 'Homestyle Indian Cooking', 'Dedicated residential cook committed to hygiene and punctuality.', 4000, 2, 0, '06:30:00', '21:30:00', 'Pure Veg, Custom Spice')`,
           [userId]
         );
 
         const [cook] = await q('SELECT id FROM cooks WHERE user_id = ?', [userId]);
         await q(
-          `INSERT INTO cook_society_assignments (cook_id, society_id, status) VALUES (?, ?, 'APPROVED')`,
+          `INSERT INTO cook_society_assignments (cook_id, society_id, status) VALUES (?, ?, 'PENDING')`,
           [cook.id, societyId]
         );
       }
@@ -106,18 +106,20 @@ export class AuthService {
       }
 
       const user = { id: userId, name, email, role, society_id: societyId };
-      const accessToken = AuthService.generateAccessToken(user);
-      const refreshToken = await AuthService.generateRefreshToken(userId);
-
-      await logAudit({
-        userId,
-        action: 'USER_REGISTERED',
-        resourceType: 'USER',
-        resourceId: userId
-      });
-
-      return { user, accessToken, refreshToken };
+      return user;
     });
+
+    const accessToken = AuthService.generateAccessToken(registeredUser);
+    const refreshToken = await AuthService.generateRefreshToken(registeredUser.id);
+
+    await logAudit({
+      userId: registeredUser.id,
+      action: 'USER_REGISTERED',
+      resourceType: 'USER',
+      resourceId: registeredUser.id
+    });
+
+    return { user: registeredUser, accessToken, refreshToken };
   }
 
   static async login({ email, password, req = null }) {

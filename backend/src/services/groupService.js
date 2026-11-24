@@ -148,9 +148,12 @@ export class GroupService {
    */
   static async getGroupDetails(groupId, userId = null) {
     const [group] = await query(
-      `SELECT g.*, 
+      `SELECT g.id, g.society_id, g.created_by_resident_id, g.name, g.description,
+              g.meal_service, g.preferred_cuisines, g.dietary_pref, g.preferred_time_start,
+              g.preferred_time_end, g.monthly_budget_max, g.min_households, g.max_households,
+              g.current_households, g.status, g.invite_code, g.assigned_cook_id, g.created_at, g.activated_at,
               s.name as society_name, s.address as society_address,
-              u.name as creator_name, u.phone as creator_phone,
+              u.name as creator_name,
               c.cuisine as cook_cuisine, cu.name as cook_name, c.photo_url as cook_photo, c.experience as cook_experience
        FROM cook_groups g
        JOIN societies s ON s.id = g.society_id
@@ -168,7 +171,9 @@ export class GroupService {
     }
 
     const members = await query(
-      `SELECT gm.*, u.name as resident_name, u.phone as resident_phone, u.avatar_url
+      `SELECT gm.id, gm.group_id, gm.resident_id, gm.flat_number, gm.household_size,
+              gm.meal_requirements, gm.preferred_slot_start, gm.status, gm.joined_at,
+              u.name as resident_name, u.avatar_url
        FROM group_members gm
        JOIN users u ON u.id = gm.resident_id
        WHERE gm.group_id = ? AND gm.status != 'LEFT'
@@ -325,6 +330,14 @@ export class GroupService {
       const [cook] = await q('SELECT c.*, u.name FROM cooks c JOIN users u ON u.id=c.user_id WHERE c.id = ?', [cookId]);
       if (!cook || !cook.verified) throw new Error('Selected cook is not verified or unavailable');
 
+      const [assignment] = await q(
+        "SELECT 1 FROM cook_society_assignments WHERE cook_id = ? AND society_id = ? AND status = 'APPROVED'",
+        [cookId, group.society_id]
+      );
+      if (!assignment) {
+        throw new Error('Selected professional is not approved for service in this society.');
+      }
+
       await q(
         "UPDATE cook_groups SET assigned_cook_id = ?, status = 'AWAITING_CONFIRMATION' WHERE id = ?",
         [cookId, groupId]
@@ -368,6 +381,18 @@ export class GroupService {
         'SELECT c.*, u.name, u.society_id FROM cooks c JOIN users u ON u.id=c.user_id WHERE c.id = ?',
         [group.assigned_cook_id]
       );
+
+      if (!cook || !cook.verified) {
+        throw new Error('Assigned professional is not verified or unavailable.');
+      }
+
+      const [assignment] = await q(
+        "SELECT 1 FROM cook_society_assignments WHERE cook_id = ? AND society_id = ? AND status = 'APPROVED'",
+        [cook.id, group.society_id]
+      );
+      if (!assignment) {
+        throw new Error('Assigned professional is not approved for service in this society.');
+      }
 
       const members = await q(
         "SELECT * FROM group_members WHERE group_id = ? AND status != 'LEFT'",
@@ -427,7 +452,7 @@ export class GroupService {
       );
       const scheduleId = schedRes.insertId;
 
-      // 4. Create Schedule Entries, 30-day Bookings & Subscriptions for each member
+      // 4. Create Schedule Entries & Reservations in PENDING status (Payment Required)
       for (const entry of scheduleResult.entries) {
         await q(
           `INSERT INTO schedule_entries 
@@ -446,11 +471,11 @@ export class GroupService {
           ]
         );
 
-        // Booking record
+        // Booking record in PENDING status (requiring payment before service begins)
         const bookingRes = await q(
           `INSERT INTO bookings 
            (resident_id, cook_id, start_date, end_date, start_time, end_time, amount, status, expires_at, slot_label, meal_type, group_id, schedule_id, monthly_price)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', DATE_ADD(NOW(), INTERVAL 30 DAY), ?, ?, ?, ?, ?)`,
           [
             entry.resident_id,
             cook.id,
@@ -468,36 +493,13 @@ export class GroupService {
         );
         const bookingId = bookingRes.insertId;
 
-        // Subscription record
-        await q(
-          `INSERT INTO subscriptions (booking_id, group_id, resident_id, society_id, monthly_amount, status, current_period_start, current_period_end)
-           VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?)`,
-          [bookingId, groupId, entry.resident_id, group.society_id, pricing.pricePerHousehold, today, nextMonth]
-        );
-
-        // Simulated initial payment record
-        await q(
-          `INSERT INTO payments (booking_id, amount, status, gateway, payment_id, order_id, group_id, user_id)
-           VALUES (?, ?, 'SUCCESS', 'DEMO_SIMULATED', CONCAT('pay_grp_', ?), CONCAT('order_grp_', ?), ?, ?)`,
-          [bookingId, pricing.pricePerHousehold, bookingId, bookingId, groupId, entry.resident_id]
-        );
-
-        // Generate session for today with OTP
-        const otpCode = String(Math.floor(1000 + Math.random() * 9000));
-        await q(
-          `INSERT INTO sessions 
-           (booking_id, cook_id, service_date, status, scheduled_start_time, scheduled_end_time, flat_number, otp_code)
-           VALUES (?, ?, ?, 'SCHEDULED', ?, ?, ?, ?)`,
-          [bookingId, cook.id, today, entry.start_time, entry.end_time, entry.flat_number, otpCode]
-        );
-
-        // Notification to resident
+        // Notification to resident prompting payment
         await q(
           `INSERT INTO notifications (user_id, title, message, type)
-           VALUES (?, 'Cook Group Activated! Your Slot is Confirmed', ?, 'SCHEDULE')`,
+           VALUES (?, 'Cook Group Activated! Complete Payment to Start Service', ?, 'SCHEDULE')`,
           [
             entry.resident_id,
-            `Group '${group.name}' is now ACTIVE! ${cook.name} is scheduled daily at ${entry.time_label}. Today's service OTP: ${otpCode}. Price: ₹${pricing.pricePerHousehold.toLocaleString('en-IN')}/mo.`
+            `Group '${group.name}' is now activated! Your reserved slot is ${entry.time_label}. Complete your monthly payment of ₹${pricing.pricePerHousehold.toLocaleString('en-IN')} on your billing page to begin daily cooking service.`
           ]
         );
       }

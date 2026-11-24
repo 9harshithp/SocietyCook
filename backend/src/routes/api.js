@@ -1,5 +1,7 @@
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { ENV } from '../config/env.js';
 import { query, transaction } from '../config/database.js';
 import { AuthService } from '../services/authService.js';
 import { GroupService } from '../services/groupService.js';
@@ -163,6 +165,10 @@ apiRouter.get('/services', handle(async (req, res) => {
 
 apiRouter.get('/cooks', authenticate, handle(async (req, res) => {
   const targetSocietyId = req.query.society_id ? Number(req.query.society_id) : req.user.society_id;
+  if (req.user.role !== 'ADMIN' && targetSocietyId !== req.user.society_id) {
+    return res.status(403).json({ success: false, message: 'Access restricted to your registered society.' });
+  }
+
   let where = targetSocietyId ? 'c.verified=1 AND u.society_id=?' : 'c.verified=1';
   const params = targetSocietyId ? [targetSocietyId] : [];
 
@@ -180,8 +186,13 @@ apiRouter.get('/cooks', authenticate, handle(async (req, res) => {
     params.push(req.query.professional_type || req.query.professionalType);
   }
 
+  // Strict field allowlist: omit phone and email from public/general listings
   const cooks = await query(`
-    SELECT c.*, u.name, u.email, u.phone, u.society_id, s.name as society_name,
+    SELECT c.id, c.user_id, c.cuisine, c.bio, c.price, c.experience, c.verified,
+           c.available_from, c.available_to, c.dietary_tags, c.photo_url, c.rating_avg,
+           c.reliability_score, c.professional_type, c.services_offered, c.dishwashing_price,
+           c.dishwashing_experience, c.dishwashing_bio,
+           u.name, u.society_id, s.name as society_name,
            COALESCE((SELECT AVG(v.rating) FROM reviews v JOIN bookings b ON b.id=v.booking_id WHERE b.cook_id=c.id), c.rating_avg, 4.8) rating,
            (SELECT COUNT(*) FROM reviews v JOIN bookings b ON b.id=v.booking_id WHERE b.cook_id=c.id) review_count,
            (SELECT COUNT(*) FROM bookings b WHERE b.cook_id=c.id AND b.status='ACTIVE') active_households
@@ -197,8 +208,24 @@ apiRouter.get('/cooks', authenticate, handle(async (req, res) => {
 
 apiRouter.get('/cooks/:id', handle(async (req, res) => {
   const cookId = Number(req.params.id);
+
+  // Optional authentication check for legitimate service relationship
+  let callerUser = null;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const decoded = jwt.verify(authHeader.split(' ')[1], ENV.JWT_SECRET);
+      const [u] = await query('SELECT id, role, society_id FROM users WHERE id = ?', [decoded.sub]);
+      callerUser = u;
+    } catch (e) {}
+  }
+
   const [cook] = await query(`
-    SELECT c.*, u.name, u.phone, u.society_id, s.name as society_name,
+    SELECT c.id, c.user_id, c.cuisine, c.bio, c.price, c.experience, c.verified,
+           c.available_from, c.available_to, c.dietary_tags, c.photo_url, c.rating_avg,
+           c.reliability_score, c.professional_type, c.services_offered, c.dishwashing_price,
+           c.dishwashing_experience, c.dishwashing_bio,
+           u.name, u.society_id, s.name as society_name,
            COALESCE((SELECT AVG(v.rating) FROM reviews v JOIN bookings b ON b.id=v.booking_id WHERE b.cook_id=c.id), c.rating_avg, 4.8) rating,
            (SELECT COUNT(*) FROM reviews v JOIN bookings b ON b.id=v.booking_id WHERE b.cook_id=c.id) review_count,
            (SELECT COUNT(*) FROM bookings b WHERE b.cook_id=c.id AND b.status='ACTIVE') active_households
@@ -210,8 +237,30 @@ apiRouter.get('/cooks/:id', handle(async (req, res) => {
 
   if (!cook) return res.status(404).json({ success: false, message: 'Cook not found' });
 
+  // Legitimate service relationship check: phone only visible to admin, the cook themselves, or active resident clients
+  let hasActiveServiceRelationship = false;
+  if (callerUser) {
+    if (callerUser.role === 'ADMIN' || callerUser.id === cook.user_id) {
+      hasActiveServiceRelationship = true;
+    } else {
+      const [activeBooking] = await query(
+        "SELECT 1 FROM bookings WHERE cook_id = ? AND resident_id = ? AND status = 'ACTIVE' LIMIT 1",
+        [cookId, callerUser.id]
+      );
+      hasActiveServiceRelationship = !!activeBooking;
+    }
+  }
+
+  let cookPhone = null;
+  if (hasActiveServiceRelationship) {
+    const [uRow] = await query('SELECT phone FROM users WHERE id = ?', [cook.user_id]);
+    cookPhone = uRow?.phone || null;
+  }
+
+  // Reviews: Anonymize resident names and scrub apartment flat numbers
   const reviews = await query(`
-    SELECT v.*, ru.name resident_name, ru.flat
+    SELECT v.id, v.rating, v.comment, v.created_at,
+           CONCAT(SUBSTRING(ru.name, 1, 1), '*** (Resident)') as resident_name
     FROM reviews v
     JOIN bookings b ON b.id = v.booking_id
     JOIN users ru ON ru.id = b.resident_id
@@ -234,27 +283,36 @@ apiRouter.get('/cooks/:id', handle(async (req, res) => {
   ];
 
   const activeBookings = await query(`
-    SELECT id, start_time, end_time, slot_label, resident_id, status 
+    SELECT start_time, end_time, slot_label, status 
     FROM bookings 
     WHERE cook_id=? AND (status='ACTIVE' OR (status='PENDING' AND expires_at>NOW()))
   `, [cookId]);
 
+  // Strip bookingId and residentId to prevent ID enumeration
   const slots = allSlots.map(s => {
     const booked = activeBookings.find(b => b.start_time.slice(0, 5) === s.start);
     return {
       ...s,
       isBooked: !!booked,
-      bookingId: booked?.id || null,
       status: booked ? 'Booked' : 'Available'
     };
   });
 
-  res.json({ ...cook, reviews, slots });
+  res.json({
+    ...cook,
+    phone: cookPhone,
+    reviews,
+    slots
+  });
 }));
 
 // 5. Group Cook Hiring (Core Differentiation)
 apiRouter.get('/groups', authenticate, handle(async (req, res) => {
   const targetSocietyId = req.query.societyId ? Number(req.query.societyId) : req.user.society_id;
+  if (req.user.role !== 'ADMIN' && targetSocietyId !== req.user.society_id) {
+    return res.status(403).json({ success: false, message: 'Access restricted to your registered society.' });
+  }
+
   const groups = await GroupService.getSocietyGroups(targetSocietyId, req.query.status);
   res.json(groups);
 }));
@@ -302,7 +360,14 @@ apiRouter.post('/groups', authenticate, requireRoles(['RESIDENT', 'ADMIN']), han
 }));
 
 apiRouter.get('/groups/:id', authenticate, handle(async (req, res) => {
-  const details = await GroupService.getGroupDetails(Number(req.params.id), req.user.id);
+  const groupId = Number(req.params.id);
+  const [groupRow] = await query('SELECT society_id FROM cook_groups WHERE id = ?', [groupId]);
+  if (!groupRow) return res.status(404).json({ success: false, message: 'Cook group not found.' });
+  if (req.user.role !== 'ADMIN' && groupRow.society_id !== req.user.society_id) {
+    return res.status(403).json({ success: false, message: 'Access restricted to your registered society.' });
+  }
+
+  const details = await GroupService.getGroupDetails(groupId, req.user.id);
   res.json({
     ...details.group,
     group: details.group,
@@ -314,6 +379,13 @@ apiRouter.get('/groups/:id', authenticate, handle(async (req, res) => {
 }));
 
 apiRouter.post('/groups/:id/join', authenticate, requireRoles(['RESIDENT', 'ADMIN']), handle(async (req, res) => {
+  const groupId = Number(req.params.id);
+  const [groupRow] = await query('SELECT society_id FROM cook_groups WHERE id = ?', [groupId]);
+  if (!groupRow) return res.status(404).json({ success: false, message: 'Cook group not found.' });
+  if (req.user.role !== 'ADMIN' && groupRow.society_id !== req.user.society_id) {
+    return res.status(403).json({ success: false, message: 'You can only join cook groups within your registered society.' });
+  }
+
   const schema = z.object({
     flatNumber: z.string().optional(),
     flat_number: z.string().optional(),
@@ -325,7 +397,7 @@ apiRouter.post('/groups/:id/join', authenticate, requireRoles(['RESIDENT', 'ADMI
   });
   const data = schema.parse(req.body);
   const result = await GroupService.joinGroup({
-    groupId: Number(req.params.id),
+    groupId,
     residentId: req.user.id,
     flatNumber: data.flatNumber || data.flat_number || req.user.flat,
     householdSize: data.householdSize || 2,
@@ -474,6 +546,31 @@ apiRouter.post('/bookings', authenticate, requireRoles(['RESIDENT']), handle(asy
         const err = new Error('Assigned dishwasher professional not available');
         err.status = 404;
         throw err;
+      }
+    }
+
+    // Verify professional society clearance (residents can only book cleared professionals in their society)
+    if (req.user.role !== 'ADMIN') {
+      const [cookAssignment] = await transQuery(
+        "SELECT 1 FROM cook_society_assignments WHERE cook_id = ? AND society_id = ? AND status = 'APPROVED'",
+        [b.cookId, req.user.society_id]
+      );
+      if (!cookAssignment) {
+        const err = new Error('Service professional is not cleared for service in your society.');
+        err.status = 403;
+        throw err;
+      }
+
+      if (b.dishwasherId) {
+        const [dwAssignment] = await transQuery(
+          "SELECT 1 FROM cook_society_assignments WHERE cook_id = ? AND society_id = ? AND status = 'APPROVED'",
+          [b.dishwasherId, req.user.society_id]
+        );
+        if (!dwAssignment) {
+          const err = new Error('Assigned dishwasher professional is not cleared for service in your society.');
+          err.status = 403;
+          throw err;
+        }
       }
     }
 
@@ -824,9 +921,43 @@ apiRouter.get('/analytics/admin', authenticate, requireRoles(['ADMIN']), handle(
   res.json(data);
 }));
 
-// Admin cook verification toggle
-apiRouter.post('/admin/cooks/:id/verify', authenticate, requireRoles(['ADMIN']), handle(async (req, res) => {
+// Authorized professional verification & clearance workflow
+apiRouter.post('/admin/cooks/:id/verify', authenticate, requireRoles(['ADMIN', 'SOCIETY_MANAGER']), handle(async (req, res) => {
+  const cookId = Number(req.params.id);
   const { verified } = req.body;
-  await query('UPDATE cooks SET verified = ? WHERE id = ?', [Boolean(verified), req.params.id]);
-  res.json({ success: true, verified: Boolean(verified) });
+
+  const [cook] = await query(
+    'SELECT c.*, u.society_id FROM cooks c JOIN users u ON u.id = c.user_id WHERE c.id = ?',
+    [cookId]
+  );
+  if (!cook) return res.status(404).json({ success: false, message: 'Professional profile not found.' });
+
+  // Prevent self-approval
+  if (cook.user_id === req.user.id) {
+    return res.status(403).json({ success: false, message: 'Self-approval is strictly prohibited.' });
+  }
+
+  // Society Manager can only verify professionals registered within their own society
+  if (req.user.role === 'SOCIETY_MANAGER' && cook.society_id !== req.user.society_id) {
+    return res.status(403).json({ success: false, message: 'Access denied: You can only approve professionals within your registered society.' });
+  }
+
+  const isVerified = Boolean(verified);
+  await transaction(async (q) => {
+    await q('UPDATE cooks SET verified = ? WHERE id = ?', [isVerified ? 1 : 0, cookId]);
+    await q(
+      "UPDATE cook_society_assignments SET status = ? WHERE cook_id = ? AND society_id = ?",
+      [isVerified ? 'APPROVED' : 'REJECTED', cookId, cook.society_id]
+    );
+
+    await logAudit({
+      userId: req.user.id,
+      action: isVerified ? 'COOK_VERIFIED' : 'COOK_REJECTED',
+      resourceType: 'COOK',
+      resourceId: cookId,
+      diff: { verified: isVerified, societyId: cook.society_id }
+    });
+  });
+
+  res.json({ success: true, verified: isVerified });
 }));

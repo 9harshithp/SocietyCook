@@ -12,16 +12,22 @@ const SENSITIVE_KEYS = [
   'jwt',
   'authorization',
   'cookie',
+  'cookies',
   'secret',
   'hash',
   'phone',
+  'mobile',
   'flat',
+  'flat_number',
   'address',
   'cvv',
   'card',
+  'credit_card',
+  'card_number',
   'upi',
   'pin',
   'otp',
+  'otp_code',
   'key',
   'api-key',
   'apikey'
@@ -115,6 +121,7 @@ export function initMonitoring() {
     
     // Error monitoring only: tracing, profiling, and session replay disabled
     tracesSampleRate: 0,
+    sendDefaultPii: false,
 
     // Enterprise Privacy: Session Replay is STRICTLY DISABLED per review requirements
     replaysSessionSampleRate: 0,

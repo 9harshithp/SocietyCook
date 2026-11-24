@@ -100,6 +100,19 @@ export function ProfessionalDashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
+      {/* Pending Verification Notice */}
+      {analytics?.cook && !analytics.cook.verified && (
+        <div className="bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 rounded-2xl p-4 sm:p-5 flex items-start gap-3 text-amber-900 dark:text-amber-200">
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="font-black text-sm">Professional Profile Under Review</h4>
+            <p className="text-xs text-amber-800 dark:text-amber-300">
+              Your professional profile is currently pending verification and security clearance by the society administrator. You will become bookable and cleared for household appointments once approved.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Hero Welcome Card */}
       <div className="bg-gradient-to-br from-[#153D32] to-[#1E5747] text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-[#153D32]/15 space-y-4">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-[#E9A15B] text-xs font-extrabold uppercase tracking-wider">

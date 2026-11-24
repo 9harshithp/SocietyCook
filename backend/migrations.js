@@ -283,6 +283,7 @@ export async function runMigrations() {
   await safeAddCol('sessions', 'flat_number', 'VARCHAR(30) NULL');
   await safeAddCol('sessions', 'otp_code', "VARCHAR(6) DEFAULT '4892'");
   await safeAddCol('sessions', 'otp_verified', 'BOOLEAN DEFAULT FALSE');
+  await safeAddCol('sessions', 'otp_attempts', 'INT DEFAULT 0');
   await safeAddCol('sessions', 'late_minutes', 'INT DEFAULT 0');
   await safeAddCol('sessions', 'resident_confirmed', 'BOOLEAN DEFAULT FALSE');
   await safeAddCol('sessions', 'dispute_reason', 'VARCHAR(255) NULL');

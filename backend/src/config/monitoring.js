@@ -11,16 +11,22 @@ const SENSITIVE_KEYS = [
   'jwt',
   'authorization',
   'cookie',
+  'cookies',
   'secret',
   'hash',
   'phone',
+  'mobile',
   'flat',
+  'flat_number',
   'address',
   'cvv',
   'card',
+  'credit_card',
+  'card_number',
   'upi',
   'pin',
   'otp',
+  'otp_code',
   'key',
   'api-key',
   'apikey',
@@ -168,6 +174,7 @@ export function initBackendMonitoring() {
     environment: APP_ENV,
     // Error monitoring only: tracing, profiling, and session replay disabled
     tracesSampleRate: 0,
+    sendDefaultPii: false,
 
     initialScope: {
       tags: {
@@ -178,9 +185,19 @@ export function initBackendMonitoring() {
     },
 
     beforeSend(event) {
+      // Strip personal IP addresses and network identifiers
+      if (event.user) {
+        delete event.user.ip_address;
+      }
+      if (event.request?.env) {
+        delete event.request.env.REMOTE_ADDR;
+      }
+
       // Redact request data
       if (event.request) {
         if (event.request.headers) {
+          delete event.request.headers['x-forwarded-for'];
+          delete event.request.headers['x-real-ip'];
           event.request.headers = redactSensitiveBackendData(event.request.headers);
         }
         if (event.request.data) {

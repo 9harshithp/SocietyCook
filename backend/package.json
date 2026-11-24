@@ -2,7 +2,7 @@
   "name": "societycook-api",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node migrations.js && node server.js",
     "dev": "node --watch server.js",
     "seed": "node seed.js",
     "migrate": "node migrations.js",
