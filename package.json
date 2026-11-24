@@ -2,6 +2,8 @@
   "name": "societycook-workspace",
   "private": true,
   "scripts": {
+    "start": "npm --prefix backend start",
+    "migrate": "npm --prefix backend run migrate",
     "test:e2e": "node tests/e2e.test.cjs"
   },
   "devDependencies": {
