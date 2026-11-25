@@ -410,7 +410,10 @@ export async function seedDatabase() {
 
 if (process.argv[1]?.endsWith('seed.js')) {
   seedDatabase()
-    .then(() => db.end())
+    .then(async () => {
+      try { await db.end(); } catch (e) {}
+      process.exit(0);
+    })
     .catch((err) => {
       console.error('Seed error:', err);
       process.exit(1);

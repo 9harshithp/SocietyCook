@@ -624,7 +624,10 @@ export async function runMigrations() {
 
 if (process.argv[1]?.endsWith('migrations.js')) {
   runMigrations()
-    .then(() => db.end())
+    .then(async () => {
+      try { await db.end(); } catch (e) {}
+      process.exit(0);
+    })
     .catch((err) => {
       console.error('Migration failed:', err);
       process.exit(1);
