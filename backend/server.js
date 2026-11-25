@@ -105,6 +105,14 @@ app.use(
 
 app.use(cors(corsOptions));
 
+// Staging & Non-Production Search Engine Indexing Protection
+app.use((req, res, next) => {
+  if (ENV.IS_STAGING || ENV.NODE_ENV !== 'production') {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
+  next();
+});
+
 // Body Parser with Raw Body preservation for Webhook Signature Verification
 app.use(
   express.json({
@@ -140,6 +148,18 @@ const authLimiter = rateLimit({
 
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/register', authLimiter);
+
+// Dedicated Rate Limiting on Payment Order and Verification Endpoints
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: isProductionEnv ? 30 : 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many payment attempts. Please slow down and try again later.' }
+});
+
+app.use('/api/v1/bookings/:id/payment-order', paymentLimiter);
+app.use('/api/v1/bookings/:id/verify-payment', paymentLimiter);
 
 // Sentry & Enterprise Latency / Error Tracking Middleware
 app.use(latencyAndErrorTrackerMiddleware);

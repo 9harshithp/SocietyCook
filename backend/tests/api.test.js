@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import app from '../server.js';
+import { query } from '../src/config/database.js';
 
 describe('SocietyCook v2 Endpoints Integration Test', () => {
   let residentToken = '';
@@ -14,6 +15,9 @@ describe('SocietyCook v2 Endpoints Integration Test', () => {
     if (res.body?.token || res.body?.accessToken) {
       residentToken = res.body.token || res.body.accessToken;
     }
+
+    // Clean up any conflicting active bookings for cook 1 at 18:00
+    await query("UPDATE bookings SET status = 'CANCELLED' WHERE cook_id = 1 AND start_time = '18:00:00' AND status = 'ACTIVE'");
   });
 
   it('GET /api/v1/health returns status HEALTHY', async () => {

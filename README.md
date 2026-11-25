@@ -4,9 +4,13 @@
 > *A happier home. A simpler everyday.*  
 > A production-grade hyperlocal household services platform enabling neighbouring households within gated residential societies to collectively hire verified home cooks, dishwashing specialists, and complete kitchen care — scheduled seamlessly in their own homes.
 
-[![Test Suite](https://img.shields.io/badge/Vitest-21%20Passing-brightgreen.svg)](#automated-testing)
-[![Branch](https://img.shields.io/badge/Branch-feature%2Fsocietycook--v3-blue.svg)](#git-branch)
-[![API Docs](https://img.shields.io/badge/Swagger-OpenAPI%203.0-orange.svg)](#api-documentation)
+[![DevSecOps CI/CD Pipeline](https://github.com/9harshithp/SocietyCook/actions/workflows/devsecops.yml/badge.svg)](https://github.com/9harshithp/SocietyCook/actions/workflows/devsecops.yml)
+[![Vercel Production](https://deploy-badge.vercel.app/vercel/societycook)](https://societycook.vercel.app)
+[![Vitest Backend](https://img.shields.io/badge/Vitest-103%20Passing%20(100%25)-brightgreen.svg)](#automated-testing)
+[![Playwright E2E](https://img.shields.io/badge/Playwright-22%20Passing-brightgreen.svg)](#automated-testing)
+[![Database](https://img.shields.io/badge/Database-MySQL%208%20%7C%20TiDB-blue.svg)](DATABASE.md)
+[![Security Audit](https://img.shields.io/badge/OWASP-0%20Vulnerabilities-brightgreen.svg)](backend/)
+[![Protocol](https://img.shields.io/badge/Standard-Ponytail%20AI-orange.svg)](AGENTS.md)
 
 ---
 

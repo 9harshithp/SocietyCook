@@ -1,4 +1,10 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 
@@ -37,6 +43,11 @@ export const ENV = {
   JWT_SECRET: jwtSecret,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '2h',
   REFRESH_TOKEN_EXPIRES_DAYS: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30),
+  // Explicit payment activation: defaults to disabled
+  ONLINE_PAYMENTS_ENABLED: process.env.ONLINE_PAYMENTS_ENABLED === 'true',
+  ALLOW_LIVE_PAYMENTS: process.env.ALLOW_LIVE_PAYMENTS === 'true',
+  IS_STAGING: process.env.IS_STAGING === 'true',
+  REFUNDS_ENABLED: process.env.REFUNDS_ENABLED === 'true',
   // Demo payments are strictly prohibited in production mode
   DEMO_PAYMENTS: isProduction ? false : process.env.DEMO_PAYMENTS === 'true',
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
