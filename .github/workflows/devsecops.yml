@@ -15,6 +15,18 @@ jobs:
     name: Security Scan, Lint & Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: societycook
+          MYSQL_USER: societycook
+          MYSQL_PASSWORD: localpassword
+          MYSQL_ROOT_PASSWORD: localrootpassword
+        ports:
+          - 3307:3306
+        options: --health-cmd="mysqladmin ping -h localhost -u root -plocalrootpassword" --health-interval=10s --health-timeout=5s --health-retries=5
+
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
@@ -42,10 +54,19 @@ jobs:
       - name: Audit Frontend Dependencies (OWASP Top 10 A06)
         run: npm --prefix frontend audit --audit-level=high
 
+      - name: Initialize Database & Seed Fixtures for CI Tests
+        run: |
+          cd backend
+          node seed.js
+        env:
+          NODE_ENV: test
+          DATABASE_URL: mysql://societycook:localpassword@127.0.0.1:3307/societycook
+
       - name: Execute Backend Tests & Security Regression Suite
         run: npm --prefix backend test
         env:
           NODE_ENV: test
+          DATABASE_URL: mysql://societycook:localpassword@127.0.0.1:3307/societycook
           JWT_SECRET: test-super-secret-jwt-key-minimum-32-chars-ok
 
       - name: Build Frontend Production Bundle

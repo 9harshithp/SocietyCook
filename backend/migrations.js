@@ -1,7 +1,29 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { query, db } from './db.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export async function runMigrations() {
-  console.log('🔄 Running SocietyCook v2 non-destructive database migrations...');
+  console.log('🔄 Running SocietyCook non-destructive database migrations...');
+
+  // 0. Ensure base schema tables exist (users, cooks, bookings, payments, etc.)
+  try {
+    const schemaPath = path.resolve(__dirname, 'schema.sql');
+    if (fs.existsSync(schemaPath)) {
+      const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+      const statements = schemaSql
+        .split(';')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      for (const stmt of statements) {
+        await query(stmt);
+      }
+    }
+  } catch (err) {
+    console.warn('  ! Base schema initialization notice:', err.message);
+  }
 
   const safeAddCol = async (table, column, definition) => {
     try {
