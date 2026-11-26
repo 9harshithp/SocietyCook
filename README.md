@@ -108,21 +108,76 @@ Its community-first model combines demand clustering, coordinated service schedu
 
 ## 🏗️ System Architecture
 
+SocietyCook follows a modular monolith architecture with
+independently deployed frontend and backend applications.
+
 ```mermaid
-flowchart TD
-    U["Residents, Providers, Managers, Admins"] --> F["React frontend (Vercel)"]
-    F -->|HTTPS REST API| B["Express backend (Render)"]
-    B --> L["Authentication, Booking, Pricing, Scheduling"]
-    L --> D[("TiDB Cloud")]
-    F --> S["Sentry"]
-    B --> S
-    M["UptimeRobot"] -. availability .-> F
-    M -. API health .-> B
+flowchart TB
+    U["Residents, Providers, Managers and Admins"]
+    U --> F["React PWA - Vercel"]
+    F -->|HTTPS REST API| B["Express API - Render"]
+
+    subgraph Backend["Backend Modules"]
+        B --> A["Authentication and RBAC"]
+        B --> S["Booking and Scheduling"]
+        B --> P["Dynamic Pricing"]
+        B --> R["Payment Management"]
+        B --> V["OTP Session Verification"]
+    end
+
+    A --> DB[("TiDB Cloud / MySQL")]
+    S --> DB
+    P --> DB
+    R --> DB
+    V --> DB
+
+    R <-->|Payments and Webhooks| RP["Razorpay"]
+    F --> M["Sentry"]
+    B --> M
+    UM["UptimeRobot"] -.-> F
+    UM -.-> B
 ```
 
-SocietyCook uses a modular monolith backend with separate frontend and API deployments.
+### Booking Sequence Diagram
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) and [TRD.md](TRD.md) for detailed engineering design.
+```mermaid
+sequenceDiagram
+    actor R as Resident
+    participant F as React Frontend
+    participant B as Express API
+    participant D as TiDB Cloud
+
+    R->>F: Select service and time slot
+    F->>B: Submit booking request
+    B->>D: Begin transaction and lock rows
+    D-->>B: Return availability
+
+    alt Slot available
+        B->>D: Create booking and commit
+        B-->>F: Booking confirmed
+        F-->>R: Display confirmation
+    else Slot unavailable
+        B->>D: Rollback transaction
+        B-->>F: Booking conflict
+        F-->>R: Request another time slot
+    end
+```
+
+### Engineering Design
+
+| Design decision | Purpose |
+|---|---|
+| Modular monolith | Maintainable business modules |
+| Database transactions | Consistent booking operations |
+| Row-level locking | Concurrent booking protection |
+| Idempotent payment processing | Prevent duplicate payment effects |
+| Role-based access control | Account-level authorization |
+| OTP verification | Service session validation |
+| Separate deployments | Independent frontend and backend delivery |
+| Production monitoring | Error tracking and availability monitoring |
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) and [TRD.md](TRD.md)
+for detailed engineering design.
 
 ## 🗄️ Conceptual Database Relationships
 
